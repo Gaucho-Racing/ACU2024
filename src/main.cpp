@@ -20,7 +20,7 @@ void setup() {
   Serial.begin(115200);
   isoSPI1.begin();
   isoSPI1.setIntFunc(intrFunc);
-
+  printMenu();
 }
 
 cell_asic test;
@@ -34,7 +34,7 @@ void loop() {
   //adbms_main();
   adBmsWakeupIc(1);
   //adBms6830_cell_openwire_test(1,);
-  //printOpenWireTestResult(1, &test, AvgCell);
+  printOpenWireTestResult(1, &test, AvgCell);
 }
 
 // put function definitions here:
