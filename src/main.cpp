@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <SPI.h>
+#include "ADBMS.h"
 
 void setup() {
   Serial.begin(115200);
@@ -7,6 +7,6 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("I wanna die!");
+  Serial.println("I love Analog Devices");
   delay(1000);
 }
