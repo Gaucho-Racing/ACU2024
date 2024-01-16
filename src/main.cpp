@@ -1,12 +1,12 @@
 #include <Arduino.h>
-#include "ADBMS6822.h"
+#include "ADBMS6822_Driver.h"
 
 // put function declarations here:
 void intrFunc();
 void wakeBms();
 
 // Object declarations
-isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2); 
+isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 
 void setup() {
   // put your setup code here, to run once:

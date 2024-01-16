@@ -3,7 +3,7 @@ ADBMS6822.h - library for ADBMS6822 dual isoSPI adapter board
 Created by Yandong Liu 20240115
 */
 
-#include "ADBMS6822.h"
+#include "ADBMS6822_Driver.h"
 
 isoSPI::isoSPI(SPIClass* mySPI, uint8_t csPin, uint8_t intPin, uint8_t wakePin, uint8_t mstrPin, uint8_t rtoPin, uint8_t xModePinA, uint8_t xModePinB, uint8_t sModePinA, uint8_t sModePinB) {
     _mySPI = mySPI;
