@@ -41,7 +41,10 @@ class isoSPI {
         void setRTO(uint8_t rtoTime);
 
         // Functions that the chip supports but we don't need: 
+            // Master mode (MSTR = HIGH)
+        void setMasterMode();
             // Slave mode (MSTR = LOW)
+        void setSlaveMode();
             // WAKE pin in slave mode to alert master controller (Pg. 22)
             // Other LPCM timeout(RTO) lengths (Pg. 4, no hardware support on board)
 

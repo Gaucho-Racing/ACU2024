@@ -7,14 +7,14 @@ Created by Yandong Liu 20240115
 
 isoSPI::isoSPI(SPIClass* mySPI, uint8_t csPin, uint8_t intPin, uint8_t wakePin, uint8_t mstrPin, uint8_t rtoPin, uint8_t xModePinA, uint8_t xModePinB, uint8_t sModePinA, uint8_t sModePinB) {
     _mySPI = mySPI;
-    _csPin = csPin;
-    _intPin = intPin;
-    _wakePin = wakePin;
-    _mstrPin = mstrPin;
+    _csPin = csPin; //chipselect
+    _intPin = intPin; //interrupt
+    _wakePin = wakePin; 
+    _mstrPin = mstrPin; //master
     _rtoPin = rtoPin;
-    _xModePinA = xModePinA;
+    _xModePinA = xModePinA; //Tranceiver, random gpio pins that the teensy needs to mess with
     _xModePinB = xModePinB;
-    _sModePinA = sModePinA;
+    _sModePinA = sModePinA; //SPI mode, random gpio pins that the teensy needs to mess with
     _sModePinB = sModePinB;
 }
 
@@ -156,4 +156,12 @@ bool isoSPI::isAwake() {
 
 void isoSPI::setIntFunc(void (*function)(void)) {
     attachInterrupt(digitalPinToInterrupt(_intPin), function, RISING);
+}
+
+void isoSPI::setMasterMode(){
+    digitalWrite(_mstrPin, HIGH);
+}
+
+void isoSPI::setSlaveMode(){
+    digitalWrite(_mstrPin, LOW);
 }
