@@ -1,9 +1,12 @@
-#include <Arduino.h>
-#include <SPI.h>
+#include "main.h"
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Hello World!");
+  //initialize SPI:
+  SPI.begin();
+  
+  //end SPI:
+  SPI.end();
 }
 
 void loop() {
