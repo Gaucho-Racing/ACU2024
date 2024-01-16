@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "ADBMS6822_Driver.h"
+#include "ADBMS.h"
 
 // put function declarations here:
 void intrFunc();
@@ -7,6 +8,7 @@ void wakeBms();
 
 // Object declarations 
 isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
+isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,6 +24,7 @@ void loop() {
   isoSPI1.transfer16(number);
   isoSPI1.endTransaction();
   delay(100);
+  ad
 }
 
 // put function definitions here:
