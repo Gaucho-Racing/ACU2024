@@ -26,9 +26,11 @@ and its licensor.
 
 #else
 #include "main.h"
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_tim.h"
-#include "stm32f4xx_it.h"
+
+
+// #include "stm32f4xx_hal.h"
+// #include "stm32f4xx_hal_tim.h"
+// #include "stm32f4xx_it.h"
 
 extern ADC_HandleTypeDef hadc1;         /* Mcu dependent ADC handler */
 extern I2C_HandleTypeDef hi2c1;         /* Mcu dependent I2C handler */

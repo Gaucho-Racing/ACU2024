@@ -33,7 +33,7 @@ uint16_t pec10_calc(bool rx_cmd, int len, uint8_t *data);
 void spiSendCmd(uint8_t tx_cmd[2]);
 void spiReadData
 ( 
-uint8_t tIC, 
+uint8_t tIC, //total num of ICs
 uint8_t tx_cmd[2], 
 uint8_t *rx_data,
 uint8_t *pec_error,
