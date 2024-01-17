@@ -21,7 +21,7 @@ and its licensor.
 #include "adBms6830CmdList.h"
 #include "adBms6830GenericType.h"
 #include "serialPrintResult.h"
-#include "mcuWrapper.h"
+#include "ADBMS.h"
 #ifdef MBED
 extern Serial pc;
 #endif

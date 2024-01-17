@@ -18,12 +18,4 @@ and its licensor.
 #include <string.h>
 #include <stdbool.h>
 
-//#define MBED /* Switch between IAR Workbench or Mbed Studio. */
-
-#ifdef MBED
-#include "mbed.h"
-#include "SPI.h"
-#include "Timer.h"
-#endif
-
 #endif

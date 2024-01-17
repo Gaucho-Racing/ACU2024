@@ -21,12 +21,13 @@ and its licensor.
 #ifndef _ADBMS6830_MAIN_H
 #define _ADBMS6830_MAIN_H
 
-#include "main.h"
+//#include "main.h"
 #include "common.h"
 #include "adBms6830Data.h"
 #include "adBms6830GenericType.h"
 #include "adBms6830ParseCreate.h"
-#include "mcuWrapper.h"
+
+#include "ADBMS.h"
 
 
 void adbms_main(void);

@@ -336,7 +336,7 @@ void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         voltage = getVoltage(IC[ic].stata.vref3);
         pc.printf("VREF3:%fV, ", voltage);
         voltage = getVoltage(IC[ic].stata.itmp);
-        pc.printf("ITMP:%f°C\n", (voltage/0.0075)-273);
+        pc.printf("ITMP:%fï¿½C\n", (voltage/0.0075)-273);
 
         pc.printf("CCount:%d, ",IC[ic].cccrc.cmd_cntr);
         pc.printf("PECError:%d\n\n",IC[ic].cccrc.stat_pec);
@@ -441,7 +441,7 @@ void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         voltage = getVoltage(IC[ic].stata.vref3);
         pc.printf("VREF3:%fV, ", voltage);
         voltage = getVoltage(IC[ic].stata.itmp);
-        pc.printf("ITMP:%f°C\n\n", (voltage/0.0075)-273);
+        pc.printf("ITMP:%fï¿½C\n\n", (voltage/0.0075)-273);
 
         pc.printf("Status B:\n");
         voltage = getVoltage(IC[ic].statb.va);
@@ -1357,7 +1357,7 @@ void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         voltage = getVoltage(IC[ic].stata.vref3);
         printf("VREF3:%fV, ", voltage);
         voltage = getVoltage(IC[ic].stata.itmp);
-        printf("ITMP:%f°C\n", (voltage/0.0075)-273);
+        printf("ITMP:%fï¿½C\n", (voltage/0.0075)-273);
 
         printf("CCount:%d, ",IC[ic].cccrc.cmd_cntr);
         printf("PECError:%d\n\n",IC[ic].cccrc.stat_pec);
@@ -1462,7 +1462,7 @@ void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         voltage = getVoltage(IC[ic].stata.vref3);
         printf("VREF3:%fV, ", voltage);
         voltage = getVoltage(IC[ic].stata.itmp);
-        printf("ITMP:%f°C\n\n", (voltage/0.0075)-273);
+        printf("ITMP:%fï¿½C\n\n", (voltage/0.0075)-273);
 
         printf("Status B:\n");
         voltage = getVoltage(IC[ic].statb.va);

@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "ADBMS6822_Driver.h"
 #include "ADBMS.h"
+#include "adbms_main.h"
 
 // put function declarations here:
 void intrFunc();
@@ -27,7 +28,6 @@ void loop() {
   isoSPI1.transfer16(number);
   isoSPI1.endTransaction();
   delay(100);
-  ad
 }
 
 // put function definitions here:
