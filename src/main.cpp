@@ -3,6 +3,8 @@
 #include "ADBMS6822_Driver.h"
 #include "ADBMS.h"
 #include "adbms_main.h"
+#include "adBms_Application.h"
+#include "serialPrintResult.h"
 
 // put function declarations here:
 void intrFunc();
@@ -21,13 +23,18 @@ void setup() {
 
 }
 
+cell_asic test;
 void loop() {
   // put your main code here, to run repeatedly:
-  uint16_t number = 0b1010101010101010;
-  isoSPI1.beginTransaction(SPI_MODE3, 2000000);
-  isoSPI1.transfer16(number);
-  isoSPI1.endTransaction();
+  //uint16_t number = 0b1010101010101010;
+  //isoSPI1.beginTransaction(SPI_MODE3, 2000000);
+  //isoSPI1.transfer16(number);
+  //isoSPI1.endTransaction();
   delay(100);
+  //adbms_main();
+  adBmsWakeupIc(1);
+  //adBms6830_cell_openwire_test(1,);
+  //printOpenWireTestResult(1, &test, AvgCell);
 }
 
 // put function definitions here:

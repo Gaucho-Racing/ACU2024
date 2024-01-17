@@ -35,7 +35,7 @@ and its licensor.
 //extern TIM_HandleTypeDef htim2;         /* Mcu dependent TIM handler */
 //extern TIM_HandleTypeDef htim5;         /* Mcu dependent TIM handler */
 
-#define CS_PIN 0               /* Mcu dependent chip select */                      //CHANGE THIS
+#define CS_PIN 10               /* Mcu dependent chip select */                      //CHANGE THIS
 #define GPIO_PORT 0      /* Mcu dependent adc chip select port */                   //CHANGE THIS
 
 void Delay_ms(uint32_t time);

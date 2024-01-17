@@ -25,7 +25,7 @@ and its licensor.
 #include <stdint.h>
 #include "adbms_main.h"
 
-void app_main(void);
+void adbms_main(void);
 void run_command(int cmd);
 void adBms6830_init_config(uint8_t tIC, cell_asic *ic);
 void adBms6830_write_read_config(uint8_t tIC, cell_asic *ic);
