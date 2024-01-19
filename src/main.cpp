@@ -13,6 +13,8 @@ void wakeBms();
 // Object declarations 
 isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
+#define TOTAL_IC 1
+cell_asic IC[TOTAL_IC];
 
 
 void setup() {
@@ -20,7 +22,7 @@ void setup() {
   Serial.begin(115200);
   isoSPI1.begin();
   isoSPI1.setIntFunc(intrFunc);
-  printMenu();
+  adBms6830_init_config(TOTAL_IC, &IC[0]);
 }
 
 cell_asic test;
@@ -34,7 +36,8 @@ void loop() {
   //adbms_main();
   adBmsWakeupIc(1);
   //adBms6830_cell_openwire_test(1,);
-  printOpenWireTestResult(1, &test, AvgCell);
+  run_command(16);
+  // run_command(4);
 }
 
 // put function definitions here:
