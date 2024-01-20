@@ -22,6 +22,7 @@ and its licensor.
 
 
 #include "Arduino.h"
+#include "ADBMS6822_Driver.h"
 #include "SPI.h"
 //#include "main.h"
 

@@ -127,9 +127,11 @@ void isoSPI::beginTransaction(uint8_t spiMode, uint32_t fsck) {
     }
     _mySPI -> beginTransaction(SPISettings(fsck, MSBFIRST, _sMode));
     digitalWrite(_csPin, LOW);
+    delayMicroseconds(1);
 }
 
 void isoSPI::endTransaction() {
+    delayMicroseconds(1);
     digitalWrite(_csPin, HIGH);
     _mySPI -> endTransaction();
 }
@@ -146,7 +148,7 @@ uint32_t isoSPI::transfer32(uint32_t sendDWord) {
     return _mySPI -> transfer32(sendDWord);
 }
 
-void isoSPI::transfer(uint8_t* buffer[], size_t size) {
+void isoSPI::transfer(uint8_t* buffer, size_t size) {
     _mySPI -> transfer(buffer, size);
 }
 
