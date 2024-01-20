@@ -19,6 +19,7 @@ cell_asic IC[TOTAL_IC];
 
 void setup() {
   // put your setup code here, to run once:
+  //set_arm_clock(24000000);
   Serial.begin(115200);
   isoSPI1.begin();
   isoSPI1.setIntFunc(intrFunc);

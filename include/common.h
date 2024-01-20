@@ -17,5 +17,7 @@ and its licensor.
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <Arduino.h>
+#include <SPI.h>
 
 #endif

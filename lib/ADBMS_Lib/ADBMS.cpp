@@ -67,6 +67,7 @@ void adBmsCsLow()
 {
 	//HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET);
 	digitalWrite(CS_PIN, LOW);
+	delayNanoseconds(500);
 }
 
 /**
@@ -83,6 +84,7 @@ void adBmsCsLow()
 void adBmsCsHigh()
 {
 	//HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET);
+	delayNanoseconds(500);
 	digitalWrite(CS_PIN, HIGH);
 }
 
