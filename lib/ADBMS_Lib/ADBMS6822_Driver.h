@@ -29,7 +29,7 @@ class isoSPI {
         // SPI stuff
         void beginTransaction(uint8_t spiMode, uint32_t fsck);
         uint8_t transfer(uint8_t sendByte);
-        void transfer(uint8_t* buffer[], size_t size);
+        void transfer(uint8_t* buffer, size_t size);
         uint16_t transfer16(uint16_t sendWord);
         uint32_t transfer32(uint32_t sendDWord);
         void endTransaction();

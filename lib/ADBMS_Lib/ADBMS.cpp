@@ -19,6 +19,7 @@ and its licensor.
 */
 //#include "common.h"
 #include "ADBMS.h"
+#include "ADBMS6822_Driver.h"
 
 #define WAKEUP_DELAY 4                          /* BMS ic wakeup delay  */
 
@@ -31,6 +32,8 @@ and its licensor.
 //I2C_HandleTypeDef *hi2c         = &hi2c1;       /* MUC I2C Handler      */
 //TIM_HandleTypeDef *htim         = &htim2;       /* Mcu TIM handler */
 
+extern isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
+extern isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 
 /**
  *******************************************************************************
@@ -66,7 +69,11 @@ void Delay_ms(uint32_t time)
 void adBmsCsLow()
 {
 	//HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET);
-	digitalWrite(CS_PIN, LOW);
+	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
+	//digitalWrite(CS_PIN, LOW);
+	//delayNanoseconds(500);
+	isoSPI1.begin();
+	isoSPI1.beginTransaction(SPI_MODE3, 1000000);
 }
 
 /**
@@ -83,7 +90,10 @@ void adBmsCsLow()
 void adBmsCsHigh()
 {
 	//HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET);
-	digitalWrite(CS_PIN, HIGH);
+	//delayNanoseconds(500);
+	//digitalWrite(CS_PIN, HIGH);
+	//SPI.endTransaction();
+	isoSPI1.endTransaction();
 }
 
 /**
@@ -110,7 +120,8 @@ uint8_t *tx_Data                       /*Array of bytes to be written on the SPI
 	//HAL_SPI_Transmit(hspi, tx_Data, size, SPI_TIME_OUT); /* SPI1 , data, size, timeout */ 
 	uint8_t tx_data_copy[size];
 	memcpy(&tx_data_copy[0], &tx_Data[0], size);
-	SPI.transfer(tx_data_copy, size);
+	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
+	isoSPI1.transfer(tx_data_copy, size);
 }
 
 /**
@@ -142,7 +153,8 @@ uint16_t size                           /*Option: number of bytes*/
 	uint16_t data_size = (4 + size);
 	uint8_t cmd[data_size];
 	memcpy(&cmd[0], &tx_data[0], 4); /* dst, src, size */
-	SPI.transfer(cmd, data_size);
+	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
+	isoSPI1.transfer(cmd, data_size);
 	memcpy(&rx_data[0], &cmd[4], size); /* dst, src, size */
 }
 
@@ -169,7 +181,8 @@ void spiReadBytes(uint16_t size, uint8_t *rx_data)
 	{
 		tx_data[i] = 0xFF;
 	}
-	SPI.transfer(tx_data, size);
+	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
+	isoSPI1.transfer(tx_data, size);
 	memcpy(&rx_data[0], &tx_data[0], size);
 }
 
@@ -184,10 +197,13 @@ void spiReadBytes(uint16_t size, uint8_t *rx_data)
  *
  *******************************************************************************
 */
+
+uint32_t startTime;
 void startTimer()
 {   
 	//HAL_TIM_Base_Start(htim);
 	//TODO
+	startTime = micros();
 }
 
 /**
@@ -201,10 +217,12 @@ void startTimer()
  *
  *******************************************************************************
 */
+uint32_t stopTime;
 void stopTimer()
 {   
 	//HAL_TIM_Base_Stop(htim);
 	//TODO
+	stopTime = micros();
 }
 
 /**
@@ -224,6 +242,7 @@ uint32_t getTimCount()
 	//count = __HAL_TIM_GetCounter(htim);
 	//__HAL_TIM_SetCounter(htim, 0);
 	//TODO
+	count = startTime - stopTime;
 	return(count);
 }
 
