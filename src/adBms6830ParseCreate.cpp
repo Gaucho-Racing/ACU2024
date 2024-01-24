@@ -19,9 +19,6 @@ and its licensor.
 
 #include "common.h"
 #include "adbms_main.h"
-#ifdef MBED
-extern Serial pc;
-#endif
 
 /**
  *******************************************************************************

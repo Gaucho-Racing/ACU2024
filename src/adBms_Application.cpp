@@ -22,9 +22,7 @@ and its licensor.
 #include "adBms6830GenericType.h"
 #include "serialPrintResult.h"
 #include "ADBMS.h"
-#ifdef MBED
-extern Serial pc;
-#endif
+
 /**
 *******************************************************************************
 * @brief Setup Variables
@@ -72,13 +70,8 @@ void adbms_main()
   while(1)
   {
     int user_command;
-#ifdef MBED
-    pc.scanf("%d", &user_command);
-    pc.Serial.printf("Enter cmd:%d\n", user_command);
-#else
     scanf("%d", &user_command);
     Serial.printf("Enter cmd:%d\n", user_command);
-#endif
     run_command(user_command);
   }
 }
@@ -192,11 +185,7 @@ void run_command(int cmd)
     break;
 
   default:
-#ifdef MBED
-    pc.Serial.printf("Incorrect Option\n\n");
-#else
     Serial.printf("Incorrect Option\n\n");
-#endif
     break;
   }
 }
@@ -248,6 +237,29 @@ void adBms6830_write_read_config(uint8_t tIC, cell_asic *ic)
   printReadConfig(tIC, &ic[0], Config, ALL_GRP);
 }
 
+void adbms6830_write_gpio(uint8_t tIC, cell_asic *ic, bool *pinConfig)
+{
+  int temp = 0;
+  for(int i = 0; i < 10; i++)
+  {
+    if(pinConfig[i])
+    {
+      temp |= (1 << i);
+    }
+    else
+    {
+      temp &= ~(1 << i);
+    }
+  }
+  for(uint8_t cic = 0; cic < tIC; cic++)
+  {
+    ic[cic].tx_cfga.gpo = temp;
+  }
+  adBmsWakeupIc(tIC);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
+  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, B);
+}
+
 /**
 *******************************************************************************
 * @brief Read Configuration Register A/B
@@ -271,11 +283,7 @@ void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC)
   adBmsWakeupIc(tIC);
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
-#ifdef MBED
-  pc.Serial.printf("Cell conversion completed\n");
-#else
   Serial.printf("Cell conversion completed\n");
-#endif
   printPollAdcConvTime(pladc_count);
 }
 
@@ -306,11 +314,7 @@ void adBms6830_start_adc_s_voltage_measurment(uint8_t tIC)
   adBmsWakeupIc(tIC);
   adBms6830_Adsv(CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
-#ifdef MBED
-  pc.Serial.printf("S-Voltage conversion completed\n");
-#else
   Serial.printf("S-Voltage conversion completed\n");
-#endif
   printPollAdcConvTime(pladc_count);
 }
 
@@ -341,11 +345,7 @@ void adBms6830_start_avgcell_voltage_measurment(uint8_t tIC)
   adBmsWakeupIc(tIC);
   adBms6830_Adcv(RD_ON, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
-#ifdef MBED
-  pc.Serial.printf("Avg Cell voltage conversion completed\n");
-#else
   Serial.printf("Avg Cell voltage conversion completed\n");
-#endif
   printPollAdcConvTime(pladc_count);
 }
 
@@ -376,11 +376,7 @@ void adBms6830_start_fcell_voltage_measurment(uint8_t tIC)
   adBmsWakeupIc(tIC);
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
-#ifdef MBED
-  pc.Serial.printf("F Cell voltage conversion completed\n");
-#else
   Serial.printf("F Cell voltage conversion completed\n");
-#endif
   printPollAdcConvTime(pladc_count);
 }
 
@@ -418,11 +414,8 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
-#ifdef MBED
-  pc.Serial.printf("Aux voltage conversion completed\n");
-#else
+
   Serial.printf("Aux voltage conversion completed\n");
-#endif
   printPollAdcConvTime(pladc_count);
 }
 
@@ -458,11 +451,7 @@ void adBms6830_start_raux_voltage_measurment(uint8_t tIC,  cell_asic *ic)
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
   adBms6830_Adax2(AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
-#ifdef MBED
-  pc.Serial.printf("RAux voltage conversion completed\n");
-#else
   Serial.printf("RAux voltage conversion completed\n");
-#endif
   printPollAdcConvTime(pladc_count);
 }
 
@@ -599,11 +588,7 @@ void adBms6830_clear_cell_measurement(uint8_t tIC)
 {
   adBmsWakeupIc(tIC);
   spiSendCmd(CLRCELL);
-#ifdef MBED
-  pc.Serial.printf("Cell Registers Cleared\n\n");
-#else
   Serial.printf("Cell Registers Cleared\n\n");
-#endif
 }
 
 /**
@@ -615,11 +600,7 @@ void adBms6830_clear_aux_measurement(uint8_t tIC)
 {
   adBmsWakeupIc(tIC);
   spiSendCmd(CLRAUX);
-#ifdef MBED
-  pc.Serial.printf("Aux Registers Cleared\n\n");
-#else
   Serial.printf("Aux Registers Cleared\n\n");
-#endif
 }
 
 /**
@@ -631,11 +612,7 @@ void adBms6830_clear_spin_measurement(uint8_t tIC)
 {
   adBmsWakeupIc(tIC);
   spiSendCmd(CLRSPIN);
-#ifdef MBED
-  pc.Serial.printf("Spin Registers Cleared\n\n");
-#else
   Serial.printf("Spin Registers Cleared\n\n");
-#endif
 }
 
 /**
@@ -647,11 +624,7 @@ void adBms6830_clear_fcell_measurement(uint8_t tIC)
 {
   adBmsWakeupIc(tIC);
   spiSendCmd(CLRFC);
-#ifdef MBED
-  pc.Serial.printf("Fcell Registers Cleared\n\n");
-#else
   Serial.printf("Fcell Registers Cleared\n\n");
-#endif
 }
 
 /** @}*/
