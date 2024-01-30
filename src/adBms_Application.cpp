@@ -62,6 +62,8 @@ LOOP_MEASURMENT MEASURE_S_VOLTAGE       = ENABLED;        /*   This is ENABLED o
 LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
+//from the count indices from the left
+bool pinConfig[10] = {0, 1, 0, 0, 0, 0 ,0, 0, 0, 0}; 
 
 void adbms_main()
 {
@@ -179,6 +181,9 @@ void run_command(int cmd)
   case 20:
     adBms6830_clear_fcell_measurement(TOTAL_IC);
     break;
+
+  case 21:
+    adbms6830_write_gpio(TOTAL_IC, &IC[0], pinConfig);
 
   case 0:
     printMenu();
@@ -408,7 +413,7 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   {
     /* Init config A */
     ic[cic].tx_cfga.refon = PWR_UP;
-    ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
+    ic[cic].tx_cfga.gpo = 0X000; /* All GPIO pull down off */
   }
   adBmsWakeupIc(tIC);
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
