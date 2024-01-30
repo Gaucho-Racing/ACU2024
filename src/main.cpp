@@ -35,11 +35,14 @@ void loop() {
   //isoSPI1.transfer16(number);
   //isoSPI1.endTransaction();
   //adbms_main();
+  delay(1000);
   adBmsWakeupIc(1);
-  run_command(3);
-  run_command(4);
-  delay(100);
-  //adBms6830_cell_openwire_test(1,);
+  // run_command(3);
+  // run_command(4);
+  // delay(100);
+  // run_command(21);
+  run_command(11);
+  run_command(12);
   // for (uint8_t i = 0; i < 20; i++) {
   //   run_command(i);
   //   //delay(1000);
