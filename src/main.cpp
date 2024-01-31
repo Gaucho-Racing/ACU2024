@@ -5,6 +5,7 @@
 #include "adbms_main.h"
 #include "adBms_Application.h"
 #include "serialPrintResult.h"
+#include "FanController.h"
 
 // put function declarations here:
 void intrFunc();
@@ -15,11 +16,13 @@ void wakeBms();
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 #define TOTAL_IC 1
 cell_asic IC[TOTAL_IC];
+fanController fans(&Serial8);
 
 void setup() {
   // put your setup code here, to run once:
   //set_arm_clock(24000000);
   Serial.begin(115200);
+  fans.begin();
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
   adBms6830_init_config(TOTAL_IC, &IC[0]);
@@ -28,6 +31,7 @@ void setup() {
 cell_asic test;
 void loop() {
   Serial.println("PLEASE WORK");
+  Serial.println(fans.writeRegister(0x00, 127) ? "Write fan success" : "Write fan failed");
   //SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
   // put your main code here, to run repeatedly:
   //uint16_t number = 0b1010101010101010;
