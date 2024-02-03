@@ -27,8 +27,8 @@ cell_asic test;
 void loop() {
   delay(1000);
   adBmsWakeupIc(1);
-  run_command(11);
-  run_command(12);
+  run_command(3);
+  run_command(4);
 }
 
 void wakeBms() {
