@@ -23,7 +23,9 @@ and its licensor.
 #define __APPLICATION_H
 
 #include <stdint.h>
-#include "adbms_main.h"
+#include "adBms6830Data.h"
+#include "adBms6830GenericType.h"
+#include "adBms6830ParseCreate.h"
 
 void adbms_main(void);
 void run_command(int cmd);

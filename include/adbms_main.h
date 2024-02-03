@@ -23,14 +23,19 @@ and its licensor.
 
 //#include "main.h"
 #include "common.h"
-#include "adBms6830Data.h"
-#include "adBms6830GenericType.h"
-#include "adBms6830ParseCreate.h"
-
-#include "ADBMS.h"
 
 
-void adbms_main(void);
+
+enum States {FIRST, PRECHARGE, NORMAL, CHARGE, SHUTDOWN};
+
+bool systemCheck();
+
+void updateVoltage();
+
+void updateTemperature();
+
+void updateCurrent(float &current);
+
 
 #endif
 /** @}*/

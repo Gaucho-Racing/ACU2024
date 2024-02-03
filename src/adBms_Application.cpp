@@ -20,6 +20,7 @@ and its licensor.
 #include "adBms_Application.h"
 #include "adBms6830CmdList.h"
 #include "adBms6830GenericType.h"
+#include "adBms6830ParseCreate.h"
 #include "serialPrintResult.h"
 #include "ADBMS.h"
 

@@ -7,7 +7,6 @@
 #include "serialPrintResult.h"
 #include "FanController.h"
 #include "ACU_data.h"
-#include "main.h"
 #include <vector>
 
 // put function declarations here:
@@ -22,8 +21,14 @@ cell_asic IC[TOTAL_IC];
 fanController fans(&Serial8);
 States state;
 bool systemCheckOK = false;
+
 //there are 3 segments of 8 IC's
 std::vector<std::vector<float>> cellVoltage(TOTAL_IC, std::vector<float>(16, 0));
+//24 IC's with measuring 16 sets of cells each, each cell has a 2 temperatures 
+std::vector<std::vector<std::pair<float,float>>> cellTemp(TOTAL_IC,std::vector<std::pair<float,float>> (16,std::make_pair(0,0)));
+//HV current
+float current = 0;
+bool openWireTestResult = false;
 
 void setup() {
   Serial.begin(115200);
@@ -70,8 +75,3 @@ void wakeBms() {
   delayMicroseconds(10);
 }
 
-bool systemCheck(States &state, bool &systemCheckOK) {
-  //check for open wire
-  //check 
- 
-}

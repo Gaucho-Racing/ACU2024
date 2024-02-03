@@ -23,7 +23,8 @@ Using the BMS Driver Application can:
 
 */
 #include "common.h"
-#include "adbms_main.h"
+#include "adBms6830Data.h"
+#include "adBms6830GenericType.h"
 /**************************************** BMS Driver APIs definitions ********************************************/
 /* Precomputed CRC15 Table */
 const uint16_t Crc15Table[256] = 
