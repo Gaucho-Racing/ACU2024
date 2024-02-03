@@ -17,8 +17,7 @@ uint8_t fanController::readRegister(uint8_t addr) {
     while (_mySerial -> available()) { // clear buffer
         _mySerial -> read();
     }
-    addr &= 0b01111111; // set R/W flag bit to 0 (read)
-    _mySerial -> write(addr);
+    _mySerial -> write(addr & 0b01111111); // set R/W flag bit to 0 (read)
     uint32_t startTime = micros();
     while (!(_mySerial -> available())) {
         if (micros() - startTime > 1000) return 0xff; // error
@@ -27,8 +26,7 @@ uint8_t fanController::readRegister(uint8_t addr) {
 }
 
 bool fanController::writeRegister(uint8_t addr, uint8_t value) {
-    addr |= 0b10000000; // set R/W flag bit to 1 (write)
-    _mySerial -> write(addr);
+    _mySerial -> write(addr | 0b10000000); // set R/W flag bit to 1 (write)
     _mySerial -> write(value);
-    return readRegister(addr) == value;
+    return value == readRegister(addr);;
 }

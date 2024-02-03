@@ -31,7 +31,12 @@ void setup() {
 cell_asic test;
 void loop() {
   Serial.println("PLEASE WORK");
-  Serial.println(fans.writeRegister(0x00, 127) ? "Write fan success" : "Write fan failed");
+  uint8_t number = 45 + sin(millis()/10000.0) * 25;
+  fans.writeRegister(0, number);
+  Serial.println(fans.readRegister(0x00) * 50);
+  //Serial.println(fans.writeRegister(0, number) ? "Write fan success" : "Write fan failed");
+  Serial.println(fans.readRegister(0x18) * 50); // read rpm
+  Serial.println(fans.readRegister(0x14) * 0.06132665832290363); // read voltage, will add register definitions later
   //SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
   // put your main code here, to run repeatedly:
   //uint16_t number = 0b1010101010101010;
@@ -39,14 +44,13 @@ void loop() {
   //isoSPI1.transfer16(number);
   //isoSPI1.endTransaction();
   //adbms_main();
-  delay(1000);
-  adBmsWakeupIc(1);
+  //adBmsWakeupIc(1);
   // run_command(3);
   // run_command(4);
-  // delay(100);
+  delay(100);
   // run_command(21);
-  run_command(11);
-  run_command(12);
+  //run_command(11);
+  //run_command(12);
   // for (uint8_t i = 0; i < 20; i++) {
   //   run_command(i);
   //   //delay(1000);
