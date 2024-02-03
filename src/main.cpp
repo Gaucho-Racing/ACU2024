@@ -6,15 +6,14 @@
 #include "adBms_Application.h"
 #include "serialPrintResult.h"
 #include "FanController.h"
+#include "ACU_data.h"
 
 // put function declarations here:
-void intrFunc();
 void wakeBms();
 
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-#define TOTAL_IC 1
 cell_asic IC[TOTAL_IC];
 fanController fans(&Serial8);
 
