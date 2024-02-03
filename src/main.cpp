@@ -19,45 +19,17 @@ cell_asic IC[TOTAL_IC];
 fanController fans(&Serial8);
 
 void setup() {
-  // put your setup code here, to run once:
-  //set_arm_clock(24000000);
   Serial.begin(115200);
-  fans.begin();
-  //isoSPI1.begin();
-  //isoSPI1.setIntFunc(intrFunc);
+  // fans.begin();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
 }
 
 cell_asic test;
 void loop() {
-  Serial.println("PLEASE WORK");
-  Serial.println(fans.writeRegister(0x00, 127) ? "Write fan success" : "Write fan failed");
-  //SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
-  // put your main code here, to run repeatedly:
-  //uint16_t number = 0b1010101010101010;
-  //isoSPI1.beginTransaction(SPI_MODE3, 2000000);
-  //isoSPI1.transfer16(number);
-  //isoSPI1.endTransaction();
-  //adbms_main();
   delay(1000);
   adBmsWakeupIc(1);
-  // run_command(3);
-  // run_command(4);
-  // delay(100);
-  // run_command(21);
   run_command(11);
   run_command(12);
-  // for (uint8_t i = 0; i < 20; i++) {
-  //   run_command(i);
-  //   //delay(1000);
-  // }
-  //delay(1000);
-  // run_command(4);
-}
-
-// put function definitions here:
-void intrFunc() {
-  Serial.println("Interrupt!");
 }
 
 void wakeBms() {
