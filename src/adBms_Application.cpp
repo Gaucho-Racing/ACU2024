@@ -149,8 +149,8 @@ void run_command(int cmd)
   case 16:
     loop_count = 0;
     adBmsWakeupIc(TOTAL_IC);
-    adBmsWriteData(TOTAL_IC, &IC[0], WRCFGA, Config, A);
-    adBmsWriteData(TOTAL_IC, &IC[0], WRCFGB, Config, B);
+    adBmsWriteData(TOTAL_IC, &IC[0], WRCFGA, Config, AA);
+    adBmsWriteData(TOTAL_IC, &IC[0], WRCFGB, Config, BB);
     adBmsWakeupIc(TOTAL_IC);
     adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
     Delay_ms(1); // ADCs are updated at their conversion rate is 1ms
@@ -223,8 +223,8 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 //    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
   }
   adBmsWakeupIc(tIC);
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
-  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, B);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
+  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }
 
 /**
@@ -235,10 +235,10 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 void adBms6830_write_read_config(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
-  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, B);
-  adBmsReadData(tIC, &ic[0], RDCFGA, Config, A);
-  adBmsReadData(tIC, &ic[0], RDCFGB, Config, B);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
+  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
+  adBmsReadData(tIC, &ic[0], RDCFGA, Config, AA);
+  adBmsReadData(tIC, &ic[0], RDCFGB, Config, BB);
   printWriteConfig(tIC, &ic[0], Config, ALL_GRP);
   printReadConfig(tIC, &ic[0], Config, ALL_GRP);
 }
@@ -262,8 +262,8 @@ void adbms6830_write_gpio(uint8_t tIC, cell_asic *ic, bool *pinConfig)
     ic[cic].tx_cfga.gpo = temp;
   }
   adBmsWakeupIc(tIC);
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
-  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, B);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
+  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }
 
 /**
@@ -274,8 +274,8 @@ void adbms6830_write_gpio(uint8_t tIC, cell_asic *ic, bool *pinConfig)
 void adBms6830_read_config(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsReadData(tIC, &ic[0], RDCFGA, Config, A);
-  adBmsReadData(tIC, &ic[0], RDCFGB, Config, B);
+  adBmsReadData(tIC, &ic[0], RDCFGA, Config, AA);
+  adBmsReadData(tIC, &ic[0], RDCFGB, Config, BB);
   printReadConfig(tIC, &ic[0], Config, ALL_GRP);
 }
 
@@ -301,9 +301,9 @@ void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC)
 void adBms6830_read_cell_voltages(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsReadData(tIC, &ic[0], RDCVA, Cell, A);
-  adBmsReadData(tIC, &ic[0], RDCVB, Cell, B);
-  adBmsReadData(tIC, &ic[0], RDCVC, Cell, C);
+  adBmsReadData(tIC, &ic[0], RDCVA, Cell, AA);
+  adBmsReadData(tIC, &ic[0], RDCVB, Cell, BB);
+  adBmsReadData(tIC, &ic[0], RDCVC, Cell, CC);
   adBmsReadData(tIC, &ic[0], RDCVD, Cell, D);
   adBmsReadData(tIC, &ic[0], RDCVE, Cell, E);
   adBmsReadData(tIC, &ic[0], RDCVF, Cell, F);
@@ -332,9 +332,9 @@ void adBms6830_start_adc_s_voltage_measurment(uint8_t tIC)
 void adBms6830_read_s_voltages(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsReadData(tIC, &ic[0], RDSVA, S_volt, A);
-  adBmsReadData(tIC, &ic[0], RDSVB, S_volt, B);
-  adBmsReadData(tIC, &ic[0], RDSVC, S_volt, C);
+  adBmsReadData(tIC, &ic[0], RDSVA, S_volt, AA);
+  adBmsReadData(tIC, &ic[0], RDSVB, S_volt, BB);
+  adBmsReadData(tIC, &ic[0], RDSVC, S_volt, CC);
   adBmsReadData(tIC, &ic[0], RDSVD, S_volt, D);
   adBmsReadData(tIC, &ic[0], RDSVE, S_volt, E);
   adBmsReadData(tIC, &ic[0], RDSVF, S_volt, F);
@@ -363,9 +363,9 @@ void adBms6830_start_avgcell_voltage_measurment(uint8_t tIC)
 void adBms6830_read_avgcell_voltages(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsReadData(tIC, &ic[0], RDACA, AvgCell, A);
-  adBmsReadData(tIC, &ic[0], RDACB, AvgCell, B);
-  adBmsReadData(tIC, &ic[0], RDACC, AvgCell, C);
+  adBmsReadData(tIC, &ic[0], RDACA, AvgCell, AA);
+  adBmsReadData(tIC, &ic[0], RDACB, AvgCell, BB);
+  adBmsReadData(tIC, &ic[0], RDACC, AvgCell, CC);
   adBmsReadData(tIC, &ic[0], RDACD, AvgCell, D);
   adBmsReadData(tIC, &ic[0], RDACE, AvgCell, E);
   adBmsReadData(tIC, &ic[0], RDACF, AvgCell, F);
@@ -394,9 +394,9 @@ void adBms6830_start_fcell_voltage_measurment(uint8_t tIC)
 void adBms6830_read_fcell_voltages(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsReadData(tIC, &ic[0], RDFCA, F_volt, A);
-  adBmsReadData(tIC, &ic[0], RDFCB, F_volt, B);
-  adBmsReadData(tIC, &ic[0], RDFCC, F_volt, C);
+  adBmsReadData(tIC, &ic[0], RDFCA, F_volt, AA);
+  adBmsReadData(tIC, &ic[0], RDFCB, F_volt, BB);
+  adBmsReadData(tIC, &ic[0], RDFCC, F_volt, CC);
   adBmsReadData(tIC, &ic[0], RDFCD, F_volt, D);
   adBmsReadData(tIC, &ic[0], RDFCE, F_volt, E);
   adBmsReadData(tIC, &ic[0], RDFCF, F_volt, F);
@@ -417,7 +417,7 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
     ic[cic].tx_cfga.gpo = 0X000; /* All GPIO pull down off */
   }
   adBmsWakeupIc(tIC);
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
 
@@ -433,9 +433,9 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
 void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsReadData(tIC, &ic[0], RDAUXA, Aux, A);
-  adBmsReadData(tIC, &ic[0], RDAUXB, Aux, B);
-  adBmsReadData(tIC, &ic[0], RDAUXC, Aux, C);
+  adBmsReadData(tIC, &ic[0], RDAUXA, Aux, AA);
+  adBmsReadData(tIC, &ic[0], RDAUXB, Aux, BB);
+  adBmsReadData(tIC, &ic[0], RDAUXC, Aux, CC);
   adBmsReadData(tIC, &ic[0], RDAUXD, Aux, D);
   printVoltages(tIC, &ic[0], Aux);
 }
@@ -454,7 +454,7 @@ void adBms6830_start_raux_voltage_measurment(uint8_t tIC,  cell_asic *ic)
     ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
   }
   adBmsWakeupIc(tIC);
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
   adBms6830_Adax2(AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
   Serial.printf("RAux voltage conversion completed\n");
@@ -469,9 +469,9 @@ void adBms6830_start_raux_voltage_measurment(uint8_t tIC,  cell_asic *ic)
 void adBms6830_read_raux_voltages(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsReadData(tIC, &ic[0], RDRAXA, RAux, A);
-  adBmsReadData(tIC, &ic[0], RDRAXB, RAux, B);
-  adBmsReadData(tIC, &ic[0], RDRAXC, RAux, C);
+  adBmsReadData(tIC, &ic[0], RDRAXA, RAux, AA);
+  adBmsReadData(tIC, &ic[0], RDRAXB, RAux, BB);
+  adBmsReadData(tIC, &ic[0], RDRAXC, RAux, CC);
   adBmsReadData(tIC, &ic[0], RDRAXD, RAux, D);
   printVoltages(tIC, &ic[0], RAux);
 }
@@ -484,16 +484,16 @@ void adBms6830_read_raux_voltages(uint8_t tIC, cell_asic *ic)
 void adBms6830_read_status_registers(uint8_t tIC, cell_asic *ic)
 {
   adBmsWakeupIc(tIC);
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
-  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, B);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
+  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = pladc_count + adBmsPollAdc(PLADC);
 
-  adBmsReadData(tIC, &ic[0], RDSTATA, Status, A);
-  adBmsReadData(tIC, &ic[0], RDSTATB, Status, B);
-  adBmsReadData(tIC, &ic[0], RDSTATC, Status, C);
+  adBmsReadData(tIC, &ic[0], RDSTATA, Status, AA);
+  adBmsReadData(tIC, &ic[0], RDSTATB, Status, BB);
+  adBmsReadData(tIC, &ic[0], RDSTATC, Status, CC);
   adBmsReadData(tIC, &ic[0], RDSTATD, Status, D);
   adBmsReadData(tIC, &ic[0], RDSTATE, Status, E);
   printPollAdcConvTime(pladc_count);
@@ -509,9 +509,9 @@ void measurement_loop()
 {
   if(MEASURE_CELL == ENABLED)
   {
-    adBmsReadData(TOTAL_IC, &IC[0], RDCVA, Cell, A);
-    adBmsReadData(TOTAL_IC, &IC[0], RDCVB, Cell, B);
-    adBmsReadData(TOTAL_IC, &IC[0], RDCVC, Cell, C);
+    adBmsReadData(TOTAL_IC, &IC[0], RDCVA, Cell, AA);
+    adBmsReadData(TOTAL_IC, &IC[0], RDCVB, Cell, BB);
+    adBmsReadData(TOTAL_IC, &IC[0], RDCVC, Cell, CC);
     adBmsReadData(TOTAL_IC, &IC[0], RDCVD, Cell, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDCVE, Cell, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDCVF, Cell, F);
@@ -520,9 +520,9 @@ void measurement_loop()
 
   if(MEASURE_AVG_CELL == ENABLED)
   {
-    adBmsReadData(TOTAL_IC, &IC[0], RDACA, AvgCell, A);
-    adBmsReadData(TOTAL_IC, &IC[0], RDACB, AvgCell, B);
-    adBmsReadData(TOTAL_IC, &IC[0], RDACC, AvgCell, C);
+    adBmsReadData(TOTAL_IC, &IC[0], RDACA, AvgCell, AA);
+    adBmsReadData(TOTAL_IC, &IC[0], RDACB, AvgCell, BB);
+    adBmsReadData(TOTAL_IC, &IC[0], RDACC, AvgCell, CC);
     adBmsReadData(TOTAL_IC, &IC[0], RDACD, AvgCell, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDACE, AvgCell, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDACF, AvgCell, F);
@@ -531,9 +531,9 @@ void measurement_loop()
 
   if(MEASURE_F_CELL == ENABLED)
   {
-    adBmsReadData(TOTAL_IC, &IC[0], RDFCA, F_volt, A);
-    adBmsReadData(TOTAL_IC, &IC[0], RDFCB, F_volt, B);
-    adBmsReadData(TOTAL_IC, &IC[0], RDFCC, F_volt, C);
+    adBmsReadData(TOTAL_IC, &IC[0], RDFCA, F_volt, AA);
+    adBmsReadData(TOTAL_IC, &IC[0], RDFCB, F_volt, BB);
+    adBmsReadData(TOTAL_IC, &IC[0], RDFCC, F_volt, CC);
     adBmsReadData(TOTAL_IC, &IC[0], RDFCD, F_volt, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDFCE, F_volt, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDFCF, F_volt, F);
@@ -542,9 +542,9 @@ void measurement_loop()
 
   if(MEASURE_S_VOLTAGE == ENABLED)
   {
-    adBmsReadData(TOTAL_IC, &IC[0], RDSVA, S_volt, A);
-    adBmsReadData(TOTAL_IC, &IC[0], RDSVB, S_volt, B);
-    adBmsReadData(TOTAL_IC, &IC[0], RDSVC, S_volt, C);
+    adBmsReadData(TOTAL_IC, &IC[0], RDSVA, S_volt, AA);
+    adBmsReadData(TOTAL_IC, &IC[0], RDSVB, S_volt, BB);
+    adBmsReadData(TOTAL_IC, &IC[0], RDSVC, S_volt, CC);
     adBmsReadData(TOTAL_IC, &IC[0], RDSVD, S_volt, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDSVE, S_volt, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDSVF, S_volt, F);
@@ -555,9 +555,9 @@ void measurement_loop()
   {
     adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
     adBmsPollAdc(PLAUX1);
-    adBmsReadData(TOTAL_IC, &IC[0], RDAUXA, Aux, A);
-    adBmsReadData(TOTAL_IC, &IC[0], RDAUXB, Aux, B);
-    adBmsReadData(TOTAL_IC, &IC[0], RDAUXC, Aux, C);
+    adBmsReadData(TOTAL_IC, &IC[0], RDAUXA, Aux, AA);
+    adBmsReadData(TOTAL_IC, &IC[0], RDAUXB, Aux, BB);
+    adBmsReadData(TOTAL_IC, &IC[0], RDAUXC, Aux, CC);
     adBmsReadData(TOTAL_IC, &IC[0], RDAUXD, Aux, D);
     printVoltages(TOTAL_IC, &IC[0], Aux);
   }
@@ -567,18 +567,18 @@ void measurement_loop()
     adBmsWakeupIc(TOTAL_IC);
     adBms6830_Adax2(AUX_CH_TO_CONVERT);
     adBmsPollAdc(PLAUX2);
-    adBmsReadData(TOTAL_IC, &IC[0], RDRAXA, RAux, A);
-    adBmsReadData(TOTAL_IC, &IC[0], RDRAXB, RAux, B);
-    adBmsReadData(TOTAL_IC, &IC[0], RDRAXC, RAux, C);
+    adBmsReadData(TOTAL_IC, &IC[0], RDRAXA, RAux, AA);
+    adBmsReadData(TOTAL_IC, &IC[0], RDRAXB, RAux, BB);
+    adBmsReadData(TOTAL_IC, &IC[0], RDRAXC, RAux, CC);
     adBmsReadData(TOTAL_IC, &IC[0], RDRAXD, RAux, D);
     printVoltages(TOTAL_IC, &IC[0], RAux);
   }
 
   if(MEASURE_STAT == ENABLED)
   {
-    adBmsReadData(TOTAL_IC, &IC[0], RDSTATA, Status, A);
-    adBmsReadData(TOTAL_IC, &IC[0], RDSTATB, Status, B);
-    adBmsReadData(TOTAL_IC, &IC[0], RDSTATC, Status, C);
+    adBmsReadData(TOTAL_IC, &IC[0], RDSTATA, Status, AA);
+    adBmsReadData(TOTAL_IC, &IC[0], RDSTATB, Status, BB);
+    adBmsReadData(TOTAL_IC, &IC[0], RDSTATC, Status, CC);
     adBmsReadData(TOTAL_IC, &IC[0], RDSTATD, Status, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDSTATE, Status, E);
     printStatus(TOTAL_IC, &IC[0], Status, ALL_GRP);

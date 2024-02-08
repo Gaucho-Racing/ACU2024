@@ -602,7 +602,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Config:	
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreateConfiga(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -612,7 +612,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }
         }
         break;
-      case B:
+      case BB:
         adBms6830CreateConfigb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -639,7 +639,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Pwm:
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreatePwma(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -649,7 +649,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }	
         }
         break;   
-      case B:
+      case BB:
         adBms6830CreatePwmb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {

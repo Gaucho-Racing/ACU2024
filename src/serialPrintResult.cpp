@@ -47,7 +47,7 @@ void printWriteConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
     Serial.printf("IC%d:\n",(ic+1));
     if(type == Config)
     {
-      if(grp == A)
+      if(grp == AA)
       {
         Serial.printf("Write Config A:\n");
         Serial.printf("0x%X, ", IC[ic].configa.tx_data[0]);
@@ -57,7 +57,7 @@ void printWriteConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         Serial.printf("0x%X, ", IC[ic].configa.tx_data[4]);
         Serial.printf("0x%X\n\n", IC[ic].configa.tx_data[5]);
       }
-      else if(grp == B)
+      else if(grp == BB)
       {
         Serial.printf("Write Config B:\n");
         Serial.printf("0x%X, ", IC[ic].configb.tx_data[0]);
@@ -117,7 +117,7 @@ void printReadConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
     Serial.printf("IC%d:\n",(ic+1));
     if(type == Config)
     {
-      if(grp == A)
+      if(grp == AA)
       {
         Serial.printf("Read Config A:\n");
         Serial.printf("REFON:0x%X, ", IC[ic].rx_cfga.refon);
@@ -141,7 +141,7 @@ void printReadConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         Serial.printf("CCount:%d,",IC[ic].cccrc.cmd_cntr);
         Serial.printf("PECError:%d\n\n",IC[ic].cccrc.cfgr_pec);
       }
-      else if(grp == B)
+      else if(grp == BB)
       {
         Serial.printf("Read Config B:\n");
         Serial.printf("VUV:0x%X, ", IC[ic].rx_cfgb.vuv);
@@ -327,7 +327,7 @@ void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
     Serial.printf("IC%d:\n",(ic+1));
     if(type == Status)
     {
-      if(grp == A)
+      if(grp == AA)
       {
         Serial.printf("Status A:\n");
         voltage = getVoltage(IC[ic].stata.vref2);
@@ -339,7 +339,7 @@ void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         Serial.printf("CCount:%d, ",IC[ic].cccrc.cmd_cntr);
         Serial.printf("PECError:%d\n\n",IC[ic].cccrc.stat_pec);
       }
-      else if(grp == B)
+      else if(grp == BB)
       {
         Serial.printf("Status B:\n");
         voltage = getVoltage(IC[ic].statb.va);
@@ -352,7 +352,7 @@ void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
         Serial.printf("CCount:%d, ",IC[ic].cccrc.cmd_cntr);
         Serial.printf("PECError:%d\n\n",IC[ic].cccrc.stat_pec);
       }
-      else if(grp == C)
+      else if(grp == CC)
       {
         Serial.printf("Status C:\n");
         Serial.printf("CSFLT:0x%X, ", IC[ic].statc.cs_flt);
@@ -584,7 +584,7 @@ void printWritePwmDutyCycle(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
   for(uint8_t ic = 0; ic < tIC; ic++)
   {
     Serial.printf("IC%d:\n",(ic+1));
-    if(grp == A)
+    if(grp == AA)
     {
       Serial.printf("Write Pwma Duty Cycle:\n");
       Serial.printf("0x%X, ", IC[ic].pwma.tx_data[0]);
@@ -594,7 +594,7 @@ void printWritePwmDutyCycle(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
       Serial.printf("0x%X, ", IC[ic].pwma.tx_data[4]);
       Serial.printf("0x%X\n\n", IC[ic].pwma.tx_data[5]);
     }
-    else if(grp == B)
+    else if(grp == BB)
     {
       Serial.printf("Write Pwmb Duty Cycle:\n");
       Serial.printf("0x%X, ", IC[ic].pwmb.tx_data[0]);
@@ -643,7 +643,7 @@ void printReadPwmDutyCycle(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
   for(uint8_t ic = 0; ic < tIC; ic++)
   {
     Serial.printf("IC%d:\n",(ic+1));
-    if(grp == A)
+    if(grp == AA)
     {
       Serial.printf("Read PWMA Duty Cycle:\n");
       Serial.printf("PWM1:0x%X, ", IC[ic].PwmA.pwma[0]);
@@ -661,7 +661,7 @@ void printReadPwmDutyCycle(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
       Serial.printf("CCount:%d,",IC[ic].cccrc.cmd_cntr);
       Serial.printf("PECError:%d\n\n",IC[ic].cccrc.pwm_pec);
     }
-    else if(grp == B)
+    else if(grp == BB)
     {
       Serial.printf("Read PWMB Duty Cycle:\n");
       Serial.printf("PWM13:0x%X, ", IC[ic].PwmB.pwmb[0]);

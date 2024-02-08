@@ -8,6 +8,7 @@
 #include "FanController.h"
 #include "ACU_data.h"
 #include <vector>
+#include "can.cpp"
 
 // put function declarations here:
 void wakeBms();
@@ -16,7 +17,7 @@ void wakeBms();
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 
-
+CANLine can;
 cell_asic IC[TOTAL_IC];
 fanController fans(&Serial8);
 States state;
