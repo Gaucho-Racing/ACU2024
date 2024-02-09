@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include "FlexCAN_T4.h"
+#include <vector>
+#include <unordered_map>
 
 //FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> canPrimary; //Depends on what board u test on ig but prob just use this for now
 //FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> canPrimary;
@@ -22,17 +24,22 @@ struct chargerData {
   bool communicationFailure;  
 };
 
-class thing {
+class CANLine {
   private:
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
+    CAN_message_t msgRecieve, msgSend;
     static const int JuanMbps = 1000000;
     static const int AteMbps = 8000000;
+    std::unordered_map<int, std::vector<byte>> last_messages;
+    std::unordered_map<int, int> last_messages_timestamps;
 
   public:
-    thing() {
+    //FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
+    CANLine() {
       // Initialize the CAN bus
       can.begin();
       can.setBaudRate(JuanMbps);
+      can.enableFIFO();
       // canData.begin();
       // CANFD_timings_t config;
       // config.clock = CLK_24MHz;
@@ -45,49 +52,78 @@ class thing {
     }
 
     void send(unsigned int id, byte *things, byte size = 8) {
-      CAN_message_t msgSend;
       msgSend.id = id;
       msgSend.len = size;
       for (int i = 0; i < size; i++) {
+        Serial.print(things[i]);
+        Serial.print(" ");
         msgSend.buf[i] = things[i];
       }
+      Serial.println();
       can.write(msgSend);
       Serial.print("Frame sent to id 0x");
       Serial.println(id, HEX);
     }
 
     void send(unsigned int id, short *things, byte size = 4) {
-      byte msg[8];
-      for (int i = 0; i < size/2; i++) {
+      byte msg[2*size];
+      for (int i = 0; i < size; i++) {
         msg[2*i] = (byte)(things[i] >> 8);
         msg[2*i+1] = (byte)(things[i]);
       }
       send(id, msg, 2*size);
     }
 
-    byte* recieve(unsigned int id, byte size = 8) {
+    void recieve_one() {
+        can.readFIFO(msgRecieve);
+        //Serial.print("0x");
+        //Serial.print(msgRecieve.id, HEX);
+        //Serial.print(" ");
+        last_messages[msgRecieve.id] = std::vector<byte>();
+        for (int i = 0; i < msgRecieve.len; i++) {
+          //Serial.print(msgRecieve.buf[i]);
+          last_messages[msgRecieve.id].push_back(msgRecieve.buf[i]);
+        }
+        last_messages_timestamps[msgRecieve.id] = millis();
+    }
+
+    std::vector<byte> recieve(unsigned int id) {
+      return last_messages[id];
+    }
+
+    int age_of(unsigned int id) {
+      return last_messages_timestamps[id];
+    }
+
+    /*
+    std::vector<byte> recieve(unsigned int id, byte size = 8) {
       CAN_message_t msgRecieve;
-      static byte result[8];
-      for (int i = 0; i < size; i++) result[i] = 0;
+      std::vector<byte> result = std::vector<byte>(size, 0);
       can.read(msgRecieve);
       Serial.print("0x");
-      Serial.println(msgRecieve.id, HEX);
-      if (msgRecieve.id != id) {
-        Serial.println("Looks like the id is wrong!");
-        return result;
-      }
+      Serial.print(msgRecieve.id, HEX);
+      //  if (msgRecieve.id != id) {
+      //    Serial.println("Looks like the id is wrong!");
+      //    return result;
+      //  }
       for (int i = 0; i < size; i++) {
         result[i] = msgRecieve.buf[i];
       }
       return result;
     }
+    */
 
-    short* recieveShort(unsigned int id, byte size = 4) {
-      static byte *msgbyte = recieve(id, size*2);
-      static short result[4];
-      for (int i = 0; i < 2*size; i+=2) {
-        result[i] = (((short)msgbyte[i]) << 8) + (short)msgbyte[i+1];
+    std::vector<short> recieveShort(unsigned int id) {
+      std::vector<byte> msgbyte = recieve(id);
+      //Serial.print("a");
+      std::vector<short> result = std::vector<short>(0);
+      //Serial.print("s");
+      msgbyte.push_back(0);
+      //Serial.print("d");
+      for (unsigned int i = 0; i < msgbyte.size()-1; i+=2) {
+        result.push_back((((short)msgbyte[i]) << 8) + (short)msgbyte[i+1]);
       }
+      //Serial.print("f");
       return result;
     }
 
@@ -120,7 +156,7 @@ class thing {
         return;
       }
       */
-      short *msg = recieveShort(0x18FF50E5); //size 4
+      short* msg = &(recieveShort(0x18FF50E5)[0]); //size 4
 
       chargerData r;
 
