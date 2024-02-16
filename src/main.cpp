@@ -18,62 +18,22 @@ void wakeBms();
 CANLine can;
 cell_asic IC[TOTAL_IC];
 fanController fans(&Serial8);
-States state;
-bool systemCheckOK = false;
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,1};
-
-//there are 3 segments of 8 IC's
-std::vector<std::vector<float>> cellVoltage(TOTAL_IC, std::vector<float>(16, 0));
-//24 IC's with measuring 16 sets of cells each, each cell has a 2 temperatures 
-std::vector<std::vector<std::pair<float,float>>> cellTemp(TOTAL_IC,std::vector<std::pair<float,float>> (16,std::make_pair(0,0)));
-//HV current
-float current = 0;
-bool openWireTestResult = false;
 
 void setup() {
   Serial.begin(115200);
   // fans.begin();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
-  adBms6830_write_read_config(TOTAL_IC, &IC[1]);
-  state = FIRST;
   
 }
 std::vector<byte> pong;
 cell_asic test;
 void loop() {
-  switch (state)
-  {
-  case FIRST:
-  {
-    // systemCheck(state, systemCheckOK);
-    short message[8] = {60000,4,0,0,0,0,0,0};
-    can.send(97, message);
-    can.recieve_one();
-    std::vector<byte> pong = can.recieve(97);
-    break;
-  }
-  case PRECHARGE:
-    /* code */
-    break;
-  case NORMAL:
-    delay(1000);
-    adBmsWakeupIc(1);
-    run_command(3);
-    run_command(4);
-    adbms6830_write_gpio(TOTAL_IC, &IC[0], test_bool);
-    adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-    /* code */
-    break;
-  case CHARGE:
-    /* code */
-    break;
-  case SHUTDOWN: 
-    /* code */
-    break;
-  default:
-  //should never be here
-    break;
-  }
+
+  adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+  //for some reason this doesn't work, why not?
+  adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+  adBms6830_read_cell_voltages(TOTAL_IC, &IC[1]);
   
 }
 
