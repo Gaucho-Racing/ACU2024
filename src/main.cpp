@@ -22,6 +22,7 @@ cell_asic IC[TOTAL_IC];
 fanController fans(&Serial8);
 States state;
 bool systemCheckOK = false;
+bool test_bool[10] = {0,0,0,0,0,0,0,0,0,1};
 
 //there are 3 segments of 8 IC's
 std::vector<std::vector<float>> cellVoltage(TOTAL_IC, std::vector<float>(16, 0));
@@ -35,7 +36,8 @@ void setup() {
   Serial.begin(115200);
   // fans.begin();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
-  state = FIRST;
+  adBms6830_write_read_config(TOTAL_IC, &IC[1]);
+  state = NORMAL;
   
 }
 std::vector<byte> pong;
@@ -56,6 +58,12 @@ void loop() {
     /* code */
     break;
   case NORMAL:
+    delay(1000);
+    adBmsWakeupIc(1);
+    run_command(3);
+    run_command(4);
+    adbms6830_write_gpio(TOTAL_IC, &IC[0], test_bool);
+    adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
     /* code */
     break;
   case CHARGE:
@@ -68,10 +76,7 @@ void loop() {
   //should never be here
     break;
   }
-  delay(1000);
-  adBmsWakeupIc(1);
-  run_command(3);
-  run_command(4);
+  
 }
 
 void wakeBms() {

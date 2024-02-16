@@ -243,7 +243,7 @@ void adBms6830_write_read_config(uint8_t tIC, cell_asic *ic)
   printReadConfig(tIC, &ic[0], Config, ALL_GRP);
 }
 
-void adbms6830_write_gpio(uint8_t tIC, cell_asic *ic, bool *pinConfig)
+void adbms6830_write_gpio(uint8_t tIC, cell_asic *ic, bool pinConfig[10])
 {
   int temp = 0;
   for(int i = 0; i < 10; i++)
@@ -414,7 +414,7 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   {
     /* Init config A */
     ic[cic].tx_cfga.refon = PWR_UP;
-    ic[cic].tx_cfga.gpo = 0X000; /* All GPIO pull down off */
+    ic[cic].tx_cfga.gpo = 0X001; /* All GPIO pull down off */
   }
   adBmsWakeupIc(tIC);
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
