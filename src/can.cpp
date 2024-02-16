@@ -51,13 +51,13 @@ class CANLine {
       // canData.setBaudRate(config);
     }
 
-    void send(unsigned int id, byte *things, byte size = 8) {
+    void send(unsigned int id, byte *message, byte size = 8) {
       msgSend.id = id;
       msgSend.len = size;
       for (int i = 0; i < size; i++) {
-        Serial.print(things[i]);
+        Serial.print(message[i]);
         Serial.print(" ");
-        msgSend.buf[i] = things[i];
+        msgSend.buf[i] = message[i];
       }
       Serial.println();
       can.write(msgSend);
@@ -65,11 +65,11 @@ class CANLine {
       Serial.println(id, HEX);
     }
 
-    void send(unsigned int id, short *things, byte size = 4) {
+    void send(unsigned int id, short *message, byte size = 4) {
       byte msg[2*size];
       for (int i = 0; i < size; i++) {
-        msg[2*i] = (byte)(things[i] >> 8);
-        msg[2*i+1] = (byte)(things[i]);
+        msg[2*i] = (byte)(message[i] >> 8);
+        msg[2*i+1] = (byte)(message[i]);
       }
       send(id, msg, 2*size);
     }

@@ -36,15 +36,22 @@ void setup() {
   // fans.begin();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
   state = FIRST;
+  
 }
-
+std::vector<byte> pong;
 cell_asic test;
 void loop() {
   switch (state)
   {
   case FIRST:
+  {
     // systemCheck(state, systemCheckOK);
+    short message[8] = {60000,4,0,0,0,0,0,0};
+    can.send(97, message);
+    can.recieve_one();
+    std::vector<byte> pong = can.recieve(97);
     break;
+  }
   case PRECHARGE:
     /* code */
     break;
