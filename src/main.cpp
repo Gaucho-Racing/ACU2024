@@ -1,13 +1,11 @@
 
-#include <Arduino.h>
 #include "ADBMS6822_Driver.h"
 #include "ADBMS.h"
-#include "adbms_main.h"
+#include "ACU.h"
 #include "adBms_Application.h"
 #include "serialPrintResult.h"
 #include "FanController.h"
 #include "ACU_data.h"
-#include <vector>
 #include "can.cpp"
 
 // put function declarations here:
@@ -37,7 +35,7 @@ void setup() {
   // fans.begin();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
   adBms6830_write_read_config(TOTAL_IC, &IC[1]);
-  state = NORMAL;
+  state = FIRST;
   
 }
 std::vector<byte> pong;
