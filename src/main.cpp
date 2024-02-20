@@ -9,6 +9,7 @@
 
 // put function declarations here:
 void wakeBms();
+void printPWM(uint8_t tIC, cell_asic *IC);
 
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
@@ -79,6 +80,8 @@ void loop() {
     Serial.println("Write data");
     adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm1, Pwm, AA);
     adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm2, Pwm, BB);
+    printPWM(TOTAL_IC, &IC[0]);
+    
 
     break;
   default:
@@ -98,4 +101,12 @@ void wakeBms() {
   // Wait 10us for the chip to wake up
   delayMicroseconds(10);
 }
-
+//will work for TotalIC = 1 and only to read PWM A
+void printPWM(uint8_t tIC, cell_asic *IC) {
+  
+  Serial.println("PWM A :");
+  for(int i = 0; i < RX_DATA; i++){
+    Serial.printf("%u  ", IC[0].pwma.tx_data[i]);
+  }
+  Serial.println();
+}
