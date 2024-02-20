@@ -67,6 +67,8 @@ void loop() {
     break;
 
   case CELLBAL:
+    //test discharge first
+    SetPwmDutyCycle(TOTAL_IC, &IC[0], PWM_46_2_PCT);
     break;
   default:
     Serial.println("Uh oh u dummy u didn't set what to debug");
