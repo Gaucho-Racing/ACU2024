@@ -224,6 +224,7 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 //    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
   }
   adBmsWakeupIc(tIC);
+  Serial.println("Write data");
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
   adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }

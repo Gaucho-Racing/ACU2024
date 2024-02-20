@@ -592,7 +592,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
   uint8_t *write_buffer = (uint8_t *)calloc(write_size, sizeof(uint8_t));
   if(write_buffer == NULL)
   {
-    printf(" Failed to allocate write_buffer array memory \n");
+    Serial.printf(" Failed to allocate write_buffer array memory \n");
     exit(0);
   }
   else
