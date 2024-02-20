@@ -23,6 +23,7 @@ and its licensor.
 #include "adBms6830ParseCreate.h"
 #include "serialPrintResult.h"
 #include "ADBMS.h"
+#include "ACU_data.h"
 
 /**
 *******************************************************************************
@@ -31,7 +32,7 @@ and its licensor.
 *******************************************************************************
 */
 
-#define TOTAL_IC 1
+
 extern cell_asic IC[TOTAL_IC];
 
 /* ADC Command Configurations */

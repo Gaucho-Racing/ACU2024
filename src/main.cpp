@@ -1,7 +1,6 @@
 
 #include "ADBMS6822_Driver.h"
 #include "ADBMS.h"
-#include "ACU.h"
 #include "adBms_Application.h"
 #include "serialPrintResult.h"
 #include "FanController.h"
@@ -14,7 +13,7 @@ void wakeBms();
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY};
+enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL};
 test_case debug = VOLTAGE;
 
 CANLine can;
@@ -30,6 +29,7 @@ void setup() {
   Serial.begin(115200);
   // fans.begin();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
+  adBms6830_init_config(TOTAL_IC, &IC[1]);
   
 }
 
@@ -66,6 +66,8 @@ void loop() {
     Serial.println("Teensy is probably not the issue");
     break;
 
+  case CELLBAL:
+    break;
   default:
     Serial.println("Uh oh u dummy u didn't set what to debug");
     delay(1000);
