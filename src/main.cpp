@@ -11,6 +11,25 @@
 void wakeBms();
 void printPWM(uint8_t tIC, cell_asic *IC);
 
+
+
+// ACU variables
+float cellVoltage[128];
+float cellTemp[128][2];
+float balTemp[128];
+float maxCellTemp, maxBalTemp;
+
+float accumVoltage, accumCurrent, tsVoltage;
+float acuTemp[3]; // DC-DC converter, something, something
+
+uint16_t fanRpm[4];
+float fanVoltage[4];
+float fanCurrent[4];
+
+bool tsActive = false;
+uint8_t 
+
+
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
