@@ -5,22 +5,20 @@
 #include "serialPrintResult.h"
 #include "FanController.h"
 #include "ACU_data.h"
+#include "ACU.h"
 #include "can.cpp"
+$include "main.cpp"
+using namespace std;
 
 // put function declarations here:
 void wakeBms();
 void printPWM(uint8_t tIC, cell_asic *IC);
-uint8_t systemChecksOK();
-uint8_t timeout();
 
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
-enum states {STANDBY, PRECHARGE, CHARGE, NORMAL, SHUTDOWN};
-
 test_case debug = CELLBAL;
-states mockState = FIRST;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -37,6 +35,8 @@ uint8_t Wrpwm2[2] = { 0x00, 0x21 };
 uint8_t Wrcfgb[2] = { 0x00, 0x24 };
 uint8_t Wrcfga[2] = { 0x00, 0x01 };
 
+States mockState = FIRST; // testing purposes
+
 void setup() {
   Serial.begin(115200);
   fans.begin();
@@ -45,16 +45,6 @@ void setup() {
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
-}
-
-uint8_t systemChecksOK(){
-  // perform system checks
-  return 1;
-}
-
-uint8_t timeout(){
-  // perform timeout checks
-  return 1;
 }
 
 void loop() {
@@ -130,60 +120,12 @@ void loop() {
     default:
       mockState = SHUTDOWN;
       Serial.println("Uh oh u dummy, u've entered a non-existent state");
-    break;
+      break;
   }
 
   delay(1000);
   
 }
-
-/// @brief shutDown, errors --> VDM
-void shutdownState(){
-  // Open AIRS and Precharge if already not open
-  // error messages --> VDM
-}
-
-/// @brief timeout checks, system checks, batt data --> VDM @ 100Hz
-void normalState(){
-  // System Checks
-  // if (!SYSTEMCHECKOK) mockState = SHUTDOWN --> return;
-  // CAN timeout checks
-  // Send battery data to VDM
-}
-
-/// @brief req charge, system checks
-void chargeState(){
-  // sendMsg if time 0.5 s reached
-  // do System Check
-  // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
-  // else --> same state
-}
-
-/// @brief error --> VDM if timeout --> (NORMAL/SHUTDOWN)
-void preChargeState(){
-  // send message to VDM to indicate Precharge
-  // close AIR+, wait 1 second, check voltage
-  // 10 x until threshold reached
-
-  // systemChecks
-  // if (!SYSTEMCHECKOK) mockState = SHUTDOWN --> return;
-  // if (timeout) --> msg --> VDM, mockState = SHUTDOWN --> return;
-  // VDM response 1 --> state = NORMAL
-  // VDM response 2 --> state = SHUTDOWN
-  // else --> ERROR 
-}
-
-/// @brief WAKE UP ISOspi Chip/sensors & System Checks
-void standByState(){
-      // WAKE UP: ISOSpi Chip & sensors
-
-      // SYSTEM CHECKS
-      // if (!SYSTEMCHECKOK) mockState = SHUTDOWN
-      // else if (!CHARGERCAN) mockState = PRECHARGE
-      // else if (CHARGERCAN) mockState = CHARGE
-      // else ERROR
-}
-
 void wakeBms() {
   // Pull CS low for more than 240nS
   digitalWrite(10, LOW);

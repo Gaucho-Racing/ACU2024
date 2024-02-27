@@ -5,7 +5,7 @@
 #include "adBms6830GenericType.h"
 
 enum States {
-    FIRST,
+    STANDBY,
     PRECHARGE,
     NORMAL,
     CHARGE,
@@ -18,4 +18,9 @@ struct Battery
     CANLine can;
 };
 
-bool systemCheck(Battery &battery, States &state);
+public bool systemCheck(Battery &battery, States &state);
+public void shutdownState();
+public void normalState();
+public void chargeState();
+public void preChargeState();
+public void standByState();
