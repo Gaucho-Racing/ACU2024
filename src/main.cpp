@@ -16,25 +16,29 @@ void printPWM(uint8_t tIC, cell_asic *IC);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
 test_case debug = CELLBAL;
-
-uint8_t Wrpwm1[2]        = { 0x00, 0x20 };
-uint8_t Wrpwm2[2]        = { 0x00, 0x21 };
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
+#define TOTAL_IC 2
 cell_asic IC[TOTAL_IC];
 
 fanController fans(&Serial8);
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,1};
 
+uint8_t Wrpwm1[2] = { 0x00, 0x20 };
+uint8_t Wrpwm2[2] = { 0x00, 0x21 };
+uint8_t Wrcfgb[2] = { 0x00, 0x24 };
+uint8_t Wrcfga[2] = { 0x00, 0x01 };
+
 void setup() {
   Serial.begin(115200);
-  // fans.begin();
+  fans.begin();
   Serial.println("Init config");
   adBms6830_init_config(TOTAL_IC, &IC[0]);
-  // adBms6830_init_config(TOTAL_IC, &IC[1]);
   Serial.println("Setup done");
+  //isoSPI1.begin();
+  //isoSPI1.setIntFunc(intrFunc);
 }
 
 void loop() {

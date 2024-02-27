@@ -32,7 +32,6 @@ and its licensor.
 *******************************************************************************
 */
 
-
 extern cell_asic IC[TOTAL_IC];
 
 /* ADC Command Configurations */
@@ -42,14 +41,14 @@ CONT    CONTINUOUS_MEASUREMENT          = SINGLE;
 OW_C_S  CELL_OPEN_WIRE_DETECTION        = OW_OFF_ALL_CH;
 OW_AUX  AUX_OPEN_WIRE_DETECTION         = AUX_OW_OFF;
 PUP     OPEN_WIRE_CURRENT_SOURCE        = PUP_DOWN;
-DCP     DISCHARGE_PERMITTED             = DCP_OFF;
+DCP     DISCHARGE_PERMITTED             = DCP_ON;
 RSTF    RESET_FILTER                    = RSTF_OFF;
 ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
 
 /* Set Under Voltage and Over Voltage Thresholds */
 const float OV_THRESHOLD = 4.2;                 /* Volt */
-const float UV_THRESHOLD = 3.0;                 /* Volt */
-const int OWC_Threshold = 2000;                 /* Cell Open wire threshold(mili volt) */
+const float UV_THRESHOLD = 0.2;                 /* Volt */
+const int OWC_Threshold = 100;                 /* Cell Open wire threshold(mili volt) */
 const int OWA_Threshold = 50000;                /* Aux Open wire threshold(mili volt) */
 const uint32_t LOOP_MEASUREMENT_COUNT = 1;      /* Loop measurment count */
 const uint16_t MEASUREMENT_LOOP_TIME  = 10;     /* milliseconds(mS)*/
@@ -191,6 +190,18 @@ void run_command(int cmd)
     printMenu();
     break;
 
+  case 22: // set balancing to 100%
+    adBms6830CreatePwma(TOTAL_IC, IC);
+    adBms6830CreatePwmb(TOTAL_IC, IC);
+    SetPwmDutyCycle(TOTAL_IC, IC, uint8_t(micros())%16);
+    adBmsWriteData(TOTAL_IC, IC, WRPWM1, Pwm, A);
+    adBmsWriteData(TOTAL_IC, IC, WRPWM2, Pwm, B);
+    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, A);
+    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, B);
+    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, A);
+    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, B);
+    break;
+
   default:
     Serial.printf("Incorrect Option\n\n");
     break;
@@ -217,7 +228,7 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 //    ic[cic].cfga.fc = IIR_FPA256;
 
     /* Init config B */
-//    ic[cic].cfgb.dtmen = DTMEN_ON;
+    ic[cic].tx_cfgb.dtmen = DTMEN_ON;
     ic[cic].tx_cfgb.vov = SetOverVoltageThreshold(OV_THRESHOLD);
     ic[cic].tx_cfgb.vuv = SetUnderVoltageThreshold(UV_THRESHOLD);
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC1, DCC_BIT_SET);
@@ -237,11 +248,10 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC15, DCC_BIT_SET);
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
 //    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
+=======
+    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
+    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
   }
-  adBmsWakeupIc(tIC);
-  Serial.println("Write data");
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
-  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }
 
 /**
