@@ -263,6 +263,7 @@ void adBmsWakeupIc(uint8_t total_ic)
 {
 	for (uint8_t ic = 0; ic < total_ic; ic++)
 	{
+		Serial.print("Waking up ic ");Serial.println(ic);
 		adBmsCsLow();
 		Delay_ms(WAKEUP_DELAY);
 		adBmsCsHigh();

@@ -23,7 +23,8 @@ Using the BMS Driver Application can:
 
 */
 #include "common.h"
-#include "adbms_main.h"
+#include "adBms6830Data.h"
+#include "adBms6830GenericType.h"
 /**************************************** BMS Driver APIs definitions ********************************************/
 /* Precomputed CRC15 Table */
 const uint16_t Crc15Table[256] = 
@@ -591,7 +592,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
   uint8_t *write_buffer = (uint8_t *)calloc(write_size, sizeof(uint8_t));
   if(write_buffer == NULL)
   {
-    printf(" Failed to allocate write_buffer array memory \n");
+    Serial.printf(" Failed to allocate write_buffer array memory \n");
     exit(0);
   }
   else
@@ -601,7 +602,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Config:	
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreateConfiga(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -611,7 +612,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }
         }
         break;
-      case B:
+      case BB:
         adBms6830CreateConfigb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -638,7 +639,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Pwm:
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreatePwma(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -648,7 +649,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }	
         }
         break;   
-      case B:
+      case BB:
         adBms6830CreatePwmb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {

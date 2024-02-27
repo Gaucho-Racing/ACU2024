@@ -22,7 +22,9 @@ and its licensor.
 #ifndef __RESULT_H
 #define __RESULT_H
 
-#include "adbms_main.h"
+// #include "common.h"
+#include "adBms6830Data.h"
+
 
 void printWriteConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp);
 void printReadConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp);
