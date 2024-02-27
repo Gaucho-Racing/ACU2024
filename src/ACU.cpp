@@ -1,18 +1,28 @@
 #include "ACU.h"
 
 /// @brief performs system check
-bool systemCheck(Battery &battery, States &state)
+/// @param[in] battery Battery struct
+/// @param[in] state Reference to states
+/// @return The false if fails, true otherwise
+public bool systemCheck(Battery &battery, States &state)
 {
     return true;   
 }
 /// @brief shutDown, errors --> VDM
-void shutdownState(){
+/// @param[in] TBD TBD
+/// @param[in] TBD TBD
+/// @return TBD
+public void shutdownState(){
   // Open AIRS and Precharge if already not open
   // error messages --> VDM
+  "stub"
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
-void normalState(){
+/// @param[in] TBD TBD
+/// @param[in] TBD TBD
+/// @return TBD
+public void normalState(){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -20,7 +30,10 @@ void normalState(){
 }
 
 /// @brief req charge, system checks
-void chargeState(){
+/// @param[in] TBD TBD
+/// @param[in] TBD TBD
+/// @return TBD
+public void chargeState(){
   // sendMsg if time 0.5 s reached
   // do System Check
   // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
@@ -28,7 +41,10 @@ void chargeState(){
 }
 
 /// @brief error --> VDM if timeout --> (NORMAL/SHUTDOWN)
-void preChargeState(){
+/// @param[in] TBD TBD
+/// @param[in] TBD TBD
+/// @return TBD
+public void preChargeState(){
   // send message to VDM to indicate Precharge
   // close AIR+, wait 1 second, check voltage
   // 10 x until threshold reached
@@ -42,7 +58,10 @@ void preChargeState(){
 }
 
 /// @brief WAKE UP ISOspi Chip/sensors & System Checks
-void standByState(){
+/// @param[in] TBD TBD
+/// @param[in] TBD TBD
+/// @return TBD
+public void standByState(){
       // WAKE UP: ISOSpi Chip & sensors
 
       // SYSTEM CHECKS
