@@ -1,5 +1,3 @@
-
-#include "ADBMS6822_Driver.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
 #include "serialPrintResult.h"
@@ -30,9 +28,6 @@ bool tsActive = false;
 uint8_t errors = 0b00000000;
 
 
-// Object declarations 
-//isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
-//isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
 test_case debug = VOLTAGE;
 CANLine can;

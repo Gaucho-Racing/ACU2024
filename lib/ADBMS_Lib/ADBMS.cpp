@@ -31,8 +31,8 @@ and its licensor.
 //I2C_HandleTypeDef *hi2c         = &hi2c1;       /* MUC I2C Handler      */
 //TIM_HandleTypeDef *htim         = &htim2;       /* Mcu TIM handler */
 
-extern isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
-extern isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
+isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
+isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 
 /**
  *******************************************************************************
@@ -56,6 +56,23 @@ void Delay_ms(uint32_t time)
 
 /**
  *******************************************************************************
+ * Function: adBmsSpiInit
+ * @brief Initialize ispSPI
+ *
+ * @details This function initializes ispSPI interfaces
+ *
+ * @return None
+ *
+ *******************************************************************************
+*/
+void adBmsSpiInit()
+{
+	isoSPI1.begin();
+	isoSPI2.begin();
+}
+
+/**
+ *******************************************************************************
  * Function: adBmsCsLow
  * @brief Select chip select low
  *
@@ -71,8 +88,7 @@ void adBmsCsLow()
 	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
 	//digitalWrite(CS_PIN, LOW);
 	//delayNanoseconds(500);
-	isoSPI1.begin();
-	isoSPI1.beginTransaction(SPI_MODE3, 1000000);
+	isoSPI1.beginTransaction(SPI_MODE3, 2000000);
 }
 
 /**
@@ -175,15 +191,15 @@ uint16_t size                           /*Option: number of bytes*/
 void spiReadBytes(uint16_t size, uint8_t *rx_data)
 {   
 	//HAL_SPI_Receive(hspi, rx_data, size, SPI_TIME_OUT);
-	//uint8_t tx_data[size];
+	uint8_t tx_data[size];
 	for(uint16_t i=0; i < size; i++)
 	{
-		//tx_data[i] = 0xFF;
-		rx_data[i] = isoSPI1.transfer(255);
+		tx_data[i] = 0xFF;
+		//rx_data[i] = isoSPI1.transfer(255);
 	}
 	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
-	//isoSPI1.transfer(tx_data, size);
-	//memcpy(&rx_data[0], &tx_data[0], size);
+	isoSPI1.transfer(tx_data, size);
+	memcpy(&rx_data[0], &tx_data[0], size);
 }
 
 /**

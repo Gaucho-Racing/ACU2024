@@ -216,6 +216,7 @@ void run_command(int cmd)
 */
 void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 {
+  adBmsSpiInit();
   for(uint8_t cic = 0; cic < tIC; cic++)
   {
     /* Init config A */
@@ -314,7 +315,6 @@ void adBms6830_read_config(uint8_t tIC, cell_asic *ic)
 void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC)
 {
   adBmsWakeupIc(tIC);
-  adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
   Serial.printf("Cell conversion completed\n");
