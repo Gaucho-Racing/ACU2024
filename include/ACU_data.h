@@ -1,9 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-//remove before final build
 #define TOTAL_IC 2
-//#define TOTAL_IC 24
 
 //Charger Values
 #define CHARGER_VOLTAGE 540 //V

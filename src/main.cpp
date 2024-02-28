@@ -39,7 +39,7 @@ CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
-cell_asic IC[TOTAL_IC];
+cell_asic IC[2];
 
 fanController fans(&Serial8);
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,1};
@@ -113,14 +113,7 @@ void loop() {
   
 }
 
-void wakeBms() {
-  // Pull CS low for more than 240nS
-  digitalWrite(10, LOW);
-  delayMicroseconds(1);
-  digitalWrite(10, HIGH);
-  // Wait 10us for the chip to wake up
-  delayMicroseconds(10);
-}
+
 //will work for TotalIC = 1 and only to read PWM A
 void printPWM(uint8_t tIC, cell_asic *IC) {
   

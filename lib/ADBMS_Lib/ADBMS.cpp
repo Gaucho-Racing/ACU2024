@@ -19,7 +19,6 @@ and its licensor.
 */
 //#include "common.h"
 #include "ADBMS.h"
-#include "ADBMS6822_Driver.h"
 
 #define WAKEUP_DELAY 4                          /* BMS ic wakeup delay  */
 
@@ -180,7 +179,7 @@ void spiReadBytes(uint16_t size, uint8_t *rx_data)
 	for(uint16_t i=0; i < size; i++)
 	{
 		//tx_data[i] = 0xFF;
-		rx_data[i] = isoSPI1.transfer(0xFF);
+		rx_data[i] = isoSPI1.transfer(255);
 	}
 	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
 	//isoSPI1.transfer(tx_data, size);
