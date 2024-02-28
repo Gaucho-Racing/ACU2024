@@ -27,19 +27,18 @@ float fanVoltage[4];
 float fanCurrent[4];
 
 bool tsActive = false;
-uint8_t 
+uint8_t errors = 0b00000000;
 
 
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
-test_case debug = CELLBAL;
+test_case debug = VOLTAGE;
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
-#define TOTAL_IC 2
 cell_asic IC[TOTAL_IC];
 
 fanController fans(&Serial8);
@@ -68,7 +67,6 @@ void loop() {
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     //for some reason this doesn't work, why not?
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-    // adBms6830_read_cell_voltages(TOTAL_IC, &IC[1]);
     break;
 
   case CAN:  
@@ -104,9 +102,8 @@ void loop() {
     adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm1, Pwm, AA);
     adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm2, Pwm, BB);
     printPWM(TOTAL_IC, &IC[0]);
-    
-
     break;
+
   default:
     Serial.println("Uh oh u dummy u didn't set what to debug");
     break;

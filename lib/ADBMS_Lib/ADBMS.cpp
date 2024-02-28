@@ -176,14 +176,15 @@ uint16_t size                           /*Option: number of bytes*/
 void spiReadBytes(uint16_t size, uint8_t *rx_data)
 {   
 	//HAL_SPI_Receive(hspi, rx_data, size, SPI_TIME_OUT);
-	uint8_t tx_data[size];
+	//uint8_t tx_data[size];
 	for(uint16_t i=0; i < size; i++)
 	{
-		tx_data[i] = 0xFF;
+		//tx_data[i] = 0xFF;
+		rx_data[i] = isoSPI1.transfer(0xFF);
 	}
 	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
-	isoSPI1.transfer(tx_data, size);
-	memcpy(&rx_data[0], &tx_data[0], size);
+	//isoSPI1.transfer(tx_data, size);
+	//memcpy(&rx_data[0], &tx_data[0], size);
 }
 
 /**
@@ -242,8 +243,8 @@ uint32_t getTimCount()
 	//count = __HAL_TIM_GetCounter(htim);
 	//__HAL_TIM_SetCounter(htim, 0);
 	//TODO
-	count = startTime - stopTime;
-	return(count);
+	count = micros() - startTime;
+	return count << 6;
 }
 
 /**
@@ -263,7 +264,6 @@ void adBmsWakeupIc(uint8_t total_ic)
 {
 	for (uint8_t ic = 0; ic < total_ic; ic++)
 	{
-		Serial.print("Waking up ic ");Serial.println(ic);
 		adBmsCsLow();
 		Delay_ms(WAKEUP_DELAY);
 		adBmsCsHigh();
