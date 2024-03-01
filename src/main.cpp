@@ -48,6 +48,7 @@ void setup() {
 }
 
 void loop() {
+
   switch (debug)
   {
   case VOLTAGE:
@@ -57,6 +58,9 @@ void loop() {
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
     // adBms6830_read_cell_voltages(TOTAL_IC, &IC[1]);
     break;
+  Serial.println("PLEASE WORK");
+
+}
 
   case CAN:  
       //sends Precharge stuff to VDM, expects a response back of some kind
