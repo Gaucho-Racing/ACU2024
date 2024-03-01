@@ -214,6 +214,8 @@ class CANLine {
 
       return r;
     }  
+
+    int charger_data_age() { return age_of(0x18FF50E5); }
 };
 
 /*
