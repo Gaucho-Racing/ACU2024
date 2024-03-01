@@ -337,7 +337,6 @@ void adBms6830_read_cell_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDCVD, Cell, D);
   adBmsReadData(tIC, &ic[0], RDCVE, Cell, E);
   adBmsReadData(tIC, &ic[0], RDCVF, Cell, F);
-  printVoltages(tIC, &ic[0], Cell);
 }
 
 /**

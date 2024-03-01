@@ -18,9 +18,12 @@ struct Battery
     CANLine can;
 };
 
-public bool systemCheck(Battery &battery, States &state);
-public void shutdownState();
-public void normalState();
-public void chargeState();
-public void preChargeState();
-public void standByState();
+void updateVoltage(uint16_t cellVoltage[], cell_asic IC[]);
+void sendCan();
+
+bool systemCheck(Battery &battery, States &state);
+void shutdownState();
+void normalState();
+void chargeState();
+void preChargeState();
+void standByState();
