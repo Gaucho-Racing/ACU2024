@@ -3,7 +3,10 @@
 #include "serialPrintResult.h"
 #include "FanController.h"
 #include "ACU_data.h"
+#include "ACU.h"
 #include "can.cpp"
+$include "main.cpp"
+using namespace std;
 
 // put function declarations here:
 void wakeBms();
@@ -30,6 +33,7 @@ uint8_t errors = 0b00000000;
 
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
 test_case debug = VOLTAGE;
+
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
@@ -44,6 +48,8 @@ uint8_t Wrpwm2[2] = { 0x00, 0x21 };
 uint8_t Wrcfgb[2] = { 0x00, 0x24 };
 uint8_t Wrcfga[2] = { 0x00, 0x01 };
 
+States mockState = FIRST; // testing purposes
+
 void setup() {
   Serial.begin(115200);
   fans.begin();
@@ -55,6 +61,7 @@ void setup() {
 }
 
 void loop() {
+
   switch (debug)
   {
   case VOLTAGE:
@@ -63,6 +70,9 @@ void loop() {
     //for some reason this doesn't work, why not?
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
     break;
+  Serial.println("PLEASE WORK");
+
+}
 
   case CAN:  
       //sends Precharge stuff to VDM, expects a response back of some kind
@@ -103,11 +113,34 @@ void loop() {
     Serial.println("Uh oh u dummy u didn't set what to debug");
     break;
   }
+  
+  // ACU STATES
+  switch (mockState)
+  {
+    case STANDBY:
+      standByState();
+      break;
+    case PRECHARGE:
+      preChargeState();
+      break;
+    case CHARGE:
+      chargeState();
+      break;
+    case NORMAL:
+      normalState();
+      break;
+    case SHUTDOWN:
+      shutdownState();
+      break;
+    default:
+      mockState = SHUTDOWN;
+      Serial.println("Uh oh u dummy, u've entered a non-existent state");
+      break;
+  }
 
-  delay(1000);
+  delay(500);
   
 }
-
 
 //will work for TotalIC = 1 and only to read PWM A
 void printPWM(uint8_t tIC, cell_asic *IC) {
