@@ -1,5 +1,3 @@
-
-#include "ADBMS6822_Driver.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
 #include "serialPrintResult.h"
@@ -14,18 +12,33 @@ using namespace std;
 void wakeBms();
 void printPWM(uint8_t tIC, cell_asic *IC);
 
-// Object declarations 
-//isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
-//isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
+
+
+// ACU variables
+float cellVoltage[128];
+float cellTemp[128][2];
+float balTemp[128];
+float maxCellTemp, maxBalTemp;
+
+float accumVoltage, accumCurrent, tsVoltage;
+float acuTemp[3]; // DC-DC converter, something, something
+
+uint16_t fanRpm[4];
+float fanVoltage[4];
+float fanCurrent[4];
+
+bool tsActive = false;
+uint8_t errors = 0b00000000;
+
+
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
-test_case debug = CELLBAL;
+test_case debug = VOLTAGE;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
-#define TOTAL_IC 2
-cell_asic IC[TOTAL_IC];
+cell_asic IC[2];
 
 fanController fans(&Serial8);
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,1};
@@ -56,7 +69,6 @@ void loop() {
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     //for some reason this doesn't work, why not?
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-    // adBms6830_read_cell_voltages(TOTAL_IC, &IC[1]);
     break;
   Serial.println("PLEASE WORK");
 
@@ -95,9 +107,8 @@ void loop() {
     adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm1, Pwm, AA);
     adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm2, Pwm, BB);
     printPWM(TOTAL_IC, &IC[0]);
-    
-
     break;
+
   default:
     Serial.println("Uh oh u dummy u didn't set what to debug");
     break;
@@ -127,17 +138,10 @@ void loop() {
       break;
   }
 
-  delay(1000);
+  delay(500);
   
 }
-void wakeBms() {
-  // Pull CS low for more than 240nS
-  digitalWrite(10, LOW);
-  delayMicroseconds(1);
-  digitalWrite(10, HIGH);
-  // Wait 10us for the chip to wake up
-  delayMicroseconds(10);
-}
+
 //will work for TotalIC = 1 and only to read PWM A
 void printPWM(uint8_t tIC, cell_asic *IC) {
   

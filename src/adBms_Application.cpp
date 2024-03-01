@@ -195,13 +195,13 @@ void run_command(int cmd)
   case 22: // set balancing to 100%
     adBms6830CreatePwma(TOTAL_IC, IC);
     adBms6830CreatePwmb(TOTAL_IC, IC);
-    SetPwmDutyCycle(TOTAL_IC, IC, uint8_t(micros())%16);
-    adBmsWriteData(TOTAL_IC, IC, WRPWM1, Pwm, A);
-    adBmsWriteData(TOTAL_IC, IC, WRPWM2, Pwm, B);
-    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, A);
-    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, B);
-    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, A);
-    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, B);
+    SetPwmDutyCycle(TOTAL_IC, IC, PWM_DUTY(uint8_t(micros())%16));
+    adBmsWriteData(TOTAL_IC, IC, WRPWM1, Pwm, AA);
+    adBmsWriteData(TOTAL_IC, IC, WRPWM2, Pwm, BB);
+    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, AA);
+    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, BB);
+    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, AA);
+    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, BB);
     break;
 
   default:
@@ -218,6 +218,7 @@ void run_command(int cmd)
 */
 void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 {
+  adBmsSpiInit();
   for(uint8_t cic = 0; cic < tIC; cic++)
   {
     /* Init config A */
@@ -249,11 +250,11 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC14, DCC_BIT_SET);
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC15, DCC_BIT_SET);
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
-//    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
-=======
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
-    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
+    //SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR); // seems that this thing makes daisy chain not work???
   }
+  adBmsWakeupIc(tIC);
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
+  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }
 
 /**

@@ -332,8 +332,8 @@ uint8_t *data
 */
 void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, GRP group)
 {
-  uint16_t rBuff_size;
-  uint8_t regData_size;
+  uint16_t rBuff_size = 0;
+  uint8_t regData_size = 0;
   if(group == ALL_GRP)
   {
     if(type == Rdcvall){rBuff_size = RDCVALL_SIZE; regData_size = RDCVALL_SIZE;}
@@ -713,8 +713,13 @@ uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
   startTimer();
   adBmsCsLow();
   spiWriteBytes(4, &cmd[0]);
-  do{
+  uint32_t startTime = millis();
+  do{ // for some reason when TOTAL_IC > 1 this gets stuck by always receiving 0s instead of 0xFF
     spiReadBytes(1, &read_data);
+    if (millis() - startTime > 100){
+      Serial.println("adBmsPollAdc timeout!");
+      break;
+    }
   }while(!(read_data == SDO_Line));
   adBmsCsHigh();
   conv_count = getTimCount();
