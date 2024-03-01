@@ -1,46 +1,70 @@
 
-#include <Arduino.h>
-#include "ADBMS6822_Driver.h"
 #include "ADBMS.h"
-#include "adbms_main.h"
-#include "adBms_Application.h"
-#include "serialPrintResult.h"
 #include "FanController.h"
+#include "ACU.h"
+
 
 // put function declarations here:
-void intrFunc();
 void wakeBms();
 
-// Object declarations 
-//isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
-//isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-#define TOTAL_IC 2
-cell_asic IC[TOTAL_IC];
+Battery battery;
+States state;
 fanController fans(&Serial8);
 
+float cellVoltage[128];
+float cellTemp[128][2];
+float balTemp[128];
+float maxCellTemp, maxBalTemp;
+
+float accumVoltage, accumCurrent, tsVoltage;
+float acuTemp[3]; // DC-DC converter, something, something
+
+uint16_t fanRpm[4];
+float fanVoltage[4];
+float fanCurrent[4];
+
+bool tsActive = false;
+uint8_t errors = 0b00000000;
+
+
+
 void setup() {
-  // put your setup code here, to run once:
-  //set_arm_clock(24000000);
   Serial.begin(115200);
   fans.begin();
+  Serial.println("Init config");
+  Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
-  adBms6830_init_config(TOTAL_IC, &IC[0]);
 }
 
-cell_asic test;
 void loop() {
-  Serial.println("PLEASE WORK");
-  run_command(3);
-  run_command(4);
-  delay(100);
-}
+  // ACU STATES
+  switch (state)
+  {
+    case STANDBY:
+      standByState();
+      break;
+    case PRECHARGE:
+      preChargeState();
+      break;
+    case CHARGE:
+      chargeState();
+      break;
+    case NORMAL:
+      normalState();
+      break;
+    case SHUTDOWN:
+      shutdownState();
+      break;
+    default:
+      state = SHUTDOWN;
+      Serial.println("Uh oh u dummy, u've entered a non-existent state");
+      break;
+  }
 
-// put function definitions here:
-void intrFunc() {
-  Serial.println("Interrupt!");
+  delay(500);
+  
 }
-
 void wakeBms() {
   // Pull CS low for more than 240nS
   digitalWrite(10, LOW);

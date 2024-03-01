@@ -23,7 +23,8 @@ Using the BMS Driver Application can:
 
 */
 #include "common.h"
-#include "adbms_main.h"
+#include "adBms6830Data.h"
+#include "adBms6830GenericType.h"
 /**************************************** BMS Driver APIs definitions ********************************************/
 /* Precomputed CRC15 Table */
 const uint16_t Crc15Table[256] = 
@@ -331,8 +332,8 @@ uint8_t *data
 */
 void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, GRP group)
 {
-  uint16_t rBuff_size;
-  uint8_t regData_size;
+  uint16_t rBuff_size = 0;
+  uint8_t regData_size = 0;
   if(group == ALL_GRP)
   {
     if(type == Rdcvall){rBuff_size = RDCVALL_SIZE; regData_size = RDCVALL_SIZE;}
@@ -591,7 +592,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
   uint8_t *write_buffer = (uint8_t *)calloc(write_size, sizeof(uint8_t));
   if(write_buffer == NULL)
   {
-    printf(" Failed to allocate write_buffer array memory \n");
+    Serial.printf(" Failed to allocate write_buffer array memory \n");
     exit(0);
   }
   else
@@ -601,7 +602,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Config:	
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreateConfiga(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -611,7 +612,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }
         }
         break;
-      case B:
+      case BB:
         adBms6830CreateConfigb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -638,7 +639,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Pwm:
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreatePwma(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -648,7 +649,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }	
         }
         break;   
-      case B:
+      case BB:
         adBms6830CreatePwmb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -712,8 +713,13 @@ uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
   startTimer();
   adBmsCsLow();
   spiWriteBytes(4, &cmd[0]);
-  do{
+  uint32_t startTime = millis();
+  do{ // for some reason when TOTAL_IC > 1 this gets stuck by always receiving 0s instead of 0xFF
     spiReadBytes(1, &read_data);
+    if (millis() - startTime > 100){
+      Serial.println("adBmsPollAdc timeout!");
+      break;
+    }
   }while(!(read_data == SDO_Line));
   adBmsCsHigh();
   conv_count = getTimCount();
