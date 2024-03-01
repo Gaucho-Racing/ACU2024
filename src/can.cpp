@@ -24,14 +24,26 @@ struct chargerData {
   bool communicationFailure;  
 };
 
+struct batteryData {
+  short maxChargeVolts;
+  short maxChargeAmps;
+  bool charging;
+};
+
 class CANLine {
   private:
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
     CAN_message_t msgRecieve, msgSend;
-    static const int JuanMbps = 1000000;
-    static const int AteMbps = 8000000;
+    static const int JuanMbps = 250000;
+    //static const int AteMbps = 8000000;
     std::unordered_map<int, std::vector<byte>> last_messages;
     std::unordered_map<int, int> last_messages_timestamps;
+    batteryData current_settings = {0, 0, false};
+
+    byte high(short x) { return (byte)(x>>8);}
+    byte low(short x) { return (byte)(x);}
+
+    short toShort(byte x, byte y = 0) { return (short)(x<<8) + (short)(y); }
 
   public:
     //FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
@@ -55,27 +67,27 @@ class CANLine {
       msgSend.id = id;
       msgSend.len = size;
       for (int i = 0; i < size; i++) {
-        Serial.print(message[i]);
-        Serial.print(" ");
+        //Serial.print(message[i]);
+        //Serial.print(" ");
         msgSend.buf[i] = message[i];
       }
-      Serial.println();
+      //Serial.println();
       can.write(msgSend);
-      Serial.print("Frame sent to id 0x");
-      Serial.println(id, HEX);
+      //Serial.print("Frame sent to id 0x");
+      //Serial.println(id, HEX);
     }
 
     void send(unsigned int id, short *message, byte size = 4) {
       byte msg[2*size];
       for (int i = 0; i < size; i++) {
-        msg[2*i] = (byte)(message[i] >> 8);
-        msg[2*i+1] = (byte)(message[i]);
+        msg[2*i] = high(message[i]);
+        msg[2*i+1] = low(message[i]);
       }
       send(id, msg, 2*size);
     }
 
-    void recieve_one() {
-        can.readFIFO(msgRecieve);
+    int recieve_one() {
+        if (can.readFIFO(msgRecieve) == 0) return 0;
         //Serial.print("0x");
         //Serial.print(msgRecieve.id, HEX);
         //Serial.print(" ");
@@ -85,9 +97,17 @@ class CANLine {
           last_messages[msgRecieve.id].push_back(msgRecieve.buf[i]);
         }
         last_messages_timestamps[msgRecieve.id] = millis();
+        return 1;
+    }
+
+    int recieve_many() {
+      if (recieve_one() == 0) return 0;
+      while (recieve_one()) {};
+      return 1;
     }
 
     std::vector<byte> recieve(unsigned int id) {
+      recieve_many();
       return last_messages[id];
     }
 
@@ -113,25 +133,45 @@ class CANLine {
     }
     */
 
+    
+
+    // start/stop charging
+    // change limits command
+
     std::vector<short> recieveShort(unsigned int id) {
-      std::vector<byte> msgbyte = recieve(id);
-      //Serial.print("a");
-      std::vector<short> result = std::vector<short>(0);
-      //Serial.print("s");
-      msgbyte.push_back(0);
-      //Serial.print("d");
-      for (unsigned int i = 0; i < msgbyte.size()-1; i+=2) {
-        result.push_back((((short)msgbyte[i]) << 8) + (short)msgbyte[i+1]);
+      std::vector<byte> bytes = recieve(id);
+      bytes.push_back(0);
+
+      std::vector<short> result = std::vector<short>((bytes.size())/2,0);
+
+      for (int i = 0; i < result.size(); i++) {
+        result[i] = toShort(bytes[2*i], bytes[2*i+1]);
       }
-      //Serial.print("f");
       return result;
     }
 
+    short setMaxTerminalVoltage(short v) {
+      current_settings.maxChargeVolts = v;
+      sendToCharger(current_settings.maxChargeVolts, current_settings.maxChargeAmps, current_settings.charging);
+      return current_settings.maxChargeVolts;
+    }
+
+    short setMaxChargingCurrent(short a) {
+      current_settings.maxChargeAmps = a;
+      sendToCharger(current_settings.maxChargeVolts, current_settings.maxChargeAmps, current_settings.charging);
+      return current_settings.maxChargeAmps;
+    }
+
+    bool toggleCharging() {
+      current_settings.charging = !current_settings.charging;
+      sendToCharger(current_settings.maxChargeVolts, current_settings.maxChargeAmps, current_settings.charging);
+      return current_settings.charging;
+    }
+
+    bool isCharging() { return current_settings.charging; }
+
     void sendToCharger(short maxChargeVolts, short maxChargeAmps, bool enableCharge) {
-      //msgPrimary.id = 0x1806E5F4;
-      //msgPrimary.len = 8;
-      short chargeShort = (short)enableCharge << 8;
-      short msg[4] = {maxChargeVolts, maxChargeAmps, chargeShort, 0};
+      short msg[4] = {maxChargeVolts, maxChargeAmps, (short)enableCharge, 0};
       send(0x1806E5F4, msg);
       /*
       msgPrimary.buf[0] = (byte)(maxChargeVolts >> 8);
