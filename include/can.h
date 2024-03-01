@@ -1,3 +1,6 @@
+#ifndef CAN_H
+#define CAN_H
+
 // #include <Arduino.h>
 #include "FlexCAN_T4.h"
 #include <vector>
@@ -228,3 +231,5 @@ class CANLine {
   tirePressure += 1;
 }
 */
+
+#endif
