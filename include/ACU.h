@@ -19,7 +19,9 @@ struct Battery
 };
 
 void updateVoltage(uint16_t cellVoltage[], cell_asic IC[]);
-void sendCan();
+
+uint8_t condenseVoltage(uint16_t voltage);
+void dumpCANbus(CANLine *can, uint16_t cellVoltage[]);
 
 bool systemCheck(Battery &battery, States &state);
 void shutdownState();

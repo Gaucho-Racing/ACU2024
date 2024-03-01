@@ -9,7 +9,7 @@
 
 
 // ACU variables
-uint16_t cellVoltage[128]; //mV
+uint16_t cellVoltage[128]; //0.1mV
 float cellTemp[128][2]; // C
 float balTemp[128]; // C
 float maxCellTemp, maxBalTemp;
@@ -115,6 +115,7 @@ void loop() {
         Serial.printf("C%u: %dmV ", i+1, cellVoltage[i]/10);
       }
       Serial.println();
+      dumpCANbus(&can, cellVoltage);
       break;
     case PRECHARGE:
       preChargeState();

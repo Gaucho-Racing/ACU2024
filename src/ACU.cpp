@@ -74,7 +74,7 @@ void standByState(){
 }
 
 /// @brief Reads cell voltages and copy data from cell_asic
-/// @param[in] cellVoltage float array to store voltages
+/// @param[in] cellVoltage array to store voltages
 /// @param[in] TBD TBD
 /// @return None
 void updateVoltage(uint16_t cellVoltage[], cell_asic IC[]) {
@@ -84,5 +84,31 @@ void updateVoltage(uint16_t cellVoltage[], cell_asic IC[]) {
     for (uint8_t cell = 0; cell < CELL; cell++) {
       cellVoltage[ic * CELL + cell] = (IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
     }
+  }
+}
+
+
+uint8_t condenseVoltage(uint16_t voltage) {
+  //voltage = constrain(voltage, 20000, 45500);
+  return (voltage / 100 + (voltage % 100 > 49));// - 200; // uncomment these when connecting to cells
+}
+
+/// @brief Sends data to CANbus
+/// @param[in] cellVoltage array to store voltages
+/// @param[in] TBD TBD
+/// @return None
+void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
+  uint8_t message[8];
+  for (uint8_t i = 0; i < 16; i++) {
+    uint16_t id = i + 0xA1;
+    message[0] = condenseVoltage(cellVoltage[i * 8 + 0]);
+    message[1] = condenseVoltage(cellVoltage[i * 8 + 1]);
+    message[2] = condenseVoltage(cellVoltage[i * 8 + 2]);
+    message[3] = condenseVoltage(cellVoltage[i * 8 + 3]);
+    message[4] = condenseVoltage(cellVoltage[i * 8 + 4]);
+    message[5] = condenseVoltage(cellVoltage[i * 8 + 5]);
+    message[6] = condenseVoltage(cellVoltage[i * 8 + 6]);
+    message[7] = condenseVoltage(cellVoltage[i * 8 + 7]);
+    can -> send(id, message, 8);
   }
 }
