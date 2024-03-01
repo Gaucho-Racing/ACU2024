@@ -21,7 +21,8 @@ and its licensor.
 #ifndef __adBmsGenericType_H
 #define __adBmsGenericType_H
 
-#include "adbms_main.h"
+#include "adBms6830ParseCreate.h"
+#include "ADBMS.h"
 
 /* Calculates and returns the CRC15Table */
 uint16_t Pec15_Calc

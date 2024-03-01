@@ -19,5 +19,6 @@ and its licensor.
 #include <stdbool.h>
 #include <Arduino.h>
 #include <SPI.h>
+#include <vector>
 
 #endif

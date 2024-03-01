@@ -610,7 +610,7 @@ typedef enum
 typedef enum  { DCC_BIT_CLR = 0x0, DCC_BIT_SET = 0x1 } DCC_BIT;
 
 /* General Enums */
-typedef enum { ALL_GRP = 0x0, A,B, C, D, E, F ,NONE} GRP;
+typedef enum { ALL_GRP = 0x0, AA,BB, CC, D, E, F ,NNONE} GRP;
 typedef enum { Cell = 0x0, Aux, RAux, Status, Pwm, AvgCell, S_volt, F_volt, Config, Comm, Sid, Clrflag, Rdcvall, Rdacall, Rdsall, Rdcsall, Rdacsall, Rdfcall, Rdasall} TYPE;
 typedef enum { PASS , FAIL } RESULT ;
 typedef enum { OSC_MISMATCH = 0x0, SUPPLY_ERROR, THSD, FUSE_ED, FUSE_MED, TMODCHK} DIAGNOSTIC_TYPE;
