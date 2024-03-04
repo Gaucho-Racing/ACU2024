@@ -26,7 +26,7 @@ uint8_t errors = 0b00000000; // BMS error, Temperature error, voltage error
 
 
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
-test_case debug = VOLTAGE;
+test_case debug = FAN;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -48,14 +48,24 @@ void setup() {
   Serial.begin(115200);
   fans.begin();
   Serial.println("Init config");
+  adBmsWakeupIc(TOTAL_IC);
   adBms6830_init_config(TOTAL_IC, &IC[0]);
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
+  adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
 }
 
+uint8_t count = 0;
+uint32_t lastCountTime = 0;
+
 void loop() {
-  Serial.println("PLEASE WORK");
+  //Serial.println("PLEASE WORK");
+  count++;
+  if(count == 255){
+    Serial.printf("Loop rate: %fHz\n", 1e6 / (float(micros() - lastCountTime) / 256));
+    lastCountTime = micros();
+  }
   switch (debug)
   {
     case VOLTAGE:
@@ -136,5 +146,4 @@ void loop() {
   }
 
   delay(1000);
-  
 }

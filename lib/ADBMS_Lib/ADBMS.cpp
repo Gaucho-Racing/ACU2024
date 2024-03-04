@@ -20,7 +20,7 @@ and its licensor.
 //#include "common.h"
 #include "ADBMS.h"
 
-#define WAKEUP_DELAY 4                          /* BMS ic wakeup delay  */
+#define WAKEUP_DELAY 1                          /* BMS ic wakeup delay  */
 
 #define SPI_TIME_OUT HAL_MAX_DELAY              /* SPI Time out delay   */              //CHANGE
 #define UART_TIME_OUT HAL_MAX_DELAY             /* UART Time out delay  */              //CHANGE
@@ -33,6 +33,9 @@ and its licensor.
 
 isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
+
+uint32_t lastWakeTime = 0;
+#define wakeTimeout 0 // us
 
 /**
  *******************************************************************************
@@ -109,6 +112,7 @@ void adBmsCsHigh()
 	//digitalWrite(CS_PIN, HIGH);
 	//SPI.endTransaction();
 	isoSPI1.endTransaction();
+	lastWakeTime = micros();
 }
 
 /**
@@ -280,9 +284,11 @@ void adBmsWakeupIc(uint8_t total_ic)
 	for (uint8_t ic = 0; ic < total_ic; ic++)
 	{
 		adBmsCsLow();
-		Delay_ms(WAKEUP_DELAY);
+		//Delay_ms(WAKEUP_DELAY);
+		delayMicroseconds(WAKEUP_DELAY);
 		adBmsCsHigh();
-		Delay_ms(WAKEUP_DELAY);
+		//Delay_ms(WAKEUP_DELAY);
+		delayMicroseconds(WAKEUP_DELAY);
 	}
 }
 

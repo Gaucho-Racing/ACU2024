@@ -211,8 +211,8 @@ void printReadConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
 void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
 {
   float voltage;
-  int16_t temp;
-  uint8_t channel;
+  int16_t temp = 0;
+  uint8_t channel = 0;
   if((type == Cell) || (type == AvgCell) || (type == F_volt) || (type == S_volt))
   {
     channel = CELL;

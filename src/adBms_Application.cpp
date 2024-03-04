@@ -319,8 +319,8 @@ void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC)
   adBmsWakeupIc(tIC);
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
-  Serial.printf("Cell conversion completed\n");
-  printPollAdcConvTime(pladc_count);
+  //Serial.printf("Cell conversion completed\n");
+  //printPollAdcConvTime(pladc_count);
 }
 
 /**
