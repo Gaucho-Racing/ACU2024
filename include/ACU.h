@@ -1,11 +1,11 @@
 #ifndef _ACU_H
 #define _ACU_H
 
+#include "adBms6830Data.h"
 #include <vector>
 #include <utility>
 #include "ACU_data.h"
 #include "can.cpp"
-#include "adBms6830GenericType.h"
 
 enum States {
     STANDBY,
@@ -16,9 +16,9 @@ enum States {
 };
 
 struct Battery{
-    //supposedly the voltage of each cell is stored in a cell_asic
-    // std::vector<std::vector<float>> cellVoltage = std::vector<std::vector<float>>(TOTAL_IC, std::vector<float>(16, 0));
-    std::vector<std::vector<std::pair<float,float>>> cellTemp = std::vector<std::vector<std::pair<float,float>>>(TOTAL_IC,std::vector<std::pair<float,float>> (16,std::make_pair(0,0)));
+    uint16_t cellVoltage[128];
+    float cellTemp[128][2];
+    float balTemp[128];
     CANLine can;
     cell_asic IC[TOTAL_IC];
     float maxCellTemp = 0;  

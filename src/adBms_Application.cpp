@@ -33,7 +33,7 @@ and its licensor.
 */
 
 
-#define TOTAL_IC 2
+//#define TOTAL_IC 2
 extern cell_asic IC[TOTAL_IC];
 
 /* ADC Command Configurations */

@@ -2,7 +2,6 @@
 #define _ACU_DATA_H
 #include <Arduino.h>
 #include <SPI.h>
-#include "adBms6830Data.h"
 // CONFIG OPTIONS FOR 6830 ARE IN THE CPP FILE
 
 #define TOTAL_IC 2
