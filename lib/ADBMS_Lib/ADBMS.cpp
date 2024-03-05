@@ -34,9 +34,6 @@ and its licensor.
 isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 
-uint32_t lastWakeTime = 0;
-#define wakeTimeout 0 // us
-
 /**
  *******************************************************************************
  * Function: Delay_ms

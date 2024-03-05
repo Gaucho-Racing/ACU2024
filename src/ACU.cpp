@@ -1,15 +1,53 @@
 #include "ACU.h"
 #include "adBms_Application.h"
+#include "adBms6830CmdList.h"
+
+
+RD      REDUNDANT_MEASUREMENT           = RD_OFF;
+CH      AUX_CH_TO_CONVERT               = AUX_ALL;
+CONT    CONTINUOUS_MEASUREMENT          = SINGLE;
+OW_C_S  CELL_OPEN_WIRE_DETECTION        = OW_OFF_ALL_CH;
+OW_AUX  AUX_OPEN_WIRE_DETECTION         = AUX_OW_OFF;
+PUP     OPEN_WIRE_CURRENT_SOURCE        = PUP_DOWN;
+DCP     DISCHARGE_PERMITTED             = DCP_OFF;
+RSTF    RESET_FILTER                    = RSTF_OFF;
+ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
+
+
+/* Set Under Voltage and Over Voltage Thresholds */
+const float OV_THRESHOLD = 4.2;                 /* Volt */
+const float UV_THRESHOLD = 3.0;                 /* Volt */
+const int OWC_Threshold = 2000;                 /* Cell Open wire threshold(mili volt) */
+const int OWA_Threshold = 50000;                /* Aux Open wire threshold(mili volt) */
+const uint32_t LOOP_MEASUREMENT_COUNT = 1;      /* Loop measurment count */
+const uint16_t MEASUREMENT_LOOP_TIME  = 10;     /* milliseconds(mS)*/
+uint32_t loop_count = 0;
+uint32_t pladc_count;
+
+/*Loop Measurement Setup These Variables are ENABLED or DISABLED Remember ALL CAPS*/
+LOOP_MEASURMENT MEASURE_CELL            = ENABLED;        /*   This is ENABLED or DISABLED       */
+LOOP_MEASURMENT MEASURE_AVG_CELL        = ENABLED;        /*   This is ENABLED or DISABLED       */
+LOOP_MEASURMENT MEASURE_F_CELL          = ENABLED;        /*   This is ENABLED or DISABLED       */
+LOOP_MEASURMENT MEASURE_S_VOLTAGE       = ENABLED;        /*   This is ENABLED or DISABLED       */
+LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED or DISABLED       */
+LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
+LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
 /// @brief performs system check
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
 /// @return The false if fails, true otherwise
-bool systemCheck(Battery &battery, States &state)
-{
-    //STUB
-    return true;   
+bool systemCheck(Battery& battery, States& state) {
+    //pull data from all 6830's
+    adBmsWakeupIc(TOTAL_IC);
+    adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
+    pladc_count = adBmsPollAdc(PLADC);
+    return true;
 }
+
+    // This function is supposed to check if the system is working properly
+    // It is not implemented yet
+    
 /// @brief shutDown, errors --> VDM
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD

@@ -55,14 +55,14 @@ class CANLine {
       msgSend.id = id;
       msgSend.len = size;
       for (int i = 0; i < size; i++) {
-        //Serial.print(message[i]);
-        //Serial.print(" ");
+        Serial.print(message[i]);
+        Serial.print(" ");
         msgSend.buf[i] = message[i];
       }
-      //Serial.println();
+      Serial.println();
       can.write(msgSend);
-      //Serial.print("Frame sent to id 0x");
-      //Serial.println(id, HEX);
+      Serial.print("Frame sent to id 0x");
+      Serial.println(id, HEX);
     }
 
     void send(unsigned int id, short *message, byte size = 4) {
