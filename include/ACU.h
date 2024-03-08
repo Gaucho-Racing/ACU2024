@@ -12,7 +12,8 @@ enum States {
     PRECHARGE,
     NORMAL,
     CHARGE,
-    SHUTDOWN
+    SHUTDOWN,
+    OFFSTATE
 };
 
 struct Battery{
@@ -26,15 +27,15 @@ struct Battery{
     float balTemp[128];
 };
 
+// helper functions
 void init_config(Battery &battery);
-void get_Voltage(Battery &battery);
 void get_Temperatures(Battery &battery);
 void get_Current(Battery &battery);
 void get_Max_Cell_Temp(Battery &battery);
 void get_Max_Bal_Res_Temp(Battery &battery);
 void cell_Balancing(Battery &battery);
 
-bool systemCheck(Battery &battery, States &state);
+void systemCheck(Battery &battery);
 
 // functions for cell Voltage
 void updateVoltage(Battery &battery);
@@ -44,11 +45,12 @@ uint8_t condenseVoltage(uint16_t voltage);
 uint16_t getAccumulatorVoltage(uint16_t *cellVoltage);
 
 
-
-void shutdownState();
-void normalState();
-void chargeState();
-void preChargeState();
-void standByState();
+// state functions
+void shutdownState(Battery &battery);
+void normalState(Battery &battery);
+void chargeState(Battery &battery);
+void preChargeState(Battery &battery);
+void standByState(Battery &battery);
+void offState(Battery &battery);
 
 #endif

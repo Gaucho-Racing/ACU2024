@@ -37,35 +37,44 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
 /// @return The false if fails, true otherwise
-bool systemCheck(Battery& battery, States& state) {
+void systemCheck(Battery &battery) {
     //pull data from all 6830's
     adBmsWakeupIc(TOTAL_IC);
     adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
     pladc_count = adBmsPollAdc(PLADC);
 
     updateVoltage(battery);
-    if(battery.state == SHUTDOWN) return false;
-    return true;
 }
 
     // This function is supposed to check if the system is working properly
     // It is not implemented yet
     
-/// @brief shutDown, errors --> VDM
-/// @param[in] TBD TBD
-/// @param[in] TBD TBD
-/// @return TBD
-void shutdownState(){
+/// @brief offState, idk if this is needed
+/// @param[in] battery TBD
+/// @return N/A
+void offState(Battery &battery){
+  // When it turns on --> go to STANDBY
+  battery.state = STANDBY;
+}
+
+/// @brief shutDown, send errors --> VDM
+/// @param[in] battery TBD
+/// @return N/A
+void shutdownState(Battery &battery){
   // Open AIRS and Precharge if already not open
-  // error messages --> VDM
-  // STUB
+
+  // send error --> CAN
+  byte alertMsg[1];
+  alertMsg[0] = 0;
+  battery.can.send(0x66, alertMsg, 1);
+  battery.state = OFFSTATE;
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void normalState(){
+void normalState(Battery &battery){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -76,7 +85,7 @@ void normalState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void chargeState(){
+void chargeState(Battery &battery){
   // sendMsg if time 0.5 s reached
   // do System Check
   // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
@@ -87,7 +96,7 @@ void chargeState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void preChargeState(){
+void preChargeState(Battery &battery){
   // send message to VDM to indicate Precharge
   // close AIR+, wait 1 second, check voltage
   // 10 x until threshold reached
@@ -104,11 +113,12 @@ void preChargeState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void standByState(){
+void standByState(Battery &battery){
       // WAKE UP: ISOSpi Chip & sensors
 
       // SYSTEM CHECKS
-      // if (!SYSTEMCHECKOK) mockState = SHUTDOWN
+      systemCheck(battery);
+      if(battery.state == SHUTDOWN) return;
       // else if (!CHARGERCAN) mockState = PRECHARGE
       // else if (CHARGERCAN) mockState = CHARGE
       // else ERROR
@@ -161,20 +171,13 @@ void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
   }
 }
 
-uint16_t getAccumulatorCurrent(uint16_t *cellVoltage){
-  return 0;
-}
-
 /// @brief sends CellVoltageError data to CANbus
 /// @param[in] battery
 /// @param[in] thresholdType either OV_THRESHOLD or UW_THRESHOLD
 /// @return N/A
 void sendCellVoltageError(Battery &battery, const float thresholdType){
   uint8_t message[8];
-  byte alertMsg[1];
-  alertMsg[0] = 1; // FOR NOW
 
-  uint16_t id1 = 0x96, id2 = 0; 
   uint16_t accVolt = getAccumulatorVoltage(battery.cellVoltage);
   message[0] = (uint8_t)((accVolt & 0xFF00) >> 8);
   message[1] = (uint8_t)(accVolt & 0x00FF);
@@ -182,18 +185,16 @@ void sendCellVoltageError(Battery &battery, const float thresholdType){
   message[3] = (uint8_t)(battery.accumulatorCurrent & 0x00FF);
   message[4] = (uint8_t)((battery.maxCellTemp & 0xFF00) >> 8);
   message[5] = (uint8_t)(battery.maxCellTemp & 0x00FF);
-
   message[7] = 3; // NOT SURE WHAT TO PUT IN HERE
 
   if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
   else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
 
-  battery.can.send(id2, alertMsg, 1);
-  battery.can.send(id1, message, 8);
+  battery.can.send(0x96, message, 8);
   battery.state = SHUTDOWN; // SEND TO SHUTDOWN
 }
 
-/// @brief sum of all 128 voltages in battery
+/// @brief sum of all voltages stored in battery
 /// @param[in] *cellVoltage a pointer to battery's cellVoltages array
 /// @return sum for accumulator voltage
 uint16_t getAccumulatorVoltage(uint16_t *cellVoltage){
@@ -201,4 +202,8 @@ uint16_t getAccumulatorVoltage(uint16_t *cellVoltage){
   for(uint8_t index = 0; index < 128; index++)
     accVoltage += cellVoltage[index] / 100 + (cellVoltage[index] % 100 > 49);
   return accVoltage;
+}
+
+uint16_t getAccumulatorCurrent(uint16_t *cellVoltage){
+  return 0;
 }
