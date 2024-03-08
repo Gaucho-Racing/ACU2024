@@ -1,3 +1,4 @@
+
 #include "FanController.h"
 #include "ACU.h"
 #include "adBms_Application.h"
@@ -17,6 +18,7 @@ void setup() {
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
+  state = STANDBY;
   state = STANDBY;
 }
 
