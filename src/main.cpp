@@ -1,63 +1,51 @@
-
-#include <Arduino.h>
-#include "ADBMS6822_Driver.h"
-#include "ADBMS.h"
-#include "adbms_main.h"
+#include "FanController.h"
+#include "ACU.h"
 #include "adBms_Application.h"
-#include "serialPrintResult.h"
+#include "adBms6830Data.h"
 
-// put function declarations here:
-void intrFunc();
-void wakeBms();
 
-// Object declarations 
-//isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
-//isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-#define TOTAL_IC 1
+Battery battery;
+States state;
+
+#define TOTAL_IC 2
 cell_asic IC[TOTAL_IC];
 
 void setup() {
-  // put your setup code here, to run once:
-  //set_arm_clock(24000000);
   Serial.begin(115200);
+  Serial.println("Init config");
+  adBms6830_init_config(TOTAL_IC, IC);
+  Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
-  adBms6830_init_config(TOTAL_IC, &IC[0]);
+  state = STANDBY;
 }
 
-cell_asic test;
 void loop() {
-  Serial.println("PLEASE WORK");
-  //SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
-  // put your main code here, to run repeatedly:
-  //uint16_t number = 0b1010101010101010;
-  //isoSPI1.beginTransaction(SPI_MODE3, 2000000);
-  //isoSPI1.transfer16(number);
-  //isoSPI1.endTransaction();
-  //adbms_main();
-  adBmsWakeupIc(1);
-  run_command(3);
-  run_command(4);
-  delay(100);
-  //adBms6830_cell_openwire_test(1,);
-  // for (uint8_t i = 0; i < 20; i++) {
-  //   run_command(i);
-  //   //delay(1000);
-  // }
-  //delay(1000);
-  // run_command(4);
-}
+  // ACU STATES
+  switch (state)
+  {
+    case STANDBY:
+      standByState();
+      updateVoltage(battery.cellVoltage, IC);
+      break;
+    case PRECHARGE:
+      preChargeState();
+      break;
+    case CHARGE:
+      chargeState();
+      break;
+    case NORMAL:
+      normalState();
+      break;
+    case SHUTDOWN:
+      shutdownState();
+      break;
+    default:
+      state = SHUTDOWN;
+      Serial.println("Uh oh u dummy, u've entered a non-existent state");
+      break;
+  }
 
-// put function definitions here:
-void intrFunc() {
-  Serial.println("Interrupt!");
-}
-
-void wakeBms() {
-  // Pull CS low for more than 240nS
-  digitalWrite(10, LOW);
-  delayMicroseconds(1);
-  digitalWrite(10, HIGH);
-  // Wait 10us for the chip to wake up
-  delayMicroseconds(10);
+  delay(500);
+  
 }

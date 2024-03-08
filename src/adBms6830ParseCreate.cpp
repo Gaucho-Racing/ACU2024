@@ -18,10 +18,7 @@ and its licensor.
 */
 
 #include "common.h"
-#include "adbms_main.h"
-#ifdef MBED
-extern Serial pc;
-#endif
+#include "adBms6830ParseCreate.h"
 
 /**
  *******************************************************************************
@@ -346,11 +343,11 @@ void adBms6830ParseConfig(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *data)
 {
   switch (grp)
   {
-  case A:
+  case AA:
     adBms6830ParseConfiga(tIC, &ic[0], &data[0]);
     break;
 
-  case B:
+  case BB:
     adBms6830ParseConfigb(tIC, &ic[0], &data[0]);
     break;
 
@@ -402,19 +399,19 @@ void adBms6830ParseCell(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *cv_data)
     address = ((curr_ic+1) * (data_size));
     switch (grp)
     {
-    case A: /* Cell Register group A */
+    case AA: /* Cell Register group A */
       ic[curr_ic].cell.c_codes[0] = (data[0] + (data[1] << 8));
       ic[curr_ic].cell.c_codes[1] = (data[2] + (data[3] << 8));
       ic[curr_ic].cell.c_codes[2] = (data[4] + (data[5] << 8));
       break;
 
-    case B: /* Cell Register group B */
+    case BB: /* Cell Register group B */
       ic[curr_ic].cell.c_codes[3] = (data[0] + (data[1] << 8));
       ic[curr_ic].cell.c_codes[4] = (data[2] + (data[3] << 8));
       ic[curr_ic].cell.c_codes[5] = (data[4] + (data[5] << 8));
       break;
 
-    case C: /* Cell Register group C */
+    case CC: /* Cell Register group C */
       ic[curr_ic].cell.c_codes[6] = (data[0] + (data[1] << 8));
       ic[curr_ic].cell.c_codes[7] = (data[2] + (data[3] << 8));
       ic[curr_ic].cell.c_codes[8] = (data[4] + (data[5] << 8));
@@ -504,19 +501,19 @@ void adBms6830ParseAverageCell(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *acv
     address = ((curr_ic+1) * (data_size));
     switch (grp)
     {
-    case A: /* Cell Register group A */
+    case AA: /* Cell Register group A */
       ic[curr_ic].acell.ac_codes[0] = (data[0] + (data[1] << 8));
       ic[curr_ic].acell.ac_codes[1] = (data[2] + (data[3] << 8));
       ic[curr_ic].acell.ac_codes[2] = (data[4] + (data[5] << 8));
       break;
 
-    case B: /* Cell Register group B */
+    case BB: /* Cell Register group B */
       ic[curr_ic].acell.ac_codes[3] = (data[0] + (data[1] << 8));
       ic[curr_ic].acell.ac_codes[4] = (data[2] + (data[3] << 8));
       ic[curr_ic].acell.ac_codes[5] = (data[4] + (data[5] << 8));
       break;
 
-    case C: /* Cell Register group C */
+    case CC: /* Cell Register group C */
       ic[curr_ic].acell.ac_codes[6] = (data[0] + (data[1] << 8));
       ic[curr_ic].acell.ac_codes[7] = (data[2] + (data[3] << 8));
       ic[curr_ic].acell.ac_codes[8] = (data[4] + (data[5] << 8));
@@ -607,19 +604,19 @@ void adBms6830ParseSCell(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *scv_data)
     address = ((curr_ic+1) * (data_size));
     switch (grp)
     {
-    case A: /* Cell Register group A */
+    case AA: /* Cell Register group A */
       ic[curr_ic].scell.sc_codes[0] = (data[0] + (data[1] << 8));
       ic[curr_ic].scell.sc_codes[1] = (data[2] + (data[3] << 8));
       ic[curr_ic].scell.sc_codes[2] = (data[4] + (data[5] << 8));
       break;
 
-    case B: /* Cell Register group B */
+    case BB: /* Cell Register group B */
       ic[curr_ic].scell.sc_codes[3] = (data[0] + (data[1] << 8));
       ic[curr_ic].scell.sc_codes[4] = (data[2] + (data[3] << 8));
       ic[curr_ic].scell.sc_codes[5] = (data[4] + (data[5] << 8));
       break;
 
-    case C: /* Cell Register group C */
+    case CC: /* Cell Register group C */
       ic[curr_ic].scell.sc_codes[6] = (data[0] + (data[1] << 8));
       ic[curr_ic].scell.sc_codes[7] = (data[2] + (data[3] << 8));
       ic[curr_ic].scell.sc_codes[8] = (data[4] + (data[5] << 8));
@@ -709,19 +706,19 @@ void adBms6830ParseFCell(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *fcv_data)
     address = ((curr_ic+1) * (data_size));
     switch (grp)
     {
-    case A: /* Cell Register group A */
+    case AA: /* Cell Register group A */
       ic[curr_ic].fcell.fc_codes[0] = (data[0] + (data[1] << 8));
       ic[curr_ic].fcell.fc_codes[1] = (data[2] + (data[3] << 8));
       ic[curr_ic].fcell.fc_codes[2] = (data[4] + (data[5] << 8));
       break;
 
-    case B: /* Cell Register group B */
+    case BB: /* Cell Register group B */
       ic[curr_ic].fcell.fc_codes[3] = (data[0] + (data[1] << 8));
       ic[curr_ic].fcell.fc_codes[4] = (data[2] + (data[3] << 8));
       ic[curr_ic].fcell.fc_codes[5] = (data[4] + (data[5] << 8));
       break;
 
-    case C: /* Cell Register group C */
+    case CC: /* Cell Register group C */
       ic[curr_ic].fcell.fc_codes[6] = (data[0] + (data[1] << 8));
       ic[curr_ic].fcell.fc_codes[7] = (data[2] + (data[3] << 8));
       ic[curr_ic].fcell.fc_codes[8] = (data[4] + (data[5] << 8));
@@ -811,19 +808,19 @@ void adBms6830ParseAux(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *aux_data)
     address = ((curr_ic+1) * (data_size));
     switch (grp)
     {
-    case A: /* Aux Register group A */
+    case AA: /* Aux Register group A */
       ic[curr_ic].aux.a_codes[0] = (data[0] + (data[1] << 8));
       ic[curr_ic].aux.a_codes[1] = (data[2] + (data[3] << 8));
       ic[curr_ic].aux.a_codes[2] = (data[4] + (data[5] << 8));
       break;
 
-    case B: /* Aux Register group B */
+    case BB: /* Aux Register group B */
       ic[curr_ic].aux.a_codes[3] = (data[0] + (data[1] << 8));
       ic[curr_ic].aux.a_codes[4] = (data[2] + (data[3] << 8));
       ic[curr_ic].aux.a_codes[5] = (data[4] + (data[5] << 8));
       break;
 
-    case C: /* Aux Register group C */
+    case CC: /* Aux Register group C */
       ic[curr_ic].aux.a_codes[6] = (data[0] + (data[1] << 8));
       ic[curr_ic].aux.a_codes[7] = (data[2] + (data[3] << 8));
       ic[curr_ic].aux.a_codes[8] = (data[4] + (data[5] << 8));
@@ -899,19 +896,19 @@ void adBms6830ParseRAux(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *raux_data)
     address = ((curr_ic+1) * (data_size));
     switch (grp)
     {
-    case A: /* RAux Register group A */
+    case AA: /* RAux Register group A */
       ic[curr_ic].raux.ra_codes[0] = (data[0] + (data[1] << 8));
       ic[curr_ic].raux.ra_codes[1] = (data[2] + (data[3] << 8));
       ic[curr_ic].raux.ra_codes[2] = (data[4] + (data[5] << 8));
       break;
 
-    case B: /* RAux Register group B */
+    case BB: /* RAux Register group B */
       ic[curr_ic].raux.ra_codes[3] = (data[0] + (data[1] << 8));
       ic[curr_ic].raux.ra_codes[4] = (data[2] + (data[3] << 8));
       ic[curr_ic].raux.ra_codes[5] = (data[4] + (data[5] << 8));
       break;
 
-    case C: /* RAux Register group C */
+    case CC: /* RAux Register group C */
       ic[curr_ic].raux.ra_codes[6] = (data[0] + (data[1] << 8));
       ic[curr_ic].raux.ra_codes[7] = (data[2] + (data[3] << 8));
       ic[curr_ic].raux.ra_codes[8] = (data[4] + (data[5] << 8));
@@ -1176,15 +1173,15 @@ void adBms6830ParseStatus(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *data)
   uint8_t statc[RX_DATA], state[RX_DATA];
   switch (grp)
   {
-    case A: /* Status Register group A */
+    case AA: /* Status Register group A */
       adBms6830ParseStatusA(tIC, &ic[0], &data[0]);
       break;
 
-    case B: /* Status Register group B */
+    case BB: /* Status Register group B */
       adBms6830ParseStatusB(tIC, &ic[0], &data[0]);
       break;
 
-    case C: /* Status Register group C */
+    case CC: /* Status Register group C */
       adBms6830ParseStatusC(tIC, &ic[0], &data[0]);
       break;
 
@@ -1390,11 +1387,11 @@ void adBms6830ParsePwm(uint8_t tIC, cell_asic *ic, GRP grp, uint8_t *data)
 {
   switch (grp)
   {
-    case A:
+    case AA:
       adBms6830ParsePwma(tIC, &ic[0], &data[0]);
       break;
 
-    case B:
+    case BB:
       adBms6830ParsePwmb(tIC, &ic[0], &data[0]);
       break;
 

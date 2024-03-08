@@ -23,10 +23,8 @@ Using the BMS Driver Application can:
 
 */
 #include "common.h"
-#include "adbms_main.h"
-#ifdef MBED
-extern Serial pc;
-#endif
+#include "adBms6830Data.h"
+#include "adBms6830GenericType.h"
 /**************************************** BMS Driver APIs definitions ********************************************/
 /* Precomputed CRC15 Table */
 const uint16_t Crc15Table[256] = 
@@ -202,11 +200,7 @@ uint8_t regData_size
   copyArray = (uint8_t *)calloc(BYTES_IN_REG, sizeof(uint8_t));
   if((data == NULL) || (copyArray == NULL))
   {
-   #ifdef MBED     
-    pc.printf(" Failed to allocate spi read data memory \n");
-    #else
     printf(" Failed to allocate spi read data memory \n");
-    #endif	  
     exit(0);
   }
   else
@@ -277,11 +271,7 @@ uint8_t *data
   cmd = (uint8_t *)calloc(CMD_LEN, sizeof(uint8_t)); 
   if(cmd == NULL)
   {
-#ifdef MBED
-    pc.printf(" Failed to allocate cmd array memory \n");
-#else
     printf(" Failed to allocate cmd array memory \n");
-#endif  
     exit(0);
   }
   else
@@ -342,8 +332,8 @@ uint8_t *data
 */
 void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, GRP group)
 {
-  uint16_t rBuff_size;
-  uint8_t regData_size;
+  uint16_t rBuff_size = 0;
+  uint8_t regData_size = 0;
   if(group == ALL_GRP)
   {
     if(type == Rdcvall){rBuff_size = RDCVALL_SIZE; regData_size = RDCVALL_SIZE;}
@@ -362,11 +352,7 @@ void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, GR
   cmd_count = (uint8_t *)calloc(tIC, sizeof(uint8_t));
   if((pec_error == NULL) || (cmd_count == NULL) || (read_buffer == NULL))
   {
-#ifdef MBED
-    pc.printf(" Failed to allocate memory \n");
-#else
     printf(" Failed to allocate memory \n");
-#endif
     exit(0);
   }
   else
@@ -606,11 +592,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
   uint8_t *write_buffer = (uint8_t *)calloc(write_size, sizeof(uint8_t));
   if(write_buffer == NULL)
   {
-#ifdef MBED
-    pc.printf(" Failed to allocate write_buffer array memory \n");
-#else
-    printf(" Failed to allocate write_buffer array memory \n");
-#endif
+    Serial.printf(" Failed to allocate write_buffer array memory \n");
     exit(0);
   }
   else
@@ -620,7 +602,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Config:	
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreateConfiga(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -630,7 +612,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }
         }
         break;
-      case B:
+      case BB:
         adBms6830CreateConfigb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -657,7 +639,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
     case Pwm:
       switch (group)
       {
-      case A:
+      case AA:
         adBms6830CreatePwma(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -667,7 +649,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
           }	
         }
         break;   
-      case B:
+      case BB:
         adBms6830CreatePwmb(tIC, &ic[0]);
         for (uint8_t cic = 0; cic < tIC; cic++)
         {
@@ -731,8 +713,13 @@ uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
   startTimer();
   adBmsCsLow();
   spiWriteBytes(4, &cmd[0]);
-  do{
+  uint32_t startTime = millis();
+  do{ // for some reason when TOTAL_IC > 1 this gets stuck by always receiving 0s instead of 0xFF
     spiReadBytes(1, &read_data);
+    if (millis() - startTime > 100){
+      Serial.println("adBmsPollAdc timeout!");
+      break;
+    }
   }while(!(read_data == SDO_Line));
   adBmsCsHigh();
   conv_count = getTimCount();
