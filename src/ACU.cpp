@@ -42,6 +42,9 @@ bool systemCheck(Battery& battery, States& state) {
     adBmsWakeupIc(TOTAL_IC);
     adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
     pladc_count = adBmsPollAdc(PLADC);
+
+    updateVoltage(battery);
+    if(battery.state == SHUTDOWN) return false;
     return true;
 }
 
@@ -111,21 +114,28 @@ void standByState(){
       // else ERROR
 }
 
-/// @brief Reads cell voltages and copy data from cell_asic
-/// @param[in] cellVoltage array to store voltages
-/// @param[in] TBD TBD
+/// @brief Reads cell voltages and copy data from cell_asic & checks for errors
+/// @param[in] battery contains cellVotage = array to store voltages
 /// @return None
-void updateVoltage(uint16_t cellVoltage[], cell_asic IC[]) {
+void updateVoltage(Battery &battery) {
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-  adBms6830_read_cell_voltages(TOTAL_IC, IC);
+  adBms6830_read_cell_voltages(TOTAL_IC, battery.IC);
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
     for (uint8_t cell = 0; cell < CELL; cell++) {
-      cellVoltage[ic * CELL + cell] = (IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
+      battery.cellVoltage[ic * CELL + cell] = (battery.IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
+      
+      // send to error state & send error to CAN if voltage threshold has issues
+      if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) > OV_THRESHOLD)
+        sendCellVoltageError(battery, OV_THRESHOLD);
+      else if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) < UV_THRESHOLD)
+        sendCellVoltageError(battery, UV_THRESHOLD);
     }
   }
 }
 
-
+/// @brief converts uint16_t voltage --> uint8_t voltage
+/// @param[in] voltage uint16_t
+/// @return uint8_t voltage converted
 uint8_t condenseVoltage(uint16_t voltage) {
   //voltage = constrain(voltage, 20000, 45500);
   return (voltage / 100 + (voltage % 100 > 49));// - 200; // uncomment these when connecting to cells
@@ -149,4 +159,46 @@ void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
     message[7] = condenseVoltage(cellVoltage[i * 8 + 7]);
     can -> send(id, message, 8);
   }
+}
+
+uint16_t getAccumulatorCurrent(uint16_t *cellVoltage){
+  return 0;
+}
+
+/// @brief sends CellVoltageError data to CANbus
+/// @param[in] battery
+/// @param[in] thresholdType either OV_THRESHOLD or UW_THRESHOLD
+/// @return N/A
+void sendCellVoltageError(Battery &battery, const float thresholdType){
+  uint8_t message[8];
+  byte alertMsg[1];
+  alertMsg[0] = 1; // FOR NOW
+
+  uint16_t id1 = 0x96, id2 = 0; 
+  uint16_t accVolt = getAccumulatorVoltage(battery.cellVoltage);
+  message[0] = (uint8_t)((accVolt & 0xFF00) >> 8);
+  message[1] = (uint8_t)(accVolt & 0x00FF);
+  message[2] = (uint8_t)((battery.accumulatorCurrent & 0xFF00) >> 8);
+  message[3] = (uint8_t)(battery.accumulatorCurrent & 0x00FF);
+  message[4] = (uint8_t)((battery.maxCellTemp & 0xFF00) >> 8);
+  message[5] = (uint8_t)(battery.maxCellTemp & 0x00FF);
+
+  message[7] = 3; // NOT SURE WHAT TO PUT IN HERE
+
+  if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
+  else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
+
+  battery.can.send(id2, alertMsg, 1);
+  battery.can.send(id1, message, 8);
+  battery.state = SHUTDOWN; // SEND TO SHUTDOWN
+}
+
+/// @brief sum of all 128 voltages in battery
+/// @param[in] *cellVoltage a pointer to battery's cellVoltages array
+/// @return sum for accumulator voltage
+uint16_t getAccumulatorVoltage(uint16_t *cellVoltage){
+  uint16_t accVoltage = 0;
+  for(uint8_t index = 0; index < 128; index++)
+    accVoltage += cellVoltage[index] / 100 + (cellVoltage[index] % 100 > 49);
+  return accVoltage;
 }
