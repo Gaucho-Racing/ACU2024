@@ -37,36 +37,36 @@ and its licensor.
 extern cell_asic IC[TOTAL_IC];
 
 /* ADC Command Configurations */
-RD      REDUNDANT_MEASUREMENT           = RD_OFF;
-CH      AUX_CH_TO_CONVERT               = AUX_ALL;
-CONT    CONTINUOUS_MEASUREMENT          = SINGLE;
-OW_C_S  CELL_OPEN_WIRE_DETECTION        = OW_OFF_ALL_CH;
-OW_AUX  AUX_OPEN_WIRE_DETECTION         = AUX_OW_OFF;
-PUP     OPEN_WIRE_CURRENT_SOURCE        = PUP_DOWN;
-DCP     DISCHARGE_PERMITTED             = DCP_ON;
-RSTF    RESET_FILTER                    = RSTF_OFF;
-ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
+extern RD      REDUNDANT_MEASUREMENT;
+extern CH      AUX_CH_TO_CONVERT;
+extern CONT    CONTINUOUS_MEASUREMENT;
+extern OW_C_S  CELL_OPEN_WIRE_DETECTION;
+extern OW_AUX  AUX_OPEN_WIRE_DETECTION;
+extern PUP     OPEN_WIRE_CURRENT_SOURCE;
+extern DCP     DISCHARGE_PERMITTED;
+extern RSTF    RESET_FILTER;
+extern ERR     INJECT_ERR_SPI_READ;
 
 /* Set Under Voltage and Over Voltage Thresholds */
-const float OV_THRESHOLD = 4.2;                 /* Volt */
-const float UV_THRESHOLD = 0.2;                 /* Volt */
-const int OWC_Threshold = 100;                 /* Cell Open wire threshold(mili volt) */
-const int OWA_Threshold = 50000;                /* Aux Open wire threshold(mili volt) */
-const uint32_t LOOP_MEASUREMENT_COUNT = 1;      /* Loop measurment count */
-const uint16_t MEASUREMENT_LOOP_TIME  = 10;     /* milliseconds(mS)*/
-uint32_t loop_count = 0;
-uint32_t pladc_count;
+extern const float OV_THRESHOLD;                 /* Volt */
+extern const float UV_THRESHOLD;                 /* Volt */
+extern const int OWC_Threshold;                 /* Cell Open wire threshold(mili volt) */
+extern const int OWA_Threshold;                /* Aux Open wire threshold(mili volt) */
+extern const uint32_t LOOP_MEASUREMENT_COUNT;      /* Loop measurment count */
+extern const uint16_t MEASUREMENT_LOOP_TIME;     /* milliseconds(mS)*/
+extern uint32_t loop_count;
+extern uint32_t pladc_count;
 
 /*Loop Measurement Setup These Variables are ENABLED or DISABLED Remember ALL CAPS*/
-LOOP_MEASURMENT MEASURE_CELL            = ENABLED;        /*   This is ENABLED or DISABLED       */
-LOOP_MEASURMENT MEASURE_AVG_CELL        = ENABLED;        /*   This is ENABLED or DISABLED       */
-LOOP_MEASURMENT MEASURE_F_CELL          = ENABLED;        /*   This is ENABLED or DISABLED       */
-LOOP_MEASURMENT MEASURE_S_VOLTAGE       = ENABLED;        /*   This is ENABLED or DISABLED       */
-LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED or DISABLED       */
-LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
-LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
+extern LOOP_MEASURMENT MEASURE_CELL;        /*   This is ENABLED or DISABLED       */
+extern LOOP_MEASURMENT MEASURE_AVG_CELL;        /*   This is ENABLED or DISABLED       */
+extern LOOP_MEASURMENT MEASURE_F_CELL;        /*   This is ENABLED or DISABLED       */
+extern LOOP_MEASURMENT MEASURE_S_VOLTAGE;        /*   This is ENABLED or DISABLED       */
+extern LOOP_MEASURMENT MEASURE_AUX;        /*   This is ENABLED or DISABLED       */
+extern LOOP_MEASURMENT MEASURE_RAUX;        /*   This is ENABLED or DISABLED       */
+extern LOOP_MEASURMENT MEASURE_STAT;        /*   This is ENABLED or DISABLED       */
 //from the count indices from the left
-bool pinConfig[10] = {0, 1, 0, 0, 0, 0 ,0, 0, 0, 0}; 
+
 
 void adbms_main()
 {
@@ -185,8 +185,8 @@ void run_command(int cmd)
     adBms6830_clear_fcell_measurement(TOTAL_IC);
     break;
 
-  case 21:
-    adbms6830_write_gpio(TOTAL_IC, &IC[0], pinConfig);
+  // case 21:
+  //   adbms6830_write_gpio(TOTAL_IC, &IC[0], pinConfig);
 
   case 0:
     printMenu();

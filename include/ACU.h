@@ -2,10 +2,14 @@
 #define _ACU_H
 
 #include "adBms6830Data.h"
+#include "adBms6830GenericType.h"
 #include <vector>
 #include <utility>
 #include "ACU_data.h"
 #include "can.cpp"
+#include "ADBMS.h"
+#include "adBms_Application.h"
+
 
 enum States {
     STANDBY,
