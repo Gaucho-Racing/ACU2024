@@ -23,9 +23,6 @@ struct Battery{
     uint16_t cellVoltage[128];
     float cellTemp[128][2];
     float balTemp[128];
-    uint16_t cellVoltage[128];
-    float cellTemp[128][2];
-    float balTemp[128];
     CANLine can;
     cell_asic IC[TOTAL_IC];
     float maxCellTemp = 0;  
