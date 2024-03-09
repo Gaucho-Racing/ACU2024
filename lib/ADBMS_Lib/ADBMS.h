@@ -40,6 +40,7 @@ and its licensor.
 #define GPIO_PORT 0      /* Mcu dependent adc chip select port */                   //CHANGE THIS
 
 void Delay_ms(uint32_t time);
+void adBmsSpiInit();
 void adBmsCsLow(void);
 void adBmsCsHigh(void);
 void spiWriteBytes

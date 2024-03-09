@@ -19,9 +19,8 @@ and its licensor.
 */
 //#include "common.h"
 #include "ADBMS.h"
-#include "ADBMS6822_Driver.h"
 
-#define WAKEUP_DELAY 4                          /* BMS ic wakeup delay  */
+#define WAKEUP_DELAY 200                          /* BMS ic wakeup delay  */
 
 #define SPI_TIME_OUT HAL_MAX_DELAY              /* SPI Time out delay   */              //CHANGE
 #define UART_TIME_OUT HAL_MAX_DELAY             /* UART Time out delay  */              //CHANGE
@@ -32,8 +31,8 @@ and its licensor.
 //I2C_HandleTypeDef *hi2c         = &hi2c1;       /* MUC I2C Handler      */
 //TIM_HandleTypeDef *htim         = &htim2;       /* Mcu TIM handler */
 
-extern isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
-extern isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
+isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
+isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 
 /**
  *******************************************************************************
@@ -57,6 +56,23 @@ void Delay_ms(uint32_t time)
 
 /**
  *******************************************************************************
+ * Function: adBmsSpiInit
+ * @brief Initialize ispSPI
+ *
+ * @details This function initializes ispSPI interfaces
+ *
+ * @return None
+ *
+ *******************************************************************************
+*/
+void adBmsSpiInit()
+{
+	isoSPI1.begin();
+	isoSPI2.begin();
+}
+
+/**
+ *******************************************************************************
  * Function: adBmsCsLow
  * @brief Select chip select low
  *
@@ -72,8 +88,7 @@ void adBmsCsLow()
 	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
 	//digitalWrite(CS_PIN, LOW);
 	//delayNanoseconds(500);
-	isoSPI1.begin();
-	isoSPI1.beginTransaction(SPI_MODE3, 1000000);
+	isoSPI1.beginTransaction(SPI_MODE3, 2000000);
 }
 
 /**
@@ -180,6 +195,7 @@ void spiReadBytes(uint16_t size, uint8_t *rx_data)
 	for(uint16_t i=0; i < size; i++)
 	{
 		tx_data[i] = 0xFF;
+		//rx_data[i] = isoSPI1.transfer(255);
 	}
 	//SPI.beginTransaction(SPISettings(SPI_MODE3, MSBFIRST, 1000000));
 	isoSPI1.transfer(tx_data, size);
@@ -242,8 +258,8 @@ uint32_t getTimCount()
 	//count = __HAL_TIM_GetCounter(htim);
 	//__HAL_TIM_SetCounter(htim, 0);
 	//TODO
-	count = startTime - stopTime;
-	return(count);
+	count = micros() - startTime;
+	return count << 6;
 }
 
 /**
@@ -263,11 +279,12 @@ void adBmsWakeupIc(uint8_t total_ic)
 {
 	for (uint8_t ic = 0; ic < total_ic; ic++)
 	{
-		Serial.print("Waking up ic ");Serial.println(ic);
 		adBmsCsLow();
-		Delay_ms(WAKEUP_DELAY);
+		//Delay_ms(WAKEUP_DELAY);
+		delayMicroseconds(WAKEUP_DELAY);
 		adBmsCsHigh();
-		Delay_ms(WAKEUP_DELAY);
+		//Delay_ms(WAKEUP_DELAY);
+		delayMicroseconds(WAKEUP_DELAY);
 	}
 }
 
