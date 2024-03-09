@@ -14,13 +14,12 @@ void printPWM(uint8_t tIC, cell_asic *IC);
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTRA};
+enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTRA};
 test_case debug = CELLBAL;
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
-#define TOTAL_IC 2
 cell_asic IC[TOTAL_IC];
 
 fanController fans(&Serial8);
@@ -65,10 +64,17 @@ void loop() {
 
   case GPIO:
     adbms6830_write_gpio(TOTAL_IC, &IC[0], test_bool);
+
     //start aux voltage measurement sets all the GPIO pins to low, this is adjustable in the code
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
     adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
     break;
+
+  case THERMAL:
+    IC[0].tx_cfga.gpo = 0b0000000001;
+    adBmsWriteData(TOTAL_IC, &IC[0], Wrcfga, Config, AA);
+    adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
+    adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
 
   case TEENSY:
     Serial.println("Teensy is probably not the issue");

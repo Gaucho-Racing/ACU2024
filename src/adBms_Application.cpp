@@ -24,6 +24,13 @@ and its licensor.
 #include "serialPrintResult.h"
 #include "ADBMS.h"
 #include "ACU_data.h"
+#define IGNORE_RESET
+
+#ifdef IGNORE_RESET 
+#define RESET 
+#else 
+#define RESET ic[cic].tx_cfga.gpo = 0X000;
+#endif
 
 /**
 *******************************************************************************
@@ -194,12 +201,12 @@ void run_command(int cmd)
     adBms6830CreatePwma(TOTAL_IC, IC);
     adBms6830CreatePwmb(TOTAL_IC, IC);
     SetPwmDutyCycle(TOTAL_IC, IC, uint8_t(micros())%16);
-    adBmsWriteData(TOTAL_IC, IC, WRPWM1, Pwm, A);
-    adBmsWriteData(TOTAL_IC, IC, WRPWM2, Pwm, B);
-    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, A);
-    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, B);
-    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, A);
-    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, B);
+    adBmsWriteData(TOTAL_IC, IC, WRPWM1, Pwm, AA);
+    adBmsWriteData(TOTAL_IC, IC, WRPWM2, Pwm, BB);
+    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, AA);
+    printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, BB);
+    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, AA);
+    printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, BB);
     break;
 
   default:
@@ -248,9 +255,6 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC15, DCC_BIT_SET);
     ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
 //    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
-=======
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
-    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
   }
 }
 
@@ -441,7 +445,7 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   {
     /* Init config A */
     ic[cic].tx_cfga.refon = PWR_UP;
-    ic[cic].tx_cfga.gpo = 0X001; /* All GPIO pull down off */
+    RESET
   }
   adBmsWakeupIc(tIC);
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
