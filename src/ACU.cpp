@@ -1,6 +1,7 @@
 #include "ACU.h"
 #include "adBms6830CmdList.h"
 
+uint16_t cell_to_mux[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001};
 
 RD      REDUNDANT_MEASUREMENT           = RD_OFF;
 CH      AUX_CH_TO_CONVERT               = AUX_ALL;
@@ -11,7 +12,6 @@ PUP     OPEN_WIRE_CURRENT_SOURCE        = PUP_DOWN;
 DCP     DISCHARGE_PERMITTED             = DCP_OFF;
 RSTF    RESET_FILTER                    = RSTF_OFF;
 ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
-
 
 /* Set Under Voltage and Over Voltage Thresholds */
 const float OV_THRESHOLD = 4.2;                 /* Volt */
@@ -32,6 +32,7 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
+
 /// @brief performs system check
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
@@ -39,7 +40,9 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 bool systemCheck(Battery& battery, States& state) {
     //pull data from all 6830's
     adBmsWakeupIc(TOTAL_IC);
+    //update Voltage, balTemp, and cellTemp
     adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
+
     pladc_count = adBmsPollAdc(PLADC);
     return true;
 }
@@ -52,7 +55,7 @@ bool systemCheck(Battery& battery, States& state) {
 /// @param[in] TBD TBD
 /// @return TBD
 
-void shutdownState(){
+void shutdownState(States& state, bool systemCheckOk){
   // Open AIRS and Precharge if already not open
   // error messages --> VDM
   
@@ -62,7 +65,7 @@ void shutdownState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void normalState(){
+void normalState(States& state, bool systemCheckOk){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -73,7 +76,7 @@ void normalState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void chargeState(){
+void chargeState(States& state, bool systemCheckOk){
   // sendMsg if time 0.5 s reached
   // do System Check
   // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
@@ -84,7 +87,7 @@ void chargeState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void preChargeState(){
+void preChargeState(States& state, bool systemCheckOk){
   // send message to VDM to indicate Precharge
   // close AIR+, wait 1 second, check voltage
   // 10 x until threshold reached
@@ -97,18 +100,19 @@ void preChargeState(){
   // else --> ERROR 
 }
 
-/// @brief WAKE UP ISOspi Chip/sensors & System Checks
+/// @brief Runs system checks and reads can to determine whether to charge or startup car
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void standByState(){
+void standByState(States& state, bool systemCheckOk){
       // WAKE UP: ISOSpi Chip & sensors
-
       // SYSTEM CHECKS
-      // if (!SYSTEMCHECKOK) mockState = SHUTDOWN
-      // else if (!CHARGERCAN) mockState = PRECHARGE
-      // else if (CHARGERCAN) mockState = CHARGE
-      // else ERROR
+      if (!systemCheckOk) state = SHUTDOWN;
+      else {
+        // read CAN
+        // if message is from Charger, set state to CHARGE
+        // else if message is from VDM, set state to NORMAL
+      }
 }
 
 /// @brief Reads cell voltages and copy data from cell_asic
@@ -152,8 +156,6 @@ void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
     can -> send(id, message, 8);
   }
 }
-
-
 /* configuration registers commands */
 uint8_t WRCFGA[2]        = { 0x00, 0x01 };
 uint8_t WRCFGB[2]        = { 0x00, 0x24 };

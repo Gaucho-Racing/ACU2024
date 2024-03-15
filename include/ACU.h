@@ -25,8 +25,12 @@ struct Battery{
     float balTemp[128];
     CANLine can;
     cell_asic IC[TOTAL_IC];
-    float maxCellTemp = 0;  
+    float maxCellTemp, maxBalTemp = 0;
+    uint8_t cycle = 0;
 };
+
+//LUT for cell to mux channel
+
 
 void init_config(Battery &battery);
 void get_Voltage(Battery &battery);
@@ -39,10 +43,9 @@ bool systemCheck(Battery &battery, States &state);
 void updateVoltage(uint16_t cellVoltage[], cell_asic IC[]);
 uint8_t condenseVoltage(uint16_t voltage);
 void dumpCANbus(CANLine *can, uint16_t cellVoltage[]);
-void shutdownState();
-void normalState();
-void chargeState();
-void preChargeState();
-void standByState();
-
+void shutdownState(States& state, bool systemCheckOk);
+void normalState(States& state, bool systemCheckOk);
+void chargeState(States& state, bool systemCheckOk);
+void preChargeState(States& state, bool systemCheckOk);
+void standByState(States& state, bool systemCheckOk);
 #endif

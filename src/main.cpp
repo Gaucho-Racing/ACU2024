@@ -8,12 +8,8 @@ void wakeBms();
 
 Battery battery;
 States state;
+bool systemCheckOk;
 fanController fans(&Serial8);
-
-float cellVoltage[128];
-float cellTemp[128][2];
-float balTemp[128];
-float maxCellTemp, maxBalTemp;
 
 float accumVoltage, accumCurrent, tsVoltage;
 float acuTemp[3]; // DC-DC converter, something, something
@@ -39,22 +35,23 @@ void setup() {
 
 void loop() {
   // ACU STATES
+  systemCheckOk = systemCheck(battery, state);
   switch (state)
   {
     case STANDBY:
-      standByState();
+      standByState(state, systemCheckOk);
       break;
     case PRECHARGE:
-      preChargeState();
+      preChargeState(state, systemCheckOk);
       break;
     case CHARGE:
-      chargeState();
+      chargeState(state, systemCheckOk);
       break;
     case NORMAL:
-      normalState();
+      normalState(state, systemCheckOk);
       break;
     case SHUTDOWN:
-      shutdownState();
+      shutdownState(state, systemCheckOk);
       break;
     default:
       state = SHUTDOWN;
