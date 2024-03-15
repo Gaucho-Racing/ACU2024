@@ -9,7 +9,7 @@ States state;
 
 void setup() {
   Serial.begin(115200);
-  fans.begin();
+  // fans.begin();
   Serial.println("Init config");
 
   Serial.println("Setup done");
@@ -19,22 +19,23 @@ void setup() {
 
 void loop() {
   // ACU STATES
+  systemCheck(battery);
   switch (state)
   {
     case STANDBY:
-      standByState();
+      standByState(battery);
       break;
     case PRECHARGE:
-      preChargeState();
+      preChargeState(battery);
       break;
     case CHARGE:
-      chargeState();
+      chargeState(battery);
       break;
     case NORMAL:
-      normalState();
+      normalState(battery);
       break;
     case SHUTDOWN:
-      shutdownState();
+      shutdownState(battery);
       break;
     default:
       state = SHUTDOWN;

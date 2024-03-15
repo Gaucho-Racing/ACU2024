@@ -25,6 +25,7 @@ struct Battery{
     uint16_t cellVoltage[128];  
     float cellTemp[128][2];
     float balTemp[128];
+    bool containsError = false;
 };
 
 // helper functions

@@ -98,30 +98,45 @@ void chargeState(Battery &battery){
 /// @return TBD
 void preChargeState(Battery &battery){
   // send message to VDM to indicate Precharge
-  // close AIR+, wait 1 second, check voltage
+  // close AIR+, wait, check voltage
   // 10 x until threshold reached
 
   // systemChecks
-  // if (!SYSTEMCHECKOK) mockState = SHUTDOWN --> return;
+  if (battery.containsError) battery.state = SHUTDOWN; return;
+  
+  // Send VDM Precharge --> TS Active (1)
+  byte message[1];
+  message[0] = 1;
+  battery.can.send(0x66, message, 1);
+  uint32_t timeout = millis(); // not sure how long we should wait until timeout
+
+  // close AIR+
   // if (timeout) --> msg --> VDM, mockState = SHUTDOWN --> return;
   // VDM response 1 --> state = NORMAL
   // VDM response 2 --> state = SHUTDOWN
   // else --> ERROR 
 }
 
-/// @brief WAKE UP ISOspi Chip/sensors & System Checks
+/// @brief WAKE UP ISOspi Chip/sensors & System Checks & CAN msg check
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
 void standByState(Battery &battery){
       // WAKE UP: ISOSpi Chip & sensors
 
-      // SYSTEM CHECKS
-      systemCheck(battery);
-      if(battery.state == SHUTDOWN) return;
-      // else if (!CHARGERCAN) mockState = PRECHARGE
-      // else if (CHARGERCAN) mockState = CHARGE
-      // else ERROR
+      if(battery.containsError) battery.state = SHUTDOWN;
+
+      chargerData * rec;
+      rec = &(battery.can.recieveCharger());
+      if (  rec->batteryConnectionFailure || 
+            rec->communicationFailure || 
+            rec->discharging || 
+            rec->hardwareFailure || 
+            rec->inputVoltageFailure || 
+            rec->temperatureFailure){
+        battery.state = CHARGE;
+      }
+      else battery.state = PRECHARGE;
 }
 
 /// @brief Reads cell voltages and copy data from cell_asic & checks for errors
@@ -191,7 +206,7 @@ void sendCellVoltageError(Battery &battery, const float thresholdType){
   else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
 
   battery.can.send(0x96, message, 8);
-  battery.state = SHUTDOWN; // SEND TO SHUTDOWN
+  battery.containsError = true; // SEND TO SHUTDOWN
 }
 
 /// @brief sum of all voltages stored in battery
