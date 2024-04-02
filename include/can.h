@@ -64,6 +64,7 @@ class CANLine {
       // config.bus_length = 1;
       // config.sample = 70;
       // canData.setBaudRate(config);
+      last_messages[0x18FF50E5] = std::vector<byte>({255, 255, 255, 255, 0, 0, 0, 0});
     }
 
     void send(unsigned int id, byte *message, byte size = 8) {
