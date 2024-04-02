@@ -19,6 +19,16 @@ ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
 /* Set Under Voltage and Over Voltage Thresholds */
 const float OV_THRESHOLD = 4.2;                 /* Volt */
 const float UV_THRESHOLD = 3.0;                 /* Volt */
+//Discharge
+const float MIN_DIS_TEMP = -40; //TODO: Modify later
+const float MAX_DIS_TEMP = 60; 
+//Charging
+const float MIN_CHR_TEMP = 0; //TODO: Modify later
+const float MAX_CHR_TEMP = 60; 
+//Balance Resistor Temp
+const float MIN_BAL_TEMP = 0; //TODO: Modify later
+const float MAX_BAL_TEMP = 60; 
+
 const int OWC_Threshold = 2000;                 /* Cell Open wire threshold(mili volt) */
 const int OWA_Threshold = 50000;                /* Aux Open wire threshold(mili volt) */
 const uint32_t LOOP_MEASUREMENT_COUNT = 1;      /* Loop measurment count */
@@ -50,11 +60,34 @@ bool systemCheck(Battery &battery, States &state) {
 
     updateVoltage(battery);
     if (battery.temp_cycle == 0) updateTemps(battery);
-    
-    //check Voltage:
-    //check BalTemp:
+    if(battery.maxBalTemp==-1) battery.maxBalTemp = battery.balTemp[0];
+    if(battery.maxCellTemp == -1) battery.maxCellTemp = battery.cellTemp[0];
+    for (int i = 0 ; i < 128; i++){
+      //check Voltage:
+      if (battery.cellVoltage[i] > OV_THRESHOLD || battery.cellVoltage[i] < UV_THRESHOLD){
+        return true;
+      }
+      if (battery.maxBalTemp < battery.balTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+      //check Bal Temp;
+      if (battery.balTemp[i] > MAX_BAL_TEMP || battery.balTemp[i] < MIN_BAL_TEMP){
+        return true;
+      }
+    }
     //check CellTemp:
-    return true; // TO MODIFY LATER
+    for (int i = 0; i < 256; i++){
+      if (battery.maxCellTemp < battery.cellTemp[i]) battery.maxCellTemp = battery.cellTemp[i];
+      if (state == CHARGE){
+        if (battery.cellTemp[i] > MAX_CHR_TEMP || battery.cellTemp[i] < MIN_CHR_TEMP){
+          return true;
+        }
+      }else{
+        if (battery.cellTemp[i] > MAX_DIS_TEMP || battery.cellTemp[i] < MIN_DIS_TEMP){
+          return true;
+        }
+      }
+      
+    }
+    return false; // TO MODIFY LATER
 }
 
     // This function is supposed to check if the system is working properly

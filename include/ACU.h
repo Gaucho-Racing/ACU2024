@@ -24,12 +24,12 @@ struct Battery{
     CANLine can;
     States state;
     cell_asic *IC;
-    uint16_t maxCellTemp, maxBalTemp = 0;
+    float maxCellTemp, maxBalTemp = -1;
     uint8_t cycle = 0;
     uint8_t temp_cycle = 0;
     uint16_t accumulatorCurrent = 0; 
     uint16_t cellVoltage[128];  
-    float cellTemp[240];
+    float cellTemp[256];
     float balTemp[128];
     bool containsError = false;
 };
