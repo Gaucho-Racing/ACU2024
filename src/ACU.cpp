@@ -180,17 +180,17 @@ void updateTemps(Battery &battery){
     for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
       //all values are subtracted by one to account for indexing from 0
       //gpio 3: mux1, temp 0
-      battery.cellTemp[ic*32 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[3]);
+      battery.cellTemp[ic*32 + (7-battery.cycle)] = V2T(battery.IC[ic].aux.a_codes[3]);
       //gpio 4: mux 2, temp 8
-      battery.cellTemp[ic*32 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
+      battery.cellTemp[ic*32 + (7-battery.cycle) + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
       //gpio 5: mux 3, bal 0
       battery.balTemp[ic*16 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[5]);
       //gpio 0: mux 4, bal 0
       battery.balTemp[ic*16 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[0]);
       //gpio 1: mux 5, temp 16
-      battery.cellTemp[ic*32 + battery.cycle + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
+      battery.cellTemp[ic*32 + (7-battery.cycle) + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
       //gpio 2: mux 6, temp 24
-      battery.cellTemp[ic*32 + battery.cycle + 24] = V2T(battery.IC[ic].aux.a_codes[2]);
+      battery.cellTemp[ic*32 + (7-battery.cycle) + 24] = V2T(battery.IC[ic].aux.a_codes[2]);
     }
   if (battery.cycle >= 7){
     battery.cycle = 0;
