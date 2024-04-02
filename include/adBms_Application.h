@@ -26,6 +26,7 @@ and its licensor.
 #include "adBms6830Data.h"
 #include "adBms6830GenericType.h"
 #include "adBms6830ParseCreate.h"
+#include "adBms6830CmdList.h"
 
 void adbms_main(void);
 void run_command(int cmd);
