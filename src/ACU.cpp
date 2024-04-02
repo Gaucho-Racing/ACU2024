@@ -274,8 +274,8 @@ void sendCellVoltageError(Battery &battery, const float thresholdType){
   message[1] = (uint8_t)(accVolt & 0x00FF);
   message[2] = (uint8_t)((battery.accumulatorCurrent & 0xFF00) >> 8);
   message[3] = (uint8_t)(battery.accumulatorCurrent & 0x00FF);
-  message[4] = (uint8_t)((battery.maxCellTemp & 0xFF00) >> 8);
-  message[5] = (uint8_t)(battery.maxCellTemp & 0x00FF);
+  message[4] = (uint8_t)(((uint8_t)(battery.maxCellTemp) & 0xFF00) >> 8);
+  message[5] = (uint8_t)((uint8_t)(battery.maxCellTemp) & 0x00FF);
   message[7] = 3; // NOT SURE WHAT TO PUT IN HERE
 
   if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
