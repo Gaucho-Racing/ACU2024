@@ -126,17 +126,17 @@ void standByState(Battery &battery){
 
       if(battery.containsError) battery.state = SHUTDOWN;
 
-      chargerData * rec;
-      rec = &(battery.can.recieveCharger());
-      if (  rec->batteryConnectionFailure || 
-            rec->communicationFailure || 
-            rec->discharging || 
-            rec->hardwareFailure || 
-            rec->inputVoltageFailure || 
-            rec->temperatureFailure){
-        battery.state = CHARGE;
-      }
-      else battery.state = PRECHARGE;
+      // chargerData * rec;
+      // rec = &(battery.can.recieveCharger());
+      // if (  rec->batteryConnectionFailure || 
+      //       rec->communicationFailure || 
+      //       rec->discharging || 
+      //       rec->hardwareFailure || 
+      //       rec->inputVoltageFailure || 
+      //       rec->temperatureFailure){
+      //   battery.state = CHARGE;
+      // }
+      // else battery.state = PRECHARGE;
 }
 
 /// @brief Reads cell voltages and copy data from cell_asic & checks for errors
