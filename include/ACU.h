@@ -6,7 +6,7 @@
 #include <vector>
 #include <utility>
 #include "ACU_data.h"
-#include "can.cpp"
+#include "can.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
 
