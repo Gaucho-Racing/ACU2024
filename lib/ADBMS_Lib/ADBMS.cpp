@@ -109,6 +109,7 @@ void adBmsCsHigh()
 	//digitalWrite(CS_PIN, HIGH);
 	//SPI.endTransaction();
 	isoSPI1.endTransaction();
+	// lastWakeTime = micros();
 }
 
 /**

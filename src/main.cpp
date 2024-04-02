@@ -3,9 +3,6 @@
 #include "ACU.h"
 
 
-// put function declarations here:
-void wakeBms();
-
 Battery battery;
 States state;
 bool systemCheckOk;
@@ -25,8 +22,9 @@ uint8_t errors = 0b00000000;
 
 void setup() {
   Serial.begin(115200);
-  fans.begin();
+  // fans.begin();
   Serial.println("Init config");
+
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
@@ -39,19 +37,19 @@ void loop() {
   switch (state)
   {
     case STANDBY:
-      standByState(state, systemCheckOk);
+      standByState(battery, state, systemCheckOk);
       break;
     case PRECHARGE:
-      preChargeState(state, systemCheckOk);
+      preChargeState(battery, state, systemCheckOk);
       break;
     case CHARGE:
-      chargeState(state, systemCheckOk);
+      chargeState(battery, state, systemCheckOk);
       break;
     case NORMAL:
-      normalState(state, systemCheckOk);
+      normalState(battery, state, systemCheckOk);
       break;
     case SHUTDOWN:
-      shutdownState(state, systemCheckOk);
+      shutdownState(battery, state, systemCheckOk);
       break;
     default:
       state = SHUTDOWN;
@@ -61,12 +59,4 @@ void loop() {
 
   delay(500);
   
-}
-void wakeBms() {
-  // Pull CS low for more than 240nS
-  digitalWrite(10, LOW);
-  delayMicroseconds(1);
-  digitalWrite(10, HIGH);
-  // Wait 10us for the chip to wake up
-  delayMicroseconds(10);
 }
