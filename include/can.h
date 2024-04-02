@@ -35,9 +35,11 @@ struct batteryData {
 
 class CANLine {
   private:
-    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
+    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> charger_can;
+    FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> vdm_can;
     CAN_message_t msgRecieve, msgSend;
-    static const int JuanMbps = 250000;
+    int Mbps1 = 1000000;
+    int Mbps3 = 1000000;
     //static const int AteMbps = 8000000;
     std::unordered_map<int, std::vector<byte>> last_messages;
     std::unordered_map<int, int> last_messages_timestamps;
@@ -48,26 +50,7 @@ class CANLine {
 
     short toShort(byte x, byte y = 0) { return (short)(x<<8) + (short)(y); }
 
-  public:
-    //FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
-    CANLine() {
-      // Initialize the CAN bus
-      can.begin();
-      can.setBaudRate(JuanMbps);
-      can.enableFIFO();
-      // canData.begin();
-      // CANFD_timings_t config;
-      // config.clock = CLK_24MHz;
-      // config.baudrate = JuanMbps;
-      // config.baudrateFD = AteMbps;
-      // config.propdelay = 190;
-      // config.bus_length = 1;
-      // config.sample = 70;
-      // canData.setBaudRate(config);
-      last_messages[0x18FF50E5] = std::vector<byte>({255, 255, 255, 255, 0, 0, 0, 0});
-    }
-
-    void send(unsigned int id, byte *message, byte size = 8) {
+    void send(unsigned int id, byte *message, bool to_charger = false, byte size = 8) {
       msgSend.id = id;
       msgSend.len = size;
       for (int i = 0; i < size; i++) {
@@ -76,22 +59,24 @@ class CANLine {
         msgSend.buf[i] = message[i];
       }
       //Serial.println();
-      can.write(msgSend);
+      if (to_charger) charger_can.write(msgSend);
+      else vdm_can.write(msgSend);
       //Serial.print("Frame sent to id 0x");
       //Serial.println(id, HEX);
     }
 
-    void send(unsigned int id, short *message, byte size = 4) {
+    void send(unsigned int id, short *message, bool to_charger = false, byte size = 4) {
       byte msg[2*size];
       for (int i = 0; i < size; i++) {
         msg[2*i] = high(message[i]);
         msg[2*i+1] = low(message[i]);
       }
-      send(id, msg, 2*size);
+      send(id, msg, to_charger, 2*size);
     }
 
-    int recieve_one() {
-        if (can.readFIFO(msgRecieve) == 0) return 0;
+    int recieve_one(bool from_charger = false) {
+        if (from_charger) if (charger_can.readFIFO(msgRecieve) == 0) return 0;
+        else if (vdm_can.readFIFO(msgRecieve) == 0) return 0;
         //Serial.print("0x");
         //Serial.print(msgRecieve.id, HEX);
         //Serial.print(" ");
@@ -104,19 +89,72 @@ class CANLine {
         return 1;
     }
 
-    int recieve_many() {
-      if (recieve_one() == 0) return 0;
-      while (recieve_one()) {};
-      return 1;
+    std::vector<byte> recieve(unsigned int id) {
+      update_recieved_msgs();
+      return last_messages[id];
     }
 
-    std::vector<byte> recieve(unsigned int id) {
-      recieve_many();
-      return last_messages[id];
+    std::vector<short> recieveShort(unsigned int id) {
+      std::vector<byte> bytes = recieve(id);
+      bytes.push_back(0);
+
+      std::vector<short> result = std::vector<short>((bytes.size())/2,0);
+
+      for (int i = 0; i < result.size(); i++) {
+        result[i] = toShort(bytes[2*i], bytes[2*i+1]);
+      }
+      return result;
     }
 
     int age_of(unsigned int id) {
       return last_messages_timestamps[id];
+    }
+
+    void sendToCharger(short maxChargeVolts, short maxChargeAmps, bool enableCharge) {
+      short msg[4] = {maxChargeVolts, maxChargeAmps, (short)enableCharge, 0};
+      send(0x1806E5F4, msg);
+      /*
+      msgPrimary.buf[0] = (byte)(maxChargeVolts >> 8);
+      msgPrimary.buf[1] = (byte)(maxChargeVolts);
+      msgPrimary.buf[2] = (byte)(maxChargeAmps >> 8);
+      msgPrimary.buf[3] = (byte)(maxChargeAmps);
+      msgPrimary.buf[4] = (byte)(enableCharge);
+      msgPrimary.buf[5] = 0x00;
+      msgPrimary.buf[6] = 0x00;
+      msgPrimary.buf[7] = 0x00;
+      canPrimary.write(msgPrimary);
+      Serial.println("Frame sent!");
+      */
+    }
+
+  public:
+    //FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
+    CANLine(int Mbps1 = 1000000, int Mbps3 = 1000000) {
+      // Initialize the CAN bus
+      charger_can.begin();
+      charger_can.setBaudRate(Mbps1);
+      charger_can.enableFIFO();
+
+      vdm_can.begin();
+      vdm_can.setBaudRate(Mbps3);
+      vdm_can.enableFIFO();
+      // canData.begin();
+      // CANFD_timings_t config;
+      // config.clock = CLK_24MHz;
+      // config.baudrate = JuanMbps;
+      // config.baudrateFD = AteMbps;
+      // config.propdelay = 190;
+      // config.bus_length = 1;
+      // config.sample = 70;
+      // canData.setBaudRate(config);
+      last_messages[0x18FF50E5] = std::vector<byte>({255, 255, 255, 255, 0, 0, 0, 0});
+    }
+
+    int update_recieved_msgs() {
+      if (recieve_one(false) == 0 && recieve_one(true) == 0) return 0;
+      while (recieve_one(false)) {};
+      while (recieve_one(true)) {};
+      return 1;
     }
 
     /*
@@ -142,18 +180,6 @@ class CANLine {
     // start/stop charging
     // change limits command
 
-    std::vector<short> recieveShort(unsigned int id) {
-      std::vector<byte> bytes = recieve(id);
-      bytes.push_back(0);
-
-      std::vector<short> result = std::vector<short>((bytes.size())/2,0);
-
-      for (int i = 0; i < result.size(); i++) {
-        result[i] = toShort(bytes[2*i], bytes[2*i+1]);
-      }
-      return result;
-    }
-
     short setMaxTerminalVoltage(short v) {
       current_settings.maxChargeVolts = v;
       sendToCharger(current_settings.maxChargeVolts, current_settings.maxChargeAmps, current_settings.charging);
@@ -172,24 +198,7 @@ class CANLine {
       return current_settings.charging;
     }
 
-    bool isCharging() { return current_settings.charging; }
-
-    void sendToCharger(short maxChargeVolts, short maxChargeAmps, bool enableCharge) {
-      short msg[4] = {maxChargeVolts, maxChargeAmps, (short)enableCharge, 0};
-      send(0x1806E5F4, msg);
-      /*
-      msgPrimary.buf[0] = (byte)(maxChargeVolts >> 8);
-      msgPrimary.buf[1] = (byte)(maxChargeVolts);
-      msgPrimary.buf[2] = (byte)(maxChargeAmps >> 8);
-      msgPrimary.buf[3] = (byte)(maxChargeAmps);
-      msgPrimary.buf[4] = (byte)(enableCharge);
-      msgPrimary.buf[5] = 0x00;
-      msgPrimary.buf[6] = 0x00;
-      msgPrimary.buf[7] = 0x00;
-      canPrimary.write(msgPrimary);
-      Serial.println("Frame sent!");
-      */
-    }
+    bool chargingAllowed() { return current_settings.charging; }
 
     chargerData recieveCharger() {
       /*
