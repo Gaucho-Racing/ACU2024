@@ -56,7 +56,7 @@ bool systemCheck(Battery &battery, States &state) {
 /// @brief offState, idk if this is needed
 /// @param[in] battery TBD
 /// @return N/A
-void offState(Battery &battery,States& state, bool systemCheckOk){
+void offState(Battery &battery,States& state){
   // When it turns on --> go to STANDBY
   battery.state = STANDBY;
 }
@@ -64,7 +64,7 @@ void offState(Battery &battery,States& state, bool systemCheckOk){
 /// @brief shutDown, send errors --> VDM
 /// @param[in] battery TBD
 /// @return N/A
-void shutdownState(Battery &battery, States& state, bool systemCheckOk){
+void shutdownState(Battery &battery, States& state){
   // Open AIRS and Precharge if already not open
 
   // send error --> CAN
@@ -78,7 +78,7 @@ void shutdownState(Battery &battery, States& state, bool systemCheckOk){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void normalState(Battery &battery, States& state, bool systemCheckOk){
+void normalState(Battery &battery, States& state){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -89,7 +89,7 @@ void normalState(Battery &battery, States& state, bool systemCheckOk){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void chargeState(Battery &battery, States& state, bool systemCheckOk){
+void chargeState(Battery &battery, States& state){
   // sendMsg if time 0.5 s reached
   // do System Check
   // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
@@ -100,7 +100,7 @@ void chargeState(Battery &battery, States& state, bool systemCheckOk){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void preChargeState(Battery &battery, States& state, bool systemCheckOk){
+void preChargeState(Battery &battery, States& state){
   // send message to VDM to indicate Precharge
   // close AIR+, wait, check voltage
   // 10 x until threshold reached
@@ -125,10 +125,10 @@ void preChargeState(Battery &battery, States& state, bool systemCheckOk){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void standByState(Battery &battery, States& state, bool systemCheckOk){
+void standByState(Battery &battery, States& state){
       // WAKE UP: ISOSpi Chip & sensors
       // SYSTEM CHECKS
-      if (!systemCheckOk) state = SHUTDOWN;
+      if (!battery.containsError) state = SHUTDOWN;
       else {
         // read CAN
         // if message is from Charger, set state to CHARGE

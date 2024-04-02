@@ -5,7 +5,6 @@
 
 Battery battery;
 States state;
-bool systemCheckOk;
 fanController fans(&Serial8);
 
 float accumVoltage, accumCurrent, tsVoltage;
@@ -33,23 +32,23 @@ void setup() {
 
 void loop() {
   // ACU STATES
-  systemCheckOk = systemCheck(battery, state);
+  battery.containsError = systemCheck(battery, state);
   switch (state)
   {
     case STANDBY:
-      standByState(battery, state, systemCheckOk);
+      standByState(battery, state);
       break;
     case PRECHARGE:
-      preChargeState(battery, state, systemCheckOk);
+      preChargeState(battery, state);
       break;
     case CHARGE:
-      chargeState(battery, state, systemCheckOk);
+      chargeState(battery, state);
       break;
     case NORMAL:
-      normalState(battery, state, systemCheckOk);
+      normalState(battery, state);
       break;
     case SHUTDOWN:
-      shutdownState(battery, state, systemCheckOk);
+      shutdownState(battery, state);
       break;
     default:
       state = SHUTDOWN;

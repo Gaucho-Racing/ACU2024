@@ -40,16 +40,17 @@ void get_Current(Battery &battery);
 void get_Max_Cell_Temp(Battery &battery);
 void get_Max_Bal_Res_Temp(Battery &battery);
 void cell_Balancing(Battery &battery);
-void offState(Battery &battery,States& state, bool systemCheckOk);
-void shutdownState(Battery &battery, States& state, bool systemCheckOk);
-void normalState(Battery &battery, States& state, bool systemCheckOk);
-void chargeState(Battery &battery, States& state, bool systemCheckOk);
-void preChargeState(Battery &battery, States& state, bool systemCheckOk);
-void standByState(Battery &battery, States& state, bool systemCheckOk);
+void offState(Battery &battery,States& state);
+void shutdownState(Battery &battery, States& state);
+void normalState(Battery &battery, States& state);
+void chargeState(Battery &battery, States& state);
+void preChargeState(Battery &battery, States& state);
+void standByState(Battery &battery, States& state);
 bool systemCheck(Battery &battery, States& state);
 
 // functions for cell Voltage
 void updateVoltage(Battery &battery);
+void updateBalTemp(Battery &battery);
 void dumpCANbus(CANLine *can, uint16_t cellVoltage[]);
 void sendCellVoltageError(Battery &battery, const float thresholdType);
 uint8_t condenseVoltage(uint16_t voltage);
