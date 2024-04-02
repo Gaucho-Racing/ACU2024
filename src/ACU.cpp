@@ -2,7 +2,9 @@
 #include "adBms_Application.h"
 #include "adBms6830CmdList.h"
 
-uint16_t cell_to_mux[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001};
+//index i corresponds to the gpio required to get the temperature of the balacing resistor of the ith cell
+//
+uint16_t mux_temp_codes[8] = {0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111}; 
 
 RD      REDUNDANT_MEASUREMENT           = RD_OFF;
 CH      AUX_CH_TO_CONVERT               = AUX_ALL;
@@ -47,6 +49,11 @@ bool systemCheck(Battery &battery, States &state) {
     pladc_count = adBmsPollAdc(PLADC);
 
     updateVoltage(battery);
+    if (battery.temp_cycle == 0) updateTemps(battery);
+    
+    //check Voltage:
+    //check BalTemp:
+    //check CellTemp:
     return true; // TO MODIFY LATER
 }
 
@@ -149,7 +156,50 @@ void updateVoltage(Battery &battery) {
         sendCellVoltageError(battery, UV_THRESHOLD);
     }
   }
+  if(battery.temp_cycle >= 15){
+    battery.temp_cycle = 0;
+  }
+  else {
+    battery.temp_cycle++;
+  }
 }
+
+float V2T(float voltage, float B = 4390){
+  float R = voltage / ((5.0 - voltage) / 47e3) / 100e3;
+  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
+  return T - 273.15;
+}
+
+void updateTemps(Battery &battery){
+  for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+    battery.IC[ic].tx_cfga.gpo = mux_temp_codes[battery.cycle];
+  }
+    adBmsWriteData(TOTAL_IC, battery.IC, WRCFGA, Config, AA);
+    adBms6830_start_aux_voltage_measurment(TOTAL_IC, battery.IC);
+    adBms6830_read_aux_voltages(TOTAL_IC, battery.IC);
+    for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+      //all values are subtracted by one to account for indexing from 0
+      //gpio 3: mux1, temp 0
+      battery.cellTemp[ic*32 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[3]);
+      //gpio 4: mux 2, temp 8
+      battery.cellTemp[ic*32 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
+      //gpio 5: mux 3, bal 0
+      battery.balTemp[ic*16 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[5]);
+      //gpio 0: mux 4, bal 0
+      battery.balTemp[ic*16 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[0]);
+      //gpio 1: mux 5, temp 16
+      battery.cellTemp[ic*32 + battery.cycle + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
+      //gpio 2: mux 6, temp 24
+      battery.cellTemp[ic*32 + battery.cycle + 24] = V2T(battery.IC[ic].aux.a_codes[2]);
+    }
+  if (battery.cycle >= 7){
+    battery.cycle = 0;
+  }
+  else {
+    battery.cycle++;
+  }
+}
+
 
 /// @brief converts uint16_t voltage --> uint8_t voltage
 /// @param[in] voltage uint16_t

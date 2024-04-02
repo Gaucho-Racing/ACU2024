@@ -26,9 +26,10 @@ struct Battery{
     cell_asic *IC;
     uint16_t maxCellTemp, maxBalTemp = 0;
     uint8_t cycle = 0;
+    uint8_t temp_cycle = 0;
     uint16_t accumulatorCurrent = 0; 
     uint16_t cellVoltage[128];  
-    float cellTemp[128][2];
+    float cellTemp[240];
     float balTemp[128];
     bool containsError = false;
 };
@@ -50,7 +51,9 @@ bool systemCheck(Battery &battery, States& state);
 
 // functions for cell Voltage
 void updateVoltage(Battery &battery);
-void updateBalTemp(Battery &battery);
+float V2T(float voltage, float B = 4390);
+void updateTemps(Battery &battery);
+void calcCharge(Battery &battery);
 void dumpCANbus(CANLine *can, uint16_t cellVoltage[]);
 void sendCellVoltageError(Battery &battery, const float thresholdType);
 uint8_t condenseVoltage(uint16_t voltage);
