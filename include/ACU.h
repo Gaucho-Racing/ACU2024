@@ -22,8 +22,8 @@ enum States {
 
 struct Battery{
     CANLine can;
-    States state;
     cell_asic *IC;
+    chargerData cData;
     uint16_t maxCellTemp, maxBalTemp = 0;
     uint8_t cycle = 0;
     uint16_t accumulatorCurrent = 0; 
@@ -31,22 +31,28 @@ struct Battery{
     float cellTemp[128][2];
     float balTemp[128];
     bool containsError = false;
+    long previousMillis = 0, interval = 500;
 };
 
 // helper functions
 void init_config(Battery &battery);
-void get_Temperatures(Battery &battery);
-void get_Current(Battery &battery);
-void get_Max_Cell_Temp(Battery &battery);
-void get_Max_Bal_Res_Temp(Battery &battery);
-void cell_Balancing(Battery &battery);
+short getMaxVoltage(CANLine *can);
+short getMaxOutputCurrent(CANLine *can);
+
 void offState(Battery &battery,States& state, bool systemCheckOk);
-void shutdownState(Battery &battery, States& state, bool systemCheckOk);
+void shutdownState(Battery &battery, States& state, bool systemCheckOk, bool &tsActive);
 void normalState(Battery &battery, States& state, bool systemCheckOk);
 void chargeState(Battery &battery, States& state, bool systemCheckOk);
 void preChargeState(Battery &battery, States& state, bool systemCheckOk);
 void standByState(Battery &battery, States& state, bool systemCheckOk);
 bool systemCheck(Battery &battery, States& state);
+
+// not implemented yet
+void get_Temperatures(Battery &battery);
+void get_Current(Battery &battery);
+void get_Max_Cell_Temp(Battery &battery);
+void get_Max_Bal_Res_Temp(Battery &battery);
+void cell_Balancing(Battery &battery);
 
 // functions for cell Voltage
 void updateVoltage(Battery &battery);

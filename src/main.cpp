@@ -1,4 +1,3 @@
-
 #include "FanController.h"
 #include "ACU.h"
 
@@ -29,10 +28,11 @@ void setup() {
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
   state = STANDBY;
+
 }
 
 void loop() {
-  // ACU STATES
+  // ACU STATES  
   systemCheckOk = systemCheck(battery, state);
   switch (state)
   {
@@ -49,7 +49,7 @@ void loop() {
       normalState(battery, state, systemCheckOk);
       break;
     case SHUTDOWN:
-      shutdownState(battery, state, systemCheckOk);
+      shutdownState(battery, state, systemCheckOk, tsActive);
       break;
     default:
       state = SHUTDOWN;

@@ -14,9 +14,9 @@
 //#define AteMbps 8000000
 
 struct chargerData {
-  short maxChargeVolts;
+  uint16_t maxChargeVolts;
   bool discharging;
-  short maxChargeAmps;
+  uint16_t maxChargeAmps;
   bool hardwareFailure;
   bool temperatureFailure;
   bool inputVoltageFailure;
@@ -51,7 +51,7 @@ class CANLine {
       // canData.setBaudRate(config);
     }
 
-    void send(unsigned int id, byte *message, byte size = 8) {
+    void send(uint32_t id, byte *message, byte size = 8) {
       msgSend.id = id;
       msgSend.len = size;
       for (int i = 0; i < size; i++) {
@@ -65,9 +65,9 @@ class CANLine {
       Serial.println(id, HEX);
     }
 
-    void send(unsigned int id, short *message, byte size = 4) {
+    void send(uint32_t id, uint16_t *message, byte size = 4) {
       byte msg[2*size];
-      for (int i = 0; i < size; i++) {
+      for (uint8_t i = 0; i < size; i++) {
         msg[2*i] = (byte)(message[i] >> 8);
         msg[2*i+1] = (byte)(message[i]);
       }
@@ -127,11 +127,11 @@ class CANLine {
       return result;
     }
 
-    void sendToCharger(short maxChargeVolts, short maxChargeAmps, bool enableCharge) {
+    void sendToCharger(uint16_t maxChargeVolts, uint16_t maxChargeAmps, bool enableCharge) {
       //msgPrimary.id = 0x1806E5F4;
       //msgPrimary.len = 8;
-      short chargeShort = (short)enableCharge << 8;
-      short msg[4] = {maxChargeVolts, maxChargeAmps, chargeShort, 0};
+      uint16_t chargeShort = (uint16_t)enableCharge << 8;
+      uint16_t msg[8] = {maxChargeVolts, maxChargeAmps, chargeShort, 0};
       send(0x1806E5F4, msg);
       /*
       msgPrimary.buf[0] = (byte)(maxChargeVolts >> 8);

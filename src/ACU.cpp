@@ -34,6 +34,8 @@ LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
 
+uint32_t lastSendChragerTime = 0; // ms
+
 /// @brief performs system check
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
@@ -49,7 +51,6 @@ bool systemCheck(Battery &battery, States &state) {
     updateVoltage(battery);
     return true; // TO MODIFY LATER
 }
-
     // This function is supposed to check if the system is working properly
     // It is not implemented yet
     
@@ -57,21 +58,22 @@ bool systemCheck(Battery &battery, States &state) {
 /// @param[in] battery TBD
 /// @return N/A
 void offState(Battery &battery,States& state, bool systemCheckOk){
-  // When it turns on --> go to STANDBY
-  battery.state = STANDBY;
+  // turns on --> go to STANDBY
+  state = STANDBY;
 }
 
 /// @brief shutDown, send errors --> VDM
 /// @param[in] battery TBD
 /// @return N/A
-void shutdownState(Battery &battery, States& state, bool systemCheckOk){
+void shutdownState(Battery &battery, States& state, bool systemCheckOk, bool &tsActive){
   // Open AIRS and Precharge if already not open
 
   // send error --> CAN
+  tsActive = false;
   byte alertMsg[1];
   alertMsg[0] = 0;
   battery.can.send(0x66, alertMsg, 1);
-  battery.state = OFFSTATE;
+  state = OFFSTATE;
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
@@ -90,10 +92,24 @@ void normalState(Battery &battery, States& state, bool systemCheckOk){
 /// @param[in] TBD TBD
 /// @return TBD
 void chargeState(Battery &battery, States& state, bool systemCheckOk){
-  // sendMsg if time 0.5 s reached
-  // do System Check
-  // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
-  // else --> same state
+  // systemCheck
+  if (!systemCheckOk){
+    state = SHUTDOWN;
+    return;
+  }
+  // sending to Charger for every 0.5 sec
+  if(millis() - lastSendChragerTime >= 250){
+    lastSendChragerTime = millis();
+    battery.can.sendToCharger(battery.cData.maxChargeVolts, battery.cData.maxChargeAmps, true);
+  }
+  // check for latest message form charger message
+  battery.cData = battery.can.recieveCharger();
+  if(battery.cData.batteryConnectionFailure || battery.cData.communicationFailure
+      || battery.cData.hardwareFailure || battery.cData.inputVoltageFailure
+      || battery.cData.temperatureFailure){
+    state = SHUTDOWN;
+    return;
+  }
 }
 
 /// @brief error --> VDM if timeout --> (NORMAL/SHUTDOWN)
@@ -106,13 +122,13 @@ void preChargeState(Battery &battery, States& state, bool systemCheckOk){
   // 10 x until threshold reached
 
   // systemChecks
-  if (battery.containsError) battery.state = SHUTDOWN; return;
+  if (battery.containsError) {state = SHUTDOWN; return; }
   
   // Send VDM Precharge --> TS Active (1)
   byte message[1];
   message[0] = 1;
   battery.can.send(0x66, message, 1);
-  uint32_t timeout = millis(); // not sure how long we should wait until timeout
+  // uint32_t timeout = millis(); // not sure how long we should wait until timeout
 
   // close AIR+
   // if (timeout) --> msg --> VDM, mockState = SHUTDOWN --> return;
@@ -127,6 +143,7 @@ void preChargeState(Battery &battery, States& state, bool systemCheckOk){
 /// @return TBD
 void standByState(Battery &battery, States& state, bool systemCheckOk){
       // WAKE UP: ISOSpi Chip & sensors
+      battery.cData = battery.can.recieveCharger();
       // SYSTEM CHECKS
       if (!systemCheckOk) state = SHUTDOWN;
       else {
@@ -155,7 +172,6 @@ void updateVoltage(Battery &battery) {
 /// @param[in] voltage uint16_t
 /// @return uint8_t voltage converted
 uint8_t condenseVoltage(uint16_t voltage) {
-  //voltage = constrain(voltage, 20000, 45500);
   return (voltage / 100 + (voltage % 100 > 49));// - 200; // uncomment these when connecting to cells
 }
 
@@ -211,7 +227,6 @@ uint16_t getAccumulatorVoltage(uint16_t *cellVoltage){
     accVoltage += cellVoltage[index] / 100 + (cellVoltage[index] % 100 > 49);
   return accVoltage;
 }
-
 uint16_t getAccumulatorCurrent(uint16_t *cellVoltage){
   return 0;
 }
