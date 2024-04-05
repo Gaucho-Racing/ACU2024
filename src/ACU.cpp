@@ -17,8 +17,8 @@ RSTF    RESET_FILTER                    = RSTF_OFF;
 ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
 
 /* Set Under Voltage and Over Voltage Thresholds */
-const float OV_THRESHOLD = 4.2;                 /* Volt */
-const float UV_THRESHOLD = 3.0;                 /* Volt */
+const float OV_THRESHOLD = 42000;                 /* Volt in 0.1 mV*/
+const float UV_THRESHOLD = 30000;                 /* Volt in 0.1 mV*/
 //Discharge
 const float MIN_DIS_TEMP = -40; //TODO: Modify later
 const float MAX_DIS_TEMP = 60; 
@@ -51,23 +51,51 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 /// @param[in] state Reference to states
 /// @return The false if fails, true otherwise
 bool systemCheck(Battery &battery, States &state) {
+
+    
     //pull data from all 6830's
     adBmsWakeupIc(TOTAL_IC);
     //update Voltage, balTemp, and cellTemp
     adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
 
     pladc_count = adBmsPollAdc(PLADC);
-
-    updateVoltage(battery);
+    // every 10 cycles recheck Voltage while in charge
+    if(battery.chargeCycle>0 && state == CHARGE){
+    } else {
+      updateVoltage(battery);
+    }
     if (battery.temp_cycle == 0) updateTemps(battery);
     if(battery.maxBalTemp==-1) battery.maxBalTemp = battery.balTemp[0];
     if(battery.maxCellTemp == -1) battery.maxCellTemp = battery.cellTemp[0];
+    if(battery.minVolt == -1) battery.minVolt = battery.cellVoltage[0];
+    // if(battery.minCellTemp == -1) battery.minCellTemp = battery.cellTemp[0];
     for (int i = 0 ; i < 128; i++){
+      if(battery.chargeCycle > 0 && state == CHARGE){
+
+      }else{
+        if (battery.minVolt > battery.cellVoltage[i]) battery.minVolt = battery.cellVoltage[i];
       //check Voltage:
-      if (battery.cellVoltage[i] > OV_THRESHOLD || battery.cellVoltage[i] < UV_THRESHOLD){
-        return true;
+        if (battery.cellVoltage[i] > OV_THRESHOLD || battery.cellVoltage[i] < UV_THRESHOLD){
+          return true;
+        }
       }
+      if (battery.chargeCycle == 0 && state == CHARGE){
+        uint16_t toDischarge = 0;
+        //figure out which cells to discharge
+        for(int ic = 0; ic < TOTAL_IC; ic++){
+          for(int cell = 0; cell < CELL; cell++){
+            //diff between the minimum cell voltage and the current cell is 20mV discharge
+            if(battery.cellVoltage[ic*CELL + cell]-battery.minVolt > 200){
+              toDischarge |= 1 << cell;
+            }
+          }
+          battery.IC[ic].tx_cfgb.dcc = toDischarge;
+        }
+      }
+      
       if (battery.maxBalTemp < battery.balTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+      // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+
       //check Bal Temp;
       if (battery.balTemp[i] > MAX_BAL_TEMP || battery.balTemp[i] < MIN_BAL_TEMP){
         return true;
@@ -87,16 +115,23 @@ bool systemCheck(Battery &battery, States &state) {
       }
       
     }
-    return false; // TO MODIFY LATER
+    //TODO: maybe discharge top 10% (std)
+    //if next chargeCycle is 0 and Charging, get ready for cell measurement by turing off discharge
+    if(battery.chargeCycle >= 9 && state == CHARGE){
+      battery.chargeCycle = 0;
+      for(int ic = 0; ic < TOTAL_IC; ic++){
+        battery.IC[ic].tx_cfgb.dcc = 0x0;
+      }
+    }
+    adBms6830_write_read_config(TOTAL_IC, battery.IC);
+    return false; 
 }
 
-    // This function is supposed to check if the system is working properly
-    // It is not implemented yet
     
 /// @brief offState, idk if this is needed
 /// @param[in] battery TBD
 /// @return N/A
-void offState(Battery &battery,States& state){
+void offState(Battery &battery, States& state){
   // When it turns on --> go to STANDBY
   battery.state = STANDBY;
 }
@@ -130,6 +165,7 @@ void normalState(Battery &battery, States& state){
 /// @param[in] TBD TBD
 /// @return TBD
 void chargeState(Battery &battery, States& state){
+  
   // sendMsg if time 0.5 s reached
   // do System Check
   // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;

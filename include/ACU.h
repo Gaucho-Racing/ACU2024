@@ -25,9 +25,13 @@ struct Battery{
     States state;
     cell_asic *IC;
     float maxCellTemp, maxBalTemp = -1;
+    uint16_t minVolt = -1;
     uint8_t cycle = 0;
+    //every 10 cycles recheck Voltage
+    uint8_t chargeCycle = 0;
     uint8_t temp_cycle = 0;
     uint16_t accumulatorCurrent = 0; 
+    //in 0.1mV
     uint16_t cellVoltage[128];  
     float cellTemp[256];
     float balTemp[128];
