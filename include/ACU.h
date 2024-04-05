@@ -6,7 +6,7 @@
 #include <vector>
 #include <utility>
 #include "ACU_data.h"
-#include "can.cpp"
+#include "can.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
 
@@ -24,11 +24,16 @@ struct Battery{
     CANLine can;
     cell_asic *IC;
     chargerData cData;
-    uint16_t maxCellTemp, maxBalTemp = 0;
+    float maxCellTemp, maxBalTemp = -1;
+    uint16_t minVolt = -1;
     uint8_t cycle = 0;
+    //every 10 cycles recheck Voltage
+    uint8_t chargeCycle = 0;
+    uint8_t temp_cycle = 0;
     uint16_t accumulatorCurrent = 0; 
+    //in 0.1mV
     uint16_t cellVoltage[128];  
-    float cellTemp[128][2];
+    float cellTemp[256];
     float balTemp[128];
     bool containsError = false;
     long previousMillis = 0, interval = 500;
@@ -36,9 +41,6 @@ struct Battery{
 
 // helper functions
 void init_config(Battery &battery);
-short getMaxVoltage(CANLine *can);
-short getMaxOutputCurrent(CANLine *can);
-
 void offState(Battery &battery,States& state, bool systemCheckOk);
 void shutdownState(Battery &battery, States& state, bool systemCheckOk, bool &tsActive);
 void normalState(Battery &battery, States& state, bool systemCheckOk);
@@ -56,6 +58,9 @@ void cell_Balancing(Battery &battery);
 
 // functions for cell Voltage
 void updateVoltage(Battery &battery);
+float V2T(float voltage, float B = 4390);
+void updateTemps(Battery &battery);
+void calcCharge(Battery &battery);
 void dumpCANbus(CANLine *can, uint16_t cellVoltage[]);
 void sendCellVoltageError(Battery &battery, const float thresholdType);
 uint8_t condenseVoltage(uint16_t voltage);

@@ -15,8 +15,8 @@
 //Pin Definitions
 #define AIR_PLUS -1
 #define AIR_NEG -1
-#define CAN_H -1
-#define CAN_L -1
+#define CAN_HI -1
+#define CAN_LO -1
 #define TSAL_RED -1
 #define TSAL_GREEN -1
 #define PRECHG_OUT -1
