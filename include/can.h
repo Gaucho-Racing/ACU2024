@@ -58,6 +58,9 @@ class CANLine {
       last_recieved_messages[0x67] = std::vector<byte>({255, 255, 255, 255, 255, 255, 0, 0});
       last_recieved_messages[0x95] = std::vector<byte>({255, 0, 0, 0, 0, 0, 0, 0});
       last_sent_messages[0x96] = std::vector<byte>({255, 255, 255, 255, 255, 255, 0, 0});
+      last_sent_messages[0x97] = std::vector<byte>({255, 255, 0, 255, 255, 255, 255, 255});
+      last_sent_messages[0x98] = std::vector<byte>({255, 255, 255, 255, 255, 255, 255, 0});
+      last_sent_messages[0x99] = std::vector<byte>({255, 255, 255, 255, 0, 0, 0, 0});
       last_sent_messages[0x1806E5F4] = std::vector<byte>({255, 255, 255, 255, 0, 0, 0, 0});
       last_recieved_messages[0x18FF50E5] = std::vector<byte>({255, 255, 255, 255, 0, 0, 0, 0});
     }
@@ -66,7 +69,7 @@ class CANLine {
     byte low(unsigned short x) { return (byte)(x);}
 
     bool getBool(byte x, int bitnum) {
-      x = x >> bitnum;
+      x = x >> (7 - bitnum);
       return (bool)(x & 1);
     }
 
@@ -122,7 +125,7 @@ class CANLine {
     void editBit(unsigned int id, byte bytenum, unsigned int count, bool *values, unsigned int *indices, bool to_charger = false) {
       byte result = last_sent_messages[id][bytenum];
       for (int i = 0; i < count; i++) {
-          values[i] ? (result | (0b00000001 << indices[i])) : (result & (~(0b00000001) << indices[i]));
+          values[i] ? (result | (0b10000000 >> indices[i])) : (result & (~(0b010000000) >> indices[i]));
       }
       byte byteValues[] = { result };
       unsigned int indices[] = { bytenum };
@@ -272,32 +275,32 @@ class CANLine {
 
     bool charger_is_discharging() {
       byte* msg = &(recieve(0x18FF50E5)[0]);
-      return getBool(msg[3], 7);
+      return getBool(msg[3], 0);
     }
 
     bool charger_is_hardware_failure() {
       byte* msg = &(recieve(0x18FF50E5)[0]);
-      return getBool(msg[5], 7);
+      return getBool(msg[5], 0);
     }
 
     bool charger_is_over_temp() {
       byte* msg = &(recieve(0x18FF50E5)[0]);
-      return getBool(msg[5], 6);
+      return getBool(msg[5], 1);
     }
 
     bool charger_is_in_voltage_error() {
       byte* msg = &(recieve(0x18FF50E5)[0]);
-      return getBool(msg[5], 5);
+      return getBool(msg[5], 2);
     }
 
     bool charger_is_not_connected_properly() {
       byte* msg = &(recieve(0x18FF50E5)[0]);
-      return getBool(msg[5], 4);
+      return getBool(msg[5], 3);
     }
 
     bool charger_is_comms_error() {
       byte* msg = &(recieve(0x18FF50E5)[0]);
-      return getBool(msg[5], 3);
+      return getBool(msg[5], 4);
     }
 
     int charger_data_age() { return age_of(0x18FF50E5); }
@@ -312,7 +315,7 @@ class CANLine {
   
     bool vdm_ts_active() {
       byte* msg = &(recieve(0x66)[0]);
-      return getBool(msg[0], 0);
+      return getBool(msg[0], 7);
     }
 
     short idk_battery_max_voltage() {
@@ -359,34 +362,34 @@ class CANLine {
 
     bool send_over_temp_error(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b01111000)) };
-      unsigned int indices[] = { 7, 0 };
+      unsigned int indices[] = { 0, 7 };
       editBit(0x96, 6, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][6], 7);      
+      return getBool(last_recieved_messages[0x96][6], 0);      
     }
 
     bool send_over_voltage_error(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b10111000)) };
-      unsigned int indices[] = { 6, 0 };
+      unsigned int indices[] = { 1, 7 };
       editBit(0x96, 6, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][6], 6);      
+      return getBool(last_recieved_messages[0x96][6], 1);      
     }
 
     bool send_over_current_error(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b11011000)) };
-      unsigned int indices[] = { 5, 0 };
+      unsigned int indices[] = { 2, 7 };
       editBit(0x96, 6, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][6], 5);      
+      return getBool(last_recieved_messages[0x96][6], 2);      
     }
 
     bool send_bms_error(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b11110000)) };
-      unsigned int indices[] = { 3, 0 };
+      unsigned int indices[] = { 3, 7 };
       editBit(0x96, 6, 1, values, indices);
       return getBool(last_recieved_messages[0x96][6], 3);      
     }
     bool send_under_voltage_error(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b11101000)) };
-      unsigned int indices[] = { 4, 0 };
+      unsigned int indices[] = { 4, 7 };
       editBit(0x96, 6, 1, values, indices);
       return getBool(last_recieved_messages[0x96][6], 4);      
     }
@@ -394,44 +397,245 @@ class CANLine {
 
     bool send_bms_open_wire_warn(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b01101110)) };
-      unsigned int indices[] = { 7, 4 };
+      unsigned int indices[] = { 0, 3 };
       editBit(0x96, 7, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][7], 7);
+      return getBool(last_recieved_messages[0x96][7], 0);
     }
 
     bool send_bms_adc_warn(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b10101110)) };
-      unsigned int indices[] = { 6, 4 };
+      unsigned int indices[] = { 1, 3 };
       editBit(0x96, 7, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][7], 6);
+      return getBool(last_recieved_messages[0x96][7], 1);
     }
 
     bool send_bms_cell_warn(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b11001110)) };
-      unsigned int indices[] = { 5, 4 };
-      editBit(0x96, 7, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][7], 5);
-    }
-
-    bool send_low_charger_warn(bool b) {
-      bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b11100110)) };
-      unsigned int indices[] = { 3, 4 };
-      editBit(0x96, 7, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][7], 3);
-    }
-
-    bool send_cell_imbalance_warn(bool b) {
-      bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b11101010)) };
-      unsigned int indices[] = { 2, 4 };
+      unsigned int indices[] = { 2, 3 };
       editBit(0x96, 7, 1, values, indices);
       return getBool(last_recieved_messages[0x96][7], 2);
     }
 
+    bool send_low_charger_warn(bool b) {
+      bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b11100110)) };
+      unsigned int indices[] = { 4, 3 };
+      editBit(0x96, 7, 1, values, indices);
+      return getBool(last_recieved_messages[0x96][7], 4);
+    }
+
+    bool send_cell_imbalance_warn(bool b) {
+      bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b11101010)) };
+      unsigned int indices[] = { 5, 3 };
+      editBit(0x96, 7, 1, values, indices);
+      return getBool(last_recieved_messages[0x96][7], 5);
+    }
+
     bool send_humidity_warn(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b11101100)) };
-      unsigned int indices[] = { 1, 4 };
+      unsigned int indices[] = { 6, 3 };
       editBit(0x96, 7, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][7], 1);
+      return getBool(last_recieved_messages[0x96][7], 6);
+    }
+
+
+    unsigned short send_ts_voltage(unsigned short v) {
+      unsigned short values[] = { v };
+      unsigned int indices[] = { 0 };
+      editShort(0x97, 1, values, indices);
+      return toShort(last_sent_messages[0x97][0], last_sent_messages[0x97][1]);
+    }
+
+    bool send_air_plus_state(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 0 };
+      editBit(0x97, 2, 1, values, indices);
+      return getBool(last_sent_messages[0x97][2], 0);
+    }
+
+    bool send_air_minus_state(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 1 };
+      editBit(0x97, 2, 1, values, indices);
+      return getBool(last_sent_messages[0x97][2], 1);
+    }
+
+    bool send_precharging(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 2 };
+      editBit(0x97, 2, 1, values, indices);
+      return getBool(last_sent_messages[0x97][2], 2);
+    }
+
+    bool send_precharging_done(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 3 };
+      editBit(0x97, 2, 1, values, indices);
+      return getBool(last_sent_messages[0x97][2], 3);
+    }
+
+    unsigned short send_max_bal_res_temp(unsigned short t) {
+      byte values[] = { high(t), low(t) };
+      unsigned int indices[] = { 3, 4 };
+      editBytes(0x97, 2, values, indices);
+      return toShort(last_sent_messages[0x97][3], last_sent_messages[0x97][4]);
+    }
+
+    //shutdown circuit pin: 16v 8 bits ADC
+    byte send_SDC_voltage(byte v) {
+      byte values[] = { v };
+      unsigned int indices[] = { 5 };
+      editBytes(0x97, 1, values, indices);
+      return last_sent_messages[0x97][5];
+    }
+
+    byte send_glv_voltage(byte v) {
+      byte values[] = { v };
+      unsigned int indices[] = { 6 };
+      editBytes(0x97, 1, values, indices);
+      return last_sent_messages[0x97][6];
+    }
+
+    byte send_soc(byte p) {
+      byte values[] = { p };
+      unsigned int indices[] = { 7 };
+      editBytes(0x97, 1, values, indices);
+      return last_sent_messages[0x97][7];
+    }
+
+
+    byte cooling_send_fan_speed_1(byte s) {
+      byte values[] = { s };
+      unsigned int indices[] = { 0 };
+      editBytes(0x98, 1, values, indices);
+      return last_sent_messages[0x98][0];
+    }
+
+    byte cooling_send_fan_speed_2(byte s) {
+      byte values[] = { s };
+      unsigned int indices[] = { 1 };
+      editBytes(0x98, 1, values, indices);
+      return last_sent_messages[0x98][1];
+    }
+
+    byte cooling_send_fan_speed_3(byte s) {
+      byte values[] = { s };
+      unsigned int indices[] = { 2 };
+      editBytes(0x98, 1, values, indices);
+      return last_sent_messages[0x98][2];
+    }
+
+    byte cooling_send_pump_speed(byte s) {
+      byte values[] = { s };
+      unsigned int indices[] = { 3 };
+      editBytes(0x98, 1, values, indices);
+      return last_sent_messages[0x98][3];
+    }
+
+    byte cooling_set_acu_temp_1(byte t) {
+      byte values[] = { t };
+      unsigned int indices[] = { 4 };
+      editBytes(0x98, 1, values, indices);
+      return last_sent_messages[0x98][4];
+    }
+
+    byte cooling_set_acu_temp_2(byte t) {
+      byte values[] = { t };
+      unsigned int indices[] = { 5 };
+      editBytes(0x98, 1, values, indices);
+      return last_sent_messages[0x98][5];
+    }
+
+    byte cooling_set_acu_temp_3(byte t) {
+      byte values[] = { t };
+      unsigned int indices[] = { 6 };
+      editBytes(0x98, 1, values, indices);
+      return last_sent_messages[0x98][6];
+    }
+
+    bool cooling_send_over_temp_error(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 0 };
+      editBit(0x98, 7, 1, values, indices);
+      return getBool(last_sent_messages[0x98][7], 0);
+    }    
+
+    bool cooling_send_fan_1_error(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 1 };
+      editBit(0x98, 7, 1, values, indices);
+      return getBool(last_sent_messages[0x98][7], 1);
+    }    
+
+    bool cooling_send_fan_2_error(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 2 };
+      editBit(0x98, 7, 1, values, indices);
+      return getBool(last_sent_messages[0x98][7], 2);
+    }    
+
+    bool cooling_send_fan_3_error(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 3 };
+      editBit(0x98, 7, 1, values, indices);
+      return getBool(last_sent_messages[0x98][7], 3);
+    }    
+
+    bool cooling_send_fan_4_error(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 4 };
+      editBit(0x98, 7, 1, values, indices);
+      return getBool(last_sent_messages[0x98][7], 4);
+    }    
+
+    bool cooling_send_pump_error(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 5 };
+      editBit(0x98, 7, 1, values, indices);
+      return getBool(last_sent_messages[0x98][7], 5);
+    }    
+
+
+
+    unsigned short charge_cart_send_max_current(unsigned short a) {
+      unsigned short values[] = { a };
+      unsigned int indices[] = { 0 };
+      editShort(0x99, 1, values, indices);
+      return toShort(last_sent_messages[0x99][0], last_sent_messages[0x99][1]);
+    }
+
+    unsigned short charge_cart_send_max_voltage(unsigned short v) {
+      unsigned short values[] = { v };
+      unsigned int indices[] = { 0 };
+      editShort(0x99, 1, values, indices);
+      return toShort(last_sent_messages[0x99][2], last_sent_messages[0x99][3]);
+    }
+
+    bool charge_cart_send_charging(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 0 };
+      editBit(0x99, 4, 1, values, indices);
+      return getBool(last_sent_messages[0x99][4], 0);
+    }
+
+    bool charge_cart_send_check_pass(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 1 };
+      editBit(0x99, 4, 1, values, indices);
+      return getBool(last_sent_messages[0x99][4], 1);
+    }
+
+    bool charge_cart_send_good_comms(bool b) {
+      bool values[] = { b };
+      unsigned int indices[] = { 2 };
+      editBit(0x99, 4, 1, values, indices);
+      return getBool(last_sent_messages[0x99][4], 2);
+    }
+
+    bool charge_cart_send_sdc(bool b) {
+      bool values[] = { b, b, b, b };
+      unsigned int indices[] = { 3, 4, 5, 6 };
+      editBit(0x99, 4, 4, values, indices);
+      return getBool(last_sent_messages[0x99][4], 3);
     }
 };
 
