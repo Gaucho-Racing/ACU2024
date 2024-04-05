@@ -122,10 +122,10 @@ class CANLine {
       editBytes(id, 2*count, valuesBytes, indicesBytes, to_charger);
     }
 
-    void editBit(unsigned int id, byte bytenum, unsigned int count, bool *values, unsigned int *indices, bool to_charger = false) {
+    void editBit(unsigned int id, byte bytenum, unsigned int count, bool *values, unsigned int *indice, bool to_charger = false) {
       byte result = last_sent_messages[id][bytenum];
       for (int i = 0; i < count; i++) {
-          values[i] ? (result | (0b10000000 >> indices[i])) : (result & (~(0b010000000) >> indices[i]));
+          values[i] ? (result | (0b10000000 >> indice[i])) : (result & (~(0b010000000) >> indice[i]));
       }
       byte byteValues[] = { result };
       unsigned int indices[] = { bytenum };
