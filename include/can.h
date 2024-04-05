@@ -378,19 +378,19 @@ class CANLine {
       return getBool(last_recieved_messages[0x96][6], 5);      
     }
 
-    bool send_over_current_error(bool b) {
-      bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b11101000)) };
-      unsigned int indices[] = { 4, 0 };
-      editBit(0x96, 6, 1, values, indices);
-      return getBool(last_recieved_messages[0x96][6], 4);      
-    }
-
     bool send_bms_error(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b11110000)) };
       unsigned int indices[] = { 3, 0 };
       editBit(0x96, 6, 1, values, indices);
       return getBool(last_recieved_messages[0x96][6], 3);      
     }
+    bool send_under_voltage_error(bool b) {
+      bool values[] = { b, (!b && !(last_sent_messages[0x96][6] & 0b11101000)) };
+      unsigned int indices[] = { 4, 0 };
+      editBit(0x96, 6, 1, values, indices);
+      return getBool(last_recieved_messages[0x96][6], 4);      
+    }
+
 
     bool send_bms_open_wire_warn(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b01101110)) };
@@ -427,7 +427,7 @@ class CANLine {
       return getBool(last_recieved_messages[0x96][7], 2);
     }
 
-    bool send_cell_imbalance_warn(bool b) {
+    bool send_humidity_warn(bool b) {
       bool values[] = { b, (!b && !(last_sent_messages[0x96][7] & 0b11101100)) };
       unsigned int indices[] = { 1, 4 };
       editBit(0x96, 7, 1, values, indices);
