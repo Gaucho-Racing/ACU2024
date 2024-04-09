@@ -208,7 +208,10 @@ void standByState(Battery &battery, States& state){
       else {
         // read CAN
         // if message is from Charger, set state to CHARGE
-        // else if message is from VDM, set state to NORMAL
+        state = CHARGE;
+        // else if message is from VDM, set state to PRECHARGE
+        
+        state = PRECHARGE;
       }
 }
 void updateVoltage(Battery &battery) {
