@@ -148,8 +148,10 @@ void shutdownState(Battery &battery, States& state, bool systemCheckOk, bool &ts
   tsActive = false;
   byte alertMsg[1];
   alertMsg[0] = 0;
+
   battery.can.send(0x66, alertMsg, 1);
   state = OFFSTATE;
+
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
@@ -203,8 +205,10 @@ void preChargeState(Battery &battery, States& state){
   // Send VDM Precharge --> TS Active (1)
   byte message[1];
   message[0] = 1;
+
   battery.can.send(0x66, message, 1);
   // uint32_t timeout = millis(); // not sure how long we should wait until timeout
+
 
   // close AIR+
   // if (timeout) --> msg --> VDM, mockState = SHUTDOWN --> return;
@@ -310,7 +314,7 @@ void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
     message[5] = condenseVoltage(cellVoltage[i * 8 + 5]);
     message[6] = condenseVoltage(cellVoltage[i * 8 + 6]);
     message[7] = condenseVoltage(cellVoltage[i * 8 + 7]);
-    can -> send(id, message, 8);
+    // can -> send(id, message, 8);
   }
 }
 
@@ -333,7 +337,7 @@ void sendCellVoltageError(Battery &battery, const float thresholdType){
   if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
   else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
 
-  battery.can.send(0x96, message, 8);
+  // battery.can.send(0x96, message, 8);
   battery.containsError = true; // SEND TO SHUTDOWN
 }
 
