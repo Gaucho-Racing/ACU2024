@@ -149,7 +149,7 @@ void shutdownState(Battery &battery, States& state, bool &tsActive){
   byte alertMsg[1];
   alertMsg[0] = 0;
 
-  battery.can.send(0x66, alertMsg, 1);
+  // battery.can.send(0x66, alertMsg, 1);
   state = OFFSTATE;
 
 }
@@ -158,7 +158,7 @@ void shutdownState(Battery &battery, States& state, bool &tsActive){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void normalSt ate(Battery &battery, States& state){
+void normalState(Battery &battery, States& state){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -178,10 +178,10 @@ void chargeState(Battery &battery, States& state){
   // sending to Charger for every 0.5 sec
   if(millis() - lastSendChragerTime >= 250){
     lastSendChragerTime = millis();
-    battery.can.sendToCharger(battery.cData.maxChargeVolts, battery.cData.maxChargeAmps, true);
+    // battery.can.sendToCharger(battery.cData.maxChargeVolts, battery.cData.maxChargeAmps, true);
   }
   // check for latest message form charger message
-  battery.cData = battery.can.recieveCharger();
+  // battery.cData = battery.can.recieveCharger();
   if(battery.cData.batteryConnectionFailure || battery.cData.communicationFailure
       || battery.cData.hardwareFailure || battery.cData.inputVoltageFailure
       || battery.cData.temperatureFailure){
@@ -206,7 +206,7 @@ void preChargeState(Battery &battery, States& state){
   byte message[1];
   message[0] = 1;
 
-  battery.can.send(0x66, message, 1);
+  // battery.can.send(0x66, message, 1);
   // uint32_t timeout = millis(); // not sure how long we should wait until timeout
 
 
@@ -223,7 +223,7 @@ void preChargeState(Battery &battery, States& state){
 /// @return TBD
 void standByState(Battery &battery, States& state){
       // WAKE UP: ISOSpi Chip & sensors
-      battery.cData = battery.can.recieveCharger();
+      // battery.cData = battery.can.recieveCharger();
       // SYSTEM CHECKS
       if (!battery.containsError) state = SHUTDOWN;
       else {
@@ -305,7 +305,7 @@ uint8_t condenseVoltage(uint16_t voltage) {
 void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
   uint8_t message[8];
   for (uint8_t i = 0; i < 16; i++) {
-    uint16_t id = i + 0xA1;
+    // uint16_t id = i + 0xA1;
     message[0] = condenseVoltage(cellVoltage[i * 8 + 0]);
     message[1] = condenseVoltage(cellVoltage[i * 8 + 1]);
     message[2] = condenseVoltage(cellVoltage[i * 8 + 2]);

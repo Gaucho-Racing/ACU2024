@@ -15,6 +15,10 @@ float fanCurrent[4];
 
 bool tsActive = false;
 uint8_t errors = 0b00000000;
+// MSB: voltage too low
+// Nxt: voltage too high
+// Nxt: ACU
+// LSB: 
 
 
 
