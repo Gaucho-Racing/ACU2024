@@ -4,7 +4,7 @@
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
 /// @return The false if fails, true otherwise
-public bool systemCheck(Battery &battery, States &state)
+bool systemCheck(Battery &battery, States &state)
 {
     return true;   
 }
@@ -12,17 +12,16 @@ public bool systemCheck(Battery &battery, States &state)
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-public void shutdownState(){
+void shutdownState(){
   // Open AIRS and Precharge if already not open
   // error messages --> VDM
-  "stub"
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-public void normalState(){
+void normalState(){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -33,7 +32,7 @@ public void normalState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-public void chargeState(){
+void chargeState(){
   // sendMsg if time 0.5 s reached
   // do System Check
   // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
@@ -44,7 +43,7 @@ public void chargeState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-public void preChargeState(){
+void preChargeState(){
   // send message to VDM to indicate Precharge
   // close AIR+, wait 1 second, check voltage
   // 10 x until threshold reached
@@ -61,7 +60,7 @@ public void preChargeState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-public void standByState(){
+void standByState(){
       // WAKE UP: ISOSpi Chip & sensors
 
       // SYSTEM CHECKS

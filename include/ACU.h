@@ -1,5 +1,5 @@
 #include "ACU_data.h"
-#include "can.cpp"
+#include "can.h"
 #include "common.h"
 #include <vector>
 #include "adBms6830GenericType.h"
@@ -18,9 +18,9 @@ struct Battery
     CANLine can;
 };
 
-public bool systemCheck(Battery &battery, States &state);
-public void shutdownState();
-public void normalState();
-public void chargeState();
-public void preChargeState();
-public void standByState();
+bool systemCheck(Battery &battery, States &state);
+void shutdownState();
+void normalState();
+void chargeState();
+void preChargeState();
+void standByState();
