@@ -41,12 +41,12 @@ struct Battery{
 
 // helper functions
 void init_config(Battery &battery);
-void offState(Battery &battery,States& state, bool systemCheckOk);
-void shutdownState(Battery &battery, States& state, bool systemCheckOk, bool &tsActive);
-void normalState(Battery &battery, States& state, bool systemCheckOk);
-void chargeState(Battery &battery, States& state, bool systemCheckOk);
-void preChargeState(Battery &battery, States& state, bool systemCheckOk);
-void standByState(Battery &battery, States& state, bool systemCheckOk);
+void offState(Battery &battery,States& state);
+void shutdownState(Battery &battery, States& state, bool &tsActive);
+void normalState(Battery &battery, States& state);
+void chargeState(Battery &battery, States& state);
+void preChargeState(Battery &battery, States& state);
+void standByState(Battery &battery, States& state);
 bool systemCheck(Battery &battery, States& state);
 
 // not implemented yet

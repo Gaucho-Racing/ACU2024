@@ -32,7 +32,7 @@ void setup() {
 
 void loop() {
   // ACU STATES  
-  systemCheckOk = systemCheck(battery, state);
+    battery.containsError = systemCheck(battery, state);
   switch (state)
   {
     case STANDBY:
@@ -48,7 +48,7 @@ void loop() {
       normalState(battery, state);
       break;
     case SHUTDOWN:
-      shutdownState(battery, state, systemCheckOk, tsActive);
+      shutdownState(battery, state, tsActive);
       break;
     default:
       state = SHUTDOWN;

@@ -133,7 +133,7 @@ bool systemCheck(Battery &battery, States &state) {
 /// @brief offState, idk if this is needed
 /// @param[in] battery TBD
 /// @return N/A
-void offState(Battery &battery,States& state, bool systemCheckOk){
+void offState(Battery &battery,States& state){
   // turns on --> go to STANDBY
   state = STANDBY;
 }
@@ -141,7 +141,7 @@ void offState(Battery &battery,States& state, bool systemCheckOk){
 /// @brief shutDown, send errors --> VDM
 /// @param[in] battery TBD
 /// @return N/A
-void shutdownState(Battery &battery, States& state, bool systemCheckOk, bool &tsActive){
+void shutdownState(Battery &battery, States& state, bool &tsActive){
   // Open AIRS and Precharge if already not open
 
   // send error --> CAN
@@ -158,7 +158,7 @@ void shutdownState(Battery &battery, States& state, bool systemCheckOk, bool &ts
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void normalState(Battery &battery, States& state){
+void normalSt ate(Battery &battery, States& state){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -169,9 +169,9 @@ void normalState(Battery &battery, States& state){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void chargeState(Battery &battery, States& state, bool systemCheckOk){
+void chargeState(Battery &battery, States& state){
   // systemCheck
-  if (!systemCheckOk){
+  if (!battery.containsError){
     state = SHUTDOWN;
     return;
   }
