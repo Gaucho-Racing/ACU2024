@@ -16,8 +16,10 @@ float V2T(float voltage, float B = 4390);
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTRA};
+enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA};
 test_case debug = THERMAL;
+enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTRA};
+test_case debug = CELLBAL;
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
@@ -117,18 +119,26 @@ void loop() {
     break;
 
   case CELLBAL:
+    //random non-cell related command to keep from going into extended
+    adBms6830_read_s_voltages(TOTAL_IC, IC);
+    
+  case EXTENDEDCELLBAL: 
     //test discharge first
     Serial.println("Set duty cycle");
-    SetPwmDutyCycle(TOTAL_IC, &IC[0], PWM_100_0_PCT);
+    SetPwmDutyCycle(TOTAL_IC, IC, PWM_100_0_PCT);
     Serial.println("Create PWMs");
-    adBms6830CreatePwma(TOTAL_IC, &IC[0]);
-    adBms6830CreatePwmb(TOTAL_IC, &IC[0]);
+    adBms6830CreatePwma(TOTAL_IC, IC);
+    adBms6830CreatePwmb(TOTAL_IC, IC);
     Serial.println("Write data");
-    adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm1, Pwm, AA);
-    adBmsWriteData(TOTAL_IC, &IC[0], Wrpwm2, Pwm, BB);
-    printPWM(TOTAL_IC, &IC[0]);
-    
+    adBmsWriteData(TOTAL_IC, IC, Wrpwm1, Pwm, AA);
+    adBmsWriteData(TOTAL_IC, IC, Wrpwm2, Pwm, BB);
+    printPWM(TOTAL_IC, IC);
+    // IC[0].tx_cfgb.dcc = 0xFFFF;
+    // run_command(22);
+    adBms6830_write_read_config(TOTAL_IC, IC);
 
+
+    delay(1000);
     break;
   default:
     Serial.println("Uh oh u dummy u didn't set what to debug");

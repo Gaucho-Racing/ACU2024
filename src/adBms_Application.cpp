@@ -200,13 +200,14 @@ void run_command(int cmd)
   case 22: // set balancing to 100%
     adBms6830CreatePwma(TOTAL_IC, IC);
     adBms6830CreatePwmb(TOTAL_IC, IC);
-    SetPwmDutyCycle(TOTAL_IC, IC, uint8_t(micros())%16);
+    SetPwmDutyCycle(TOTAL_IC, IC, PWM_100_0_PCT);
     adBmsWriteData(TOTAL_IC, IC, WRPWM1, Pwm, AA);
     adBmsWriteData(TOTAL_IC, IC, WRPWM2, Pwm, BB);
     printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, AA);
     printWritePwmDutyCycle(TOTAL_IC, IC, Pwm, BB);
     printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, AA);
     printReadPwmDutyCycle(TOTAL_IC, IC, Pwm, BB);
+    adBms6830_write_read_config(TOTAL_IC, IC);
     break;
 
   default:
@@ -235,25 +236,9 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 //    ic[cic].cfga.fc = IIR_FPA256;
 
     /* Init config B */
-    ic[cic].tx_cfgb.dtmen = DTMEN_ON;
     ic[cic].tx_cfgb.vov = SetOverVoltageThreshold(OV_THRESHOLD);
     ic[cic].tx_cfgb.vuv = SetUnderVoltageThreshold(UV_THRESHOLD);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC1, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC2, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC3, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC4, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC5, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC6, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC7, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC8, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC9, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC10, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC11, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC12, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC13, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC14, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC15, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
+    ic[cic].tx_cfgb.dcc = 0xFFFF;
 //    SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR);
   }
 }

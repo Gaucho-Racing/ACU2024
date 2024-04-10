@@ -3,6 +3,7 @@
 #include "common.h"
 #include <vector>
 #include "adBms6830GenericType.h"
+#include "ADC1283.h"
 
 enum States {
     FIRST,
