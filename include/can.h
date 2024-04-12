@@ -18,8 +18,8 @@
 
 struct chargerData {
   int16_t maxChargeVolts;
-  bool discharging;
   int16_t maxChargeAmps;
+  bool discharging;
   bool hardwareFailure;
   bool temperatureFailure;
   bool inputVoltageFailure;
@@ -44,8 +44,8 @@ class CANLine {
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> charger_can;
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> vdm_can;
     CAN_message_t msgRecieve, msgSend;
-    int Mbps1 = 1000000;
-    int Mbps3 = 1000000;
+    uint32_t Mbps1 = 1000000;
+    uint32_t Mbps3 = 1000000;
     //static const int AteMbps = 8000000;
     std::unordered_map<int, std::vector<byte>> last_recieved_messages;
     std::unordered_map<int, int> last_recieved_messages_timestamps;
@@ -75,36 +75,9 @@ class CANLine {
 
     uint16_t toShort(byte x, byte y = 0) { return (uint16_t)(x<<8) + (uint16_t)(y); }
 
-
-    void send(uint32_t id, byte *message, bool to_charger = false, byte size = 8) {
-      msgSend.id = id;
-      msgSend.len = size;
-      last_sent_messages[id] = std::vector<byte>();
-      for (int i = 0; i < size; i++) {
-        //Serial.print(message[i]);
-        //Serial.print(" ");
-        msgSend.buf[i] = message[i];
-        last_sent_messages[id].push_back(message[i]);
-      }
-      //Serial.println();
-      if (to_charger) charger_can.write(msgSend);
-      else vdm_can.write(msgSend);
-      //Serial.print("Frame sent to id 0x");
-      //Serial.println(id, HEX);
-    }
-
-    void send(uint32_t id, uint16_t *message, bool to_charger = false, byte size = 4) {
-      byte msg[2*size];
-      for (int i = 0; i < size; i++) {
-        msg[2*i] = high(message[i]);
-        msg[2*i+1] = low(message[i]);
-      }
-      send(id, msg, to_charger, 2*size);
-    }
-
     void editBytes(uint32_t id, uint32_t count, byte *values, uint32_t *indices, bool to_charger = false) {
       byte *msg = &(last_sent_messages[id][0]);
-      for (int i = 0; i < count; i++) {
+      for (size_t i = 0; i < count; i++) {
           msg[indices[i]] = values[i];
       }
       send(id, msg, to_charger, last_sent_messages[id].size());
@@ -113,7 +86,7 @@ class CANLine {
     void editShort(uint32_t id, uint32_t count, uint16_t *values, uint32_t *indices, bool to_charger = false) {
       byte *valuesBytes;
       uint32_t *indicesBytes;
-      for (int i = 0; i < count; i++) {
+      for (size_t i = 0; i < count; i++) {
         valuesBytes[2*i] = high(values[i]);
         valuesBytes[2*i+1] = low(values[i]);
         indicesBytes[2*i] = 2*indices[i];
@@ -124,7 +97,7 @@ class CANLine {
 
     void editBit(unsigned int id, byte bytenum, unsigned int count, bool *values, unsigned int *indice, bool to_charger = false) {
       byte result = last_sent_messages[id][bytenum];
-      for (int i = 0; i < count; i++) {
+      for (size_t i = 0; i < count; i++) {
           values[i] ? (result | (0b10000000 >> indice[i])) : (result & (~(0b010000000) >> indice[i]));
           values[i] ? (result | (0b10000000 >> indice[i])) : (result & (~(0b010000000) >> indice[i]));
       }
@@ -134,7 +107,7 @@ class CANLine {
     }
 
     int recieve_one(bool from_charger = false) {
-        if (from_charger) if (charger_can.readFIFO(msgRecieve) == 0) return 0;
+        if(from_charger) {if(charger_can.readFIFO(msgRecieve) == 0) {return 0;}}
         else if (vdm_can.readFIFO(msgRecieve) == 0) return 0;
         //Serial.print("0x");
         //Serial.print(msgRecieve.id, HEX);
@@ -159,7 +132,7 @@ class CANLine {
 
       std::vector<uint16_t> result = std::vector<uint16_t>((bytes.size())/2,0);
 
-      for (int i = 0; i < result.size(); i++) {
+      for (size_t i = 0; i < result.size(); i++) {
         result[i] = toShort(bytes[2*i], bytes[2*i+1]);
       }
       return result;
@@ -208,6 +181,35 @@ class CANLine {
       // canData.setBaudRate(config);
       this->initialize();
     }
+    /// @brief sends message (8 bytes)
+    /// @param id: the id, duh
+    /// @param message: the message you want to send
+    /// @param to_charger: t/f
+    /// @param size: 8 bytes
+    void send(uint32_t id, byte *message, bool to_charger = false, byte size = 8) {
+      msgSend.id = id;
+      msgSend.len = size;
+      last_sent_messages[id] = std::vector<byte>();
+      for (int i = 0; i < size; i++) {
+        msgSend.buf[i] = message[i];
+        last_sent_messages[id].push_back(message[i]);
+      }
+      if (to_charger) charger_can.write(msgSend);
+      else vdm_can.write(msgSend);
+    }
+    /// @brief sends message (4 bytes)
+    /// @param id: the id, duh
+    /// @param message: the message you want to send
+    /// @param to_charger: t/f
+    /// @param size: 4 bytes
+    void send(uint32_t id, uint16_t *message, bool to_charger = false, byte size = 4) {
+      byte msg[2*size];
+      for (int i = 0; i < size; i++) {
+        msg[2*i] = high(message[i]);
+        msg[2*i+1] = low(message[i]);
+      }
+      send(id, msg, to_charger, 2*size);
+    }
 
     int update_recieved_msgs() {
       if (recieve_one(false) == 0 && recieve_one(true) == 0) return 0;
@@ -242,7 +244,9 @@ class CANLine {
       editBytes(0x1806E5F4, 1, values, indices, true);
       return (bool)last_sent_messages[0x1806E5F4][4];
    }
-
+    // 1; communication timeout, 0: no timeout
+    bool check_timeout(){ return recieve(0x18FF50E5)[4] == 1;}
+    
     //get charger stuff
     bool charger_chargingAllowed() { return (bool)last_sent_messages[0x1806E5F4][4]; }
 
@@ -317,6 +321,22 @@ class CANLine {
     bool vdm_ts_active() {
       byte* msg = &(recieve(0x66)[0]);
       return getBool(msg[0], 7);
+    }
+
+    void send_vdm_ts_active(bool active) {
+      byte alertMsg[1];
+      alertMsg[0] = 0;
+      send(0x66, alertMsg, false, 1);
+    }
+    void send_errors_to_vdm(chargerData data){
+
+    }
+    batteryData get_battery_data(){
+      batteryData data;
+      data.maxChargeAmps = idk_battery_max_out_current();
+      data.maxChargeVolts = idk_battery_max_voltage();
+      data.charging = !charger_is_discharging();
+      return data;
     }
 
     int16_t idk_battery_max_voltage() {
@@ -594,16 +614,14 @@ class CANLine {
       editBit(0x98, 7, 1, values, indices);
       return getBool(last_sent_messages[0x98][7], 5);
     }    
-
-
-
+    // sets max charger current
     uint16_t charge_cart_send_max_current(uint16_t a) {
       uint16_t values[] = { a };
       uint32_t indices[] = { 0 };
       editShort(0x99, 1, values, indices);
       return toShort(last_sent_messages[0x99][0], last_sent_messages[0x99][1]);
     }
-
+    // sets max charger voltage
     uint16_t charge_cart_send_max_voltage(uint16_t v) {
       uint16_t values[] = { v };
       uint32_t indices[] = { 0 };

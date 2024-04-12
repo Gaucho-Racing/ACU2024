@@ -54,7 +54,7 @@ uint32_t lastSendChragerTime = 0; // ms
 /// @return The false if fails, true otherwise
 bool systemCheck(Battery &battery, States &state) {
 
-    
+  
     //pull data from all 6830's
     adBmsWakeupIc(TOTAL_IC);
     //update Voltage, balTemp, and cellTemp
@@ -143,26 +143,41 @@ void offState(Battery &battery,States& state){
 /// @return N/A
 void shutdownState(Battery &battery, States& state, bool &tsActive){
   // Open AIRS and Precharge if already not open
-
-  // send error --> CAN
   tsActive = false;
-  byte alertMsg[1];
-  alertMsg[0] = 0;
+  battery.can.send_precharging(true);
+  battery.can.send_air_plus_state(true);
+  battery.can.send_air_minus_state(true);
 
-  // battery.can.send(0x66, alertMsg, 1);
+  // if errors --> CAN
+  if(battery.containsError){
+    // do something
+  }
   state = OFFSTATE;
-
 }
 
-/// @brief timeout checks, system checks, batt data --> VDM
-/// @param[in] TBD TBD
-/// @param[in] TBD TBD
-/// @return TBD
+/// @brief timeout & system checks, batt data --> VDM
+/// @param[in] battery: battery
+/// @param[in] state: state
+/// @return N/A
 void normalState(Battery &battery, States& state){
-  // System Checks
-  //if (!systemCheck()) mockState = SHUTDOWN; return;
-  
-  // if CAN timeout --> Send battery data to VDM
+  // Continuous System Checks
+  // Open AIRS and Precharge if already not open, spit error messages to VDM 
+  if (!battery.containsError){
+    battery.can.send_errors_to_vdm(battery.cData);
+    state = SHUTDOWN;
+    return;
+  }
+  // if CAN timeout, // Send batt info to VDM at 100Hz SHUTDOWN
+  if (battery.can.check_timeout()){
+      batteryData data = battery.can.get_battery_data();
+      battery.can.charge_cart_send_max_current(data.maxChargeAmps);
+      battery.can.charge_cart_send_max_voltage(data.maxChargeVolts);
+      battery.can.charge_cart_send_charging(data.charging);
+      state = SHUTDOWN;
+      return;
+  }
+  // Send warnings when warning threshold hit (10% before values or $\pm$ 0.1)
+  // Send to Shutdown when crit threshold hit (5% before values or $\pm$ 0.05)
 }
 
 /// @brief req charge, system checks
@@ -170,7 +185,8 @@ void normalState(Battery &battery, States& state){
 /// @param[in] TBD TBD
 /// @return TBD
 void chargeState(Battery &battery, States& state){
-  // systemCheck
+  // System Checks - check voltage with normal operating, leak sensing?, gas sensor?
+  // temperature, current, SOC. 
   if (!battery.containsError){
     state = SHUTDOWN;
     return;
@@ -195,22 +211,19 @@ void chargeState(Battery &battery, States& state){
 /// @param[in] TBD TBD
 /// @return TBD
 void preChargeState(Battery &battery, States& state){
-  // send message to VDM to indicate Precharge
-  // close AIR+, wait, check voltage
+  // wait, check voltage
   // 10 x until threshold reached
 
   // systemChecks
   if (battery.containsError) {state = SHUTDOWN; return; }
-  
-  // Send VDM Precharge --> TS Active (1)
-  byte message[1];
-  message[0] = 1;
-
-  // battery.can.send(0x66, message, 1);
-  // uint32_t timeout = millis(); // not sure how long we should wait until timeout
-
 
   // close AIR+
+  battery.can.send_air_plus_state(false);
+
+  // send message to VDM to indicate Precharge
+  battery.can.send_precharging(true);
+
+
   // if (timeout) --> msg --> VDM, mockState = SHUTDOWN --> return;
   // VDM response 1 --> state = NORMAL
   // VDM response 2 --> state = SHUTDOWN
@@ -238,12 +251,15 @@ void updateVoltage(Battery &battery) {
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
     for (uint8_t cell = 0; cell < CELL; cell++) {
       battery.cellVoltage[ic * CELL + cell] = (battery.IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
-      
       // send to error state & send error to CAN if voltage threshold has issues
-      if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) > OV_THRESHOLD)
-        sendCellVoltageError(battery, OV_THRESHOLD);
-      else if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) < UV_THRESHOLD)
-        sendCellVoltageError(battery, UV_THRESHOLD);
+      if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) > OV_THRESHOLD){
+        battery.containsError = true; // SEND TO SHUTDOWN
+        battery.can.send_over_voltage_error(true);
+      }
+      else if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) < UV_THRESHOLD){
+        battery.containsError = true; // SEND TO SHUTDOWN
+        battery.can.send_under_voltage_error(true);
+        }
     }
   }
   if(battery.temp_cycle >= 15){
@@ -303,42 +319,40 @@ uint8_t condenseVoltage(uint16_t voltage) {
 /// @param[in] TBD TBD
 /// @return None
 void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
-  uint8_t message[8];
-  for (uint8_t i = 0; i < 16; i++) {
-    // uint16_t id = i + 0xA1;
-    message[0] = condenseVoltage(cellVoltage[i * 8 + 0]);
-    message[1] = condenseVoltage(cellVoltage[i * 8 + 1]);
-    message[2] = condenseVoltage(cellVoltage[i * 8 + 2]);
-    message[3] = condenseVoltage(cellVoltage[i * 8 + 3]);
-    message[4] = condenseVoltage(cellVoltage[i * 8 + 4]);
-    message[5] = condenseVoltage(cellVoltage[i * 8 + 5]);
-    message[6] = condenseVoltage(cellVoltage[i * 8 + 6]);
-    message[7] = condenseVoltage(cellVoltage[i * 8 + 7]);
-    // can -> send(id, message, 8);
-  }
+  // uint8_t message[8];
+  // for (uint8_t i = 0; i < 16; i++) {
+  // uint16_t id = i + 0xA1;
+  //   message[0] = condenseVoltage(cellVoltage[i * 8 + 0]);
+  //   message[1] = condenseVoltage(cellVoltage[i * 8 + 1]);
+  //   message[2] = condenseVoltage(cellVoltage[i * 8 + 2]);
+  //   message[3] = condenseVoltage(cellVoltage[i * 8 + 3]);
+  //   message[4] = condenseVoltage(cellVoltage[i * 8 + 4]);
+  //   message[5] = condenseVoltage(cellVoltage[i * 8 + 5]);
+  //   message[6] = condenseVoltage(cellVoltage[i * 8 + 6]);
+  //   message[7] = condenseVoltage(cellVoltage[i * 8 + 7]);
+  //   can -> send(id, message, 8);
+  // }
 }
 
-/// @brief sends CellVoltageError data to CANbus
+/// @brief sends CellVoltageError data to CANbus --> OBSELETE
 /// @param[in] battery
 /// @param[in] thresholdType either OV_THRESHOLD or UW_THRESHOLD
 /// @return N/A
 void sendCellVoltageError(Battery &battery, const float thresholdType){
-  uint8_t message[8];
-
+  // uint8_t message[8];
   uint16_t accVolt = getAccumulatorVoltage(battery.cellVoltage);
-  message[0] = (uint8_t)((accVolt & 0xFF00) >> 8);
-  message[1] = (uint8_t)(accVolt & 0x00FF);
-  message[2] = (uint8_t)((battery.accumulatorCurrent & 0xFF00) >> 8);
-  message[3] = (uint8_t)(battery.accumulatorCurrent & 0x00FF);
-  message[4] = (uint8_t)(((uint8_t)(battery.maxCellTemp) & 0xFF00) >> 8);
-  message[5] = (uint8_t)((uint8_t)(battery.maxCellTemp) & 0x00FF);
-  message[7] = 3; // NOT SURE WHAT TO PUT IN HERE
-
-  if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
-  else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
-
+  // message[0] = (uint8_t)((accVolt & 0xFF00) >> 8);
+  // message[1] = (uint8_t)(accVolt & 0x00FF);
+  // message[2] = (uint8_t)((battery.accumulatorCurrent & 0xFF00) >> 8);
+  // message[3] = (uint8_t)(battery.accumulatorCurrent & 0x00FF);
+  // message[4] = (uint8_t)(((uint8_t)(battery.maxCellTemp) & 0xFF00) >> 8);
+  // message[5] = (uint8_t)((uint8_t)(battery.maxCellTemp) & 0x00FF);
+  // message[7] = 3; // NOT SURE WHAT TO PUT IN HERE
+  // if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
+  // else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
+  battery.can.send_ts_voltage(accVolt);
   // battery.can.send(0x96, message, 8);
-  battery.containsError = true; // SEND TO SHUTDOWN
+  
 }
 
 /// @brief sum of all voltages stored in battery
