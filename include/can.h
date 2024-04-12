@@ -83,7 +83,7 @@ class CANLine {
       CANData *node;
       switch (msgRecieve.id) {
         case 0x18FF50E5:
-          node = &configCellData;
+          node = &chargerData;
           break;
         default:
           return -1;
@@ -114,7 +114,7 @@ class CANLine {
         
       }
       //Serial.println();
-      if (d.isToCharger) charger_can.write(msgSend);
+      if (d.id == 0x1806E5F4) charger_can.write(msgSend);
       else vdm_can.write(msgSend);
       //Serial.print("Frame sent to id 0x");
       //Serial.println(id, HEX);
