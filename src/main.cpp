@@ -8,7 +8,7 @@
 Battery battery;
 States state;
 
-#define TOTAL_IC 2
+//#define TOTAL_IC 2
 cell_asic IC[TOTAL_IC];
 
 void setup() {
@@ -29,6 +29,7 @@ void loop() {
     case STANDBY:
       standByState();
       updateVoltage(battery.cellVoltage, IC);
+      //dumpCANbus(&battery.can, battery.cellVoltage);
       break;
     case PRECHARGE:
       preChargeState();

@@ -54,7 +54,6 @@ void adBms6830_clear_aux_measurement(uint8_t tIC);
 void adBms6830_clear_spin_measurement(uint8_t tIC);
 void adBms6830_clear_fcell_measurement(uint8_t tIC);
 
-//#define TOTAL_IC 2
 extern cell_asic IC[TOTAL_IC];
 
 /* ADC Command Configurations */
