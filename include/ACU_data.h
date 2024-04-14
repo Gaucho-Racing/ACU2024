@@ -7,9 +7,7 @@
 
 #define TOTAL_IC 2
 
-
-//6830 settings
-
+//TODO: Change these to the correct values
 
 
 //Pin Definitions
@@ -20,10 +18,21 @@
 #define TSAL_RED -1
 #define TSAL_GREEN -1
 #define PRECHG_OUT -1
+#define ADC_PIN -1
+//
+#define ADC_MUX_GLV_VOLT -1
+#define ADC_MUX_HV_VOLT -1
+#define ADC_MUX_HV_CURRENT -1
+#define ADC_MUX_DCDC_CURRENT -1
+#define ADC_MUX_DCDC_TEMP1 -1
+#define ADC_MUX_DCDC_TEMP2 -1
+#define ADC_MUX_DCDC_TEMP3 -1
 
 
 //Charger Values
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A
+
+#define PRECHARGE_THRESHOLD -1 //V
 
 #endif

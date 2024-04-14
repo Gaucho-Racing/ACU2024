@@ -45,7 +45,6 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
-
 /// @brief performs system check
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
@@ -127,25 +126,16 @@ bool systemCheck(Battery &battery, States &state) {
     return false; 
 }
 
-    
-/// @brief offState, idk if this is needed
-/// @param[in] battery TBD
-/// @return N/A
-void offState(Battery &battery, States& state){
-  // When it turns on --> go to STANDBY
-  battery.state = STANDBY;
-}
-
 /// @brief shutDown, send errors --> VDM
 /// @param[in] battery TBD
 /// @return N/A
 void shutdownState(Battery &battery, States& state){
   // Open AIRS and Precharge if already not open
-
-  // send error --> CAN
-  byte alertMsg[1];
-  alertMsg[0] = 0;
-  // battery.can.send(0x66, alertMsg, 1);
+  digitalWrite(PRECHG_OUT, LOW);
+  digitalWrite(AIR_NEG, LOW);
+  digitalWrite(AIR_PLUS, LOW);
+  battery.can.ACUGeneral2.msg[3] = 1 << 4;
+  battery.can.send(battery.can.ACUGeneral2);
   battery.state = OFFSTATE;
 }
 
@@ -177,43 +167,36 @@ void chargeState(Battery &battery, States& state){
 /// @param[in] TBD TBD
 /// @return TBD
 void preChargeState(Battery &battery, States& state){
+  //TODO: close AIR-
+  digitalWrite(AIR_NEG, HIGH);
   // send message to VDM to indicate Precharge
-  // close AIR+, wait, check voltage
-  // 10 x until threshold reached
-
-  // systemChecks
-  if (battery.containsError) battery.state = SHUTDOWN; return;
-  
-  // Send VDM Precharge --> TS Active (1)
-  byte message[1];
-  message[0] = 1;
-  // battery.can.send(0x66, message, 1);
-  uint32_t timeout = millis(); // not sure how long we should wait until timeout
-
-  // close AIR+
-  // if (timeout) --> msg --> VDM, mockState = SHUTDOWN --> return;
-  // VDM response 1 --> state = NORMAL
-  // VDM response 2 --> state = SHUTDOWN
-  // else --> ERROR 
+  battery.can.ACUGeneral2.msg[3] = 0b00000110;
+  digitalWrite(PRECHG_OUT, HIGH);
+  battery.can.send(battery.can.ACUGeneral2);
+  // check voltage, wait 2 seconds otherwise throw error
+  for(int i = 0; i < 30; i++){
+    if(battery.ACU_ADC.readVoltage(ADC_MUX_HV_VOLT)> PRECHARGE_THRESHOLD){
+      digitalWrite(AIR_PLUS, HIGH);
+      state = NORMAL;
+      battery.can.ACUGeneral2.msg[3] = 0b00001101;
+      battery.can.send(battery.can.ACUGeneral2);
+      return;
+    }
+    delay(100);
+  }
+  // send error to VDM
+  battery.can.ACUGeneral1.msg[6] |= 1<<5;
+  battery.can.send(battery.can.ACUGeneral1); 
 }
 
-/// @brief Runs system checks and reads can to determine whether to charge or startup car
-/// @param[in] TBD TBD
-/// @param[in] TBD TBD
-/// @return TBD
-void standByState(Battery &battery, States& state){
-      // WAKE UP: ISOSpi Chip & sensors
-      // SYSTEM CHECKS
-      if (!battery.containsError) state = SHUTDOWN;
-      else {
-        // read CAN
-        // if message is from Charger, set state to CHARGE
-        state = CHARGE;
-        // else if message is from VDM, set state to PRECHARGE
-        
-        state = PRECHARGE;
-      }
+/// @brief offState, idk if this is needed
+/// @param[in] battery TBD
+/// @return N/A
+void offState(Battery &battery, States& state){
+  // When it turns on --> go to STANDBY
+  battery.state = OFFSTATE;
 }
+
 void updateVoltage(Battery &battery) {
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
   adBms6830_read_cell_voltages(TOTAL_IC, battery.IC);
