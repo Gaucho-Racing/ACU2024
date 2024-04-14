@@ -37,6 +37,7 @@ class CANLine {
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vdm_can;
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> charger_can;
     CAN_message_t msgRecieve, msgSend;
+    bool vdm_recieve_ignore_flags[2] = {0,0};
 
   public:
     CANLine() {
@@ -54,7 +55,7 @@ class CANLine {
 
     uint16_t toShort(uint8_t x, uint8_t y = 0) { return (uint16_t)(x<<8) + (uint16_t)(y); }
 
-    int vdm_can_recieve() {
+    int vdm_can_recieve(bool set_ignore_flags = false) {
       if (vdm_can.readFIFO(msgRecieve) == 0) return 0;
       //  byte msg[8];
       //  for (int i = 0; i < 8; i++) msg[i] = msgRecieve.buf[i];
@@ -64,11 +65,20 @@ class CANLine {
           node = &configCellData;
           break;
         case 0x66:
+          if (vdm_recieve_ignore_flags[0]) break;
           node = &ACUControl;
+          if (set_ignore_flags) vdm_recieve_ignore_flags[0] = 1;
           break;
         case 0x67:
+          if (vdm_recieve_ignore_flags[1]) break;
           node = &batteryLimits;
+          if (set_ignore_flags) vdm_recieve_ignore_flags[1] = 1;
           break;
+        case 0x95:
+          msgRecieve.id = 0xC7; // ACU to all ping send ID
+          vdm_can.write(msgRecieve);
+          break;
+          //send()
         default:
           return -1;
       }
@@ -95,13 +105,15 @@ class CANLine {
     int vdm_can_update() {
       /* pull up to 32 msgs from vdm queue */
       int ct = 0;
-      for (int i = 0; i < 32 && vdm_can_recieve(); i++) ct = 1;
+      for (int i = 0; i < 32 && vdm_can_recieve(true); i++) {ct = 1;}
+      vdm_recieve_ignore_flags[0] = 0;
+      vdm_recieve_ignore_flags[1] = 0;
       return ct;
     }
     int charger_can_update() {
       /* pull up to 32 msgs from charger queue */
       int ct = 0;
-      for (int i = 0; i < 32 && charger_can_recieve(); i++) ct = 1;
+      for (int i = 0; i < 1 /* only one id, either there is a most recent message, or there isn't */ && charger_can_recieve(); i++) ct = 1;
       return ct;
      }
 
