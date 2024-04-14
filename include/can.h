@@ -75,7 +75,7 @@ class CANLine {
           if (set_ignore_flags) vdm_recieve_ignore_flags[1] = 1;
           break;
         case 0x95:
-          msgRecieve.id = 0xC7; // ACU to all ping recieve ID
+          msgRecieve.id = 0xC7; // ACU to all ping send ID
           vdm_can.write(msgRecieve);
           break;
           //send()
