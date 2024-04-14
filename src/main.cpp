@@ -27,7 +27,23 @@ void setup() {
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
-  state = STANDBY;
+  //counts the number of seconds since polling can
+  uint8_t can_count = 0;
+  while(battery.can.charger_can_recieve() == false && battery.can.vdm_can_recieve() == false){
+    Serial.println("Waiting for can");
+    delay(1000);
+    //after 10 seconds shutdown
+    if (can_count > 10){
+      Serial.println("CAN not connected");
+      break;
+    }
+  }
+  if (can_count > 10){
+    state = SHUTDOWN;
+  }
+  else{
+    state = STANDBY;
+  }
 }
 
 void loop() {

@@ -39,9 +39,9 @@ class CANLine {
     CAN_message_t msgRecieve, msgSend;
 
   public:
-    CANLine(FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vdm_can, FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> charger_can) {
-      this->vdm_can = vdm_can;
-      this->charger_can = charger_can;
+    CANLine() {
+      this->vdm_can = FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16>();
+      this->charger_can = FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16>();
     }
 
     byte high(uint16_t x) { return (uint8_t)(x>>8);}
@@ -207,6 +207,45 @@ class CANLine {
     byte4: charge control (bool)
     */
     CANData chargerControl = CANData(0x1806E5F4, true);
+
+    /*
+    stores all the condensed cell data, voltage and temp. the number corresponds to the first cell
+    */
+    struct CellData {
+      CANData CCV0 = CANData(0xA1);
+      CANData CCV8 = CANData(0xA2);
+      CANData CCV16 = CANData(0xA3);
+      CANData CCV24 = CANData(0xA4);
+      CANData CCV32 = CANData(0xA5);
+      CANData CCV40 = CANData(0xA6);
+      CANData CCV48 = CANData(0xA7);
+      CANData CCV56 = CANData(0xA8);
+      CANData CCV64 = CANData(0xA9);
+      CANData CCV72 = CANData(0xAA);
+      CANData CCV80 = CANData(0xAB);
+      CANData CCV88 = CANData(0xAC);
+      CANData CCV96 = CANData(0xAD);
+      CANData CCV104 = CANData(0xAE);
+      CANData CCV112 = CANData(0xAF);
+      CANData CCV120 = CANData(0xB0);
+
+      CANData CCT0 = CANData(0xB3);
+      CANData CCT8 = CANData(0xB4);
+      CANData CCT16 = CANData(0xB5);
+      CANData CCT24 = CANData(0xB6);
+      CANData CCT32 = CANData(0xB7);
+      CANData CCT40 = CANData(0xB8);
+      CANData CCT48 = CANData(0xB9);
+      CANData CCT56 = CANData(0xBA);
+      CANData CCT64 = CANData(0xBB);
+      CANData CCT72 = CANData(0xBC);
+      CANData CCT80 = CANData(0xBD);
+      CANData CCT88 = CANData(0xBE);
+      CANData CCT96 = CANData(0xBF);
+      CANData CCT104 = CANData(0xC0);
+      CANData CCT112 = CANData(0xC1);
+      CANData CCT120 = CANData(0xC2);
+    } CondensedCellData;
 };
 
 /*
