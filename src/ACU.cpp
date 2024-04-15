@@ -2,6 +2,9 @@
 #include "adBms_Application.h"
 #include "adBms6830CmdList.h"
 
+//index i corresponds to the gpio required to get the temperature of the balacing resistor of the ith cell
+//
+uint16_t mux_temp_codes[8] = {0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111}; 
 
 RD      REDUNDANT_MEASUREMENT           = RD_OFF;
 CH      AUX_CH_TO_CONVERT               = AUX_ALL;
@@ -13,10 +16,19 @@ DCP     DISCHARGE_PERMITTED             = DCP_OFF;
 RSTF    RESET_FILTER                    = RSTF_OFF;
 ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
 
-
 /* Set Under Voltage and Over Voltage Thresholds */
-const float OV_THRESHOLD = 4.2;                 /* Volt */
-const float UV_THRESHOLD = 3.0;                 /* Volt */
+const float OV_THRESHOLD = 42000;                 /* Volt in 0.1 mV*/
+const float UV_THRESHOLD = 30000;                 /* Volt in 0.1 mV*/
+//Discharge
+const float MIN_DIS_TEMP = -40; //TODO: Modify later
+const float MAX_DIS_TEMP = 60; 
+//Charging
+const float MIN_CHR_TEMP = 0; //TODO: Modify later
+const float MAX_CHR_TEMP = 60; 
+//Balance Resistor Temp
+const float MIN_BAL_TEMP = 0; //TODO: Modify later
+const float MAX_BAL_TEMP = 60; 
+
 const int OWC_Threshold = 2000;                 /* Cell Open wire threshold(mili volt) */
 const int OWA_Threshold = 50000;                /* Aux Open wire threshold(mili volt) */
 const uint32_t LOOP_MEASUREMENT_COUNT = 1;      /* Loop measurment count */
@@ -33,33 +45,115 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
+
 /// @brief performs system check
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
 /// @return The false if fails, true otherwise
-bool systemCheck(Battery& battery, States& state) {
-    // STUB
-    return true;
+bool systemCheck(Battery &battery, States &state) {
+
+    
+    //pull data from all 6830's
+    adBmsWakeupIc(TOTAL_IC);
+    //update Voltage, balTemp, and cellTemp
+    adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
+
+    pladc_count = adBmsPollAdc(PLADC);
+    // every 10 cycles recheck Voltage while in charge
+    if(battery.chargeCycle>0 && state == CHARGE){
+    } else {
+      updateVoltage(battery);
+    }
+    if (battery.temp_cycle == 0) updateTemps(battery);
+    if(battery.maxBalTemp==-1) battery.maxBalTemp = battery.balTemp[0];
+    if(battery.maxCellTemp == -1) battery.maxCellTemp = battery.cellTemp[0];
+    if(battery.minVolt == -1) battery.minVolt = battery.cellVoltage[0];
+    // if(battery.minCellTemp == -1) battery.minCellTemp = battery.cellTemp[0];
+    for (int i = 0 ; i < 128; i++){
+      if(battery.chargeCycle > 0 && state == CHARGE){
+
+      }else{
+        if (battery.minVolt > battery.cellVoltage[i]) battery.minVolt = battery.cellVoltage[i];
+      //check Voltage:
+        if (battery.cellVoltage[i] > OV_THRESHOLD || battery.cellVoltage[i] < UV_THRESHOLD){
+          return true;
+        }
+      }
+      if (battery.chargeCycle == 0 && state == CHARGE){
+        uint16_t toDischarge = 0;
+        //figure out which cells to discharge
+        for(int ic = 0; ic < TOTAL_IC; ic++){
+          for(int cell = 0; cell < CELL; cell++){
+            //diff between the minimum cell voltage and the current cell is 20mV discharge
+            if(battery.cellVoltage[ic*CELL + cell]-battery.minVolt > 200){
+              toDischarge |= 1 << cell;
+            }
+          }
+          battery.IC[ic].tx_cfgb.dcc = toDischarge;
+        }
+      }
+      
+      if (battery.maxBalTemp < battery.balTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+      // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+
+      //check Bal Temp;
+      if (battery.balTemp[i] > MAX_BAL_TEMP || battery.balTemp[i] < MIN_BAL_TEMP){
+        return true;
+      }
+    }
+    //check CellTemp:
+    for (int i = 0; i < 256; i++){
+      if (battery.maxCellTemp < battery.cellTemp[i]) battery.maxCellTemp = battery.cellTemp[i];
+      if (state == CHARGE){
+        if (battery.cellTemp[i] > MAX_CHR_TEMP || battery.cellTemp[i] < MIN_CHR_TEMP){
+          return true;
+        }
+      }else{
+        if (battery.cellTemp[i] > MAX_DIS_TEMP || battery.cellTemp[i] < MIN_DIS_TEMP){
+          return true;
+        }
+      }
+      
+    }
+    //TODO: maybe discharge top 10% (std)
+    //if next chargeCycle is 0 and Charging, get ready for cell measurement by turing off discharge
+    if(battery.chargeCycle >= 9 && state == CHARGE){
+      battery.chargeCycle = 0;
+      for(int ic = 0; ic < TOTAL_IC; ic++){
+        battery.IC[ic].tx_cfgb.dcc = 0x0;
+      }
+    }
+    adBms6830_write_read_config(TOTAL_IC, battery.IC);
+    return false; 
 }
 
-    // This function is supposed to check if the system is working properly
-    // It is not implemented yet
     
-/// @brief shutDown, errors --> VDM
-/// @param[in] TBD TBD
-/// @param[in] TBD TBD
-/// @return TBD
-void shutdownState(){
+/// @brief offState, idk if this is needed
+/// @param[in] battery TBD
+/// @return N/A
+void offState(Battery &battery, States& state){
+  // When it turns on --> go to STANDBY
+  battery.state = STANDBY;
+}
+
+/// @brief shutDown, send errors --> VDM
+/// @param[in] battery TBD
+/// @return N/A
+void shutdownState(Battery &battery, States& state){
   // Open AIRS and Precharge if already not open
-  // error messages --> VDM
-  // STUB
+
+  // send error --> CAN
+  byte alertMsg[1];
+  alertMsg[0] = 0;
+  // battery.can.send(0x66, alertMsg, 1);
+  battery.state = OFFSTATE;
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void normalState(){
+void normalState(Battery &battery, States& state){
   // System Checks
   //if (!systemCheck()) mockState = SHUTDOWN; return;
   
@@ -70,7 +164,8 @@ void normalState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void chargeState(){
+void chargeState(Battery &battery, States& state){
+  
   // sendMsg if time 0.5 s reached
   // do System Check
   // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
@@ -81,50 +176,103 @@ void chargeState(){
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void preChargeState(){
+void preChargeState(Battery &battery, States& state){
   // send message to VDM to indicate Precharge
-  // close AIR+, wait 1 second, check voltage
+  // close AIR+, wait, check voltage
   // 10 x until threshold reached
 
   // systemChecks
-  // if (!SYSTEMCHECKOK) mockState = SHUTDOWN --> return;
+  if (battery.containsError) battery.state = SHUTDOWN; return;
+  
+  // Send VDM Precharge --> TS Active (1)
+  byte message[1];
+  message[0] = 1;
+  // battery.can.send(0x66, message, 1);
+  uint32_t timeout = millis(); // not sure how long we should wait until timeout
+
+  // close AIR+
   // if (timeout) --> msg --> VDM, mockState = SHUTDOWN --> return;
   // VDM response 1 --> state = NORMAL
   // VDM response 2 --> state = SHUTDOWN
   // else --> ERROR 
 }
 
-/// @brief WAKE UP ISOspi Chip/sensors & System Checks
+/// @brief Runs system checks and reads can to determine whether to charge or startup car
 /// @param[in] TBD TBD
 /// @param[in] TBD TBD
 /// @return TBD
-void standByState(){
+void standByState(Battery &battery, States& state){
       // WAKE UP: ISOSpi Chip & sensors
-
       // SYSTEM CHECKS
-      // if (!SYSTEMCHECKOK) mockState = SHUTDOWN
-      // else if (!CHARGERCAN) mockState = PRECHARGE
-      // else if (CHARGERCAN) mockState = CHARGE
-      // else ERROR
+      if (!battery.containsError) state = SHUTDOWN;
+      else {
+        // read CAN
+        // if message is from Charger, set state to CHARGE
+        // else if message is from VDM, set state to NORMAL
+      }
 }
-
-/// @brief Reads cell voltages and copy data from cell_asic
-/// @param[in] cellVoltage array to store voltages
-/// @param[in] TBD TBD
-/// @return None
-void updateVoltage(uint16_t cellVoltage[], cell_asic IC[]) {
+void updateVoltage(Battery &battery) {
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-  adBms6830_read_cell_voltages(TOTAL_IC, IC);
+  adBms6830_read_cell_voltages(TOTAL_IC, battery.IC);
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
     for (uint8_t cell = 0; cell < CELL; cell++) {
-      cellVoltage[ic * CELL + cell] = (IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
-      Serial.printf("C%u: %u ", ic * CELL + cell + 1, cellVoltage[ic * CELL + cell]/10 + (cellVoltage[ic * CELL + cell]%10 > 4));
+      battery.cellVoltage[ic * CELL + cell] = (battery.IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
+      
+      // send to error state & send error to CAN if voltage threshold has issues
+      if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) > OV_THRESHOLD)
+        sendCellVoltageError(battery, OV_THRESHOLD);
+      else if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) < UV_THRESHOLD)
+        sendCellVoltageError(battery, UV_THRESHOLD);
     }
   }
-  Serial.println();
+  if(battery.temp_cycle >= 15){
+    battery.temp_cycle = 0;
+  }
+  else {
+    battery.temp_cycle++;
+  }
+}
+
+float V2T(float voltage, float B = 4390){
+  float R = voltage / ((5.0 - voltage) / 47e3) / 100e3;
+  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
+  return T - 273.15;
+}
+
+void updateTemps(Battery &battery){
+  for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+    battery.IC[ic].tx_cfga.gpo = mux_temp_codes[battery.cycle];
+  }
+    adBmsWriteData(TOTAL_IC, battery.IC, WRCFGA, Config, AA);
+    adBms6830_start_aux_voltage_measurment(TOTAL_IC, battery.IC);
+    adBms6830_read_aux_voltages(TOTAL_IC, battery.IC);
+    for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+      //all values are subtracted by one to account for indexing from 0
+      //gpio 3: mux1, temp 0
+      battery.cellTemp[ic*32 + (7-battery.cycle)] = V2T(battery.IC[ic].aux.a_codes[3]);
+      //gpio 4: mux 2, temp 8
+      battery.cellTemp[ic*32 + (7-battery.cycle) + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
+      //gpio 5: mux 3, bal 0
+      battery.balTemp[ic*16 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[5]);
+      //gpio 0: mux 4, bal 0
+      battery.balTemp[ic*16 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[0]);
+      //gpio 1: mux 5, temp 16
+      battery.cellTemp[ic*32 + (7-battery.cycle) + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
+      //gpio 2: mux 6, temp 24
+      battery.cellTemp[ic*32 + (7-battery.cycle) + 24] = V2T(battery.IC[ic].aux.a_codes[2]);
+    }
+  if (battery.cycle >= 7){
+    battery.cycle = 0;
+  }
+  else {
+    battery.cycle++;
+  }
 }
 
 
+/// @brief converts uint16_t voltage --> uint8_t voltage
+/// @param[in] voltage uint16_t
+/// @return uint8_t voltage converted
 uint8_t condenseVoltage(uint16_t voltage) {
   //voltage = constrain(voltage, 20000, 45500);
   return (voltage / 100 + (voltage % 100 > 49));// - 200; // uncomment these when connecting to cells
@@ -146,10 +294,46 @@ void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
     message[5] = condenseVoltage(cellVoltage[i * 8 + 5]);
     message[6] = condenseVoltage(cellVoltage[i * 8 + 6]);
     message[7] = condenseVoltage(cellVoltage[i * 8 + 7]);
-    can -> send(id, message, 8);
+    // can -> send(id, message, 8);
   }
 }
 
+/// @brief sends CellVoltageError data to CANbus
+/// @param[in] battery
+/// @param[in] thresholdType either OV_THRESHOLD or UW_THRESHOLD
+/// @return N/A
+void sendCellVoltageError(Battery &battery, const float thresholdType){
+  uint8_t message[8];
+
+  uint16_t accVolt = getAccumulatorVoltage(battery.cellVoltage);
+  message[0] = (uint8_t)((accVolt & 0xFF00) >> 8);
+  message[1] = (uint8_t)(accVolt & 0x00FF);
+  message[2] = (uint8_t)((battery.accumulatorCurrent & 0xFF00) >> 8);
+  message[3] = (uint8_t)(battery.accumulatorCurrent & 0x00FF);
+  message[4] = (uint8_t)(((uint8_t)(battery.maxCellTemp) & 0xFF00) >> 8);
+  message[5] = (uint8_t)((uint8_t)(battery.maxCellTemp) & 0x00FF);
+  message[7] = 3; // NOT SURE WHAT TO PUT IN HERE
+
+  if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
+  else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
+
+  // battery.can.send(0x96, message, 8);
+  battery.containsError = true; // SEND TO SHUTDOWN
+}
+
+/// @brief sum of all voltages stored in battery
+/// @param[in] *cellVoltage a pointer to battery's cellVoltages array
+/// @return sum for accumulator voltage
+uint16_t getAccumulatorVoltage(uint16_t *cellVoltage){
+  uint16_t accVoltage = 0;
+  for(uint8_t index = 0; index < 128; index++)
+    accVoltage += cellVoltage[index] / 100 + (cellVoltage[index] % 100 > 49);
+  return accVoltage;
+}
+
+uint16_t getAccumulatorCurrent(uint16_t *cellVoltage){
+  return 0;
+}
 
 /* configuration registers commands */
 uint8_t WRCFGA[2]        = { 0x00, 0x01 };

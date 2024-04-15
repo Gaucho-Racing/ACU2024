@@ -8,11 +8,22 @@
 Battery battery;
 States state;
 
-//#define TOTAL_IC 2
-cell_asic IC[TOTAL_IC];
+fanController fans(&Serial8);
+
+float accumVoltage, accumCurrent, tsVoltage;
+float acuTemp[3]; // DC-DC converter, something, something
+
+uint16_t fanRpm[4];
+float fanVoltage[4];
+float fanCurrent[4];
+
+bool tsActive = false;
+uint8_t errors = 0b00000000;
+
 
 void setup() {
   Serial.begin(115200);
+  // fans.begin();
   Serial.println("Init config");
   adBms6830_init_config(TOTAL_IC, IC);
   Serial.println("Setup done");
@@ -24,24 +35,23 @@ void setup() {
 
 void loop() {
   // ACU STATES
+  battery.containsError = systemCheck(battery, state);
   switch (state)
   {
     case STANDBY:
-      standByState();
-      updateVoltage(battery.cellVoltage, IC);
-      //dumpCANbus(&battery.can, battery.cellVoltage);
+      standByState(battery, state);
       break;
     case PRECHARGE:
-      preChargeState();
+      preChargeState(battery, state);
       break;
     case CHARGE:
-      chargeState();
+      chargeState(battery, state);
       break;
     case NORMAL:
-      normalState();
+      normalState(battery, state);
       break;
     case SHUTDOWN:
-      shutdownState();
+      shutdownState(battery, state);
       break;
     default:
       state = SHUTDOWN;

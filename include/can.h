@@ -1,0 +1,229 @@
+#ifndef CAN_H
+#define CAN_H
+
+// #include <Arduino.h>
+#include "FlexCAN_T4.h"
+//#include <vector>
+//#include <unordered_map>
+
+typedef uint8_t byte;
+
+//FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> canPrimary; //Depends on what board u test on ig but prob just use this for now
+//FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> canPrimary;
+//FlexCAN_T4FD<CAN3, RX_SIZE_256, TX_SIZE_16> canData;
+//CAN_message_t msgPrimary;
+//CAN_message_t msg;
+//CANFD_message_t msgData;
+
+//#define JuanMbps 1000000
+//#define AteMbps 8000000
+
+class CANData {
+  public:
+    int id;
+    byte msg[8];
+    bool isToCharger;
+    CANData(int id, bool isToCharger = false) {
+      this->id = id;
+      for (int i = 0; i < 8; i++) {
+        this->msg[i] = 0;
+      }
+      this->isToCharger = isToCharger;
+    }
+};
+
+class CANLine {
+  private: 
+    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vdm_can;
+    FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> charger_can;
+    CAN_message_t msgRecieve, msgSend;
+
+  public:
+    CANLine(FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vdm_can, FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> charger_can) {
+      this->vdm_can = vdm_can;
+      this->charger_can = charger_can;
+    }
+
+    byte high(uint16_t x) { return (uint8_t)(x>>8);}
+    byte low(uint16_t x) { return (uint8_t)(x);}
+
+    bool getBit(uint8_t x, int bitnum) {
+      x = x >> (7 - bitnum);
+      return (bool)(x & 1);
+    }
+
+    uint16_t toShort(uint8_t x, uint8_t y = 0) { return (uint16_t)(x<<8) + (uint16_t)(y); }
+
+    int vdm_can_recieve() {
+      if (vdm_can.readFIFO(msgRecieve) == 0) return 0;
+      //  byte msg[8];
+      //  for (int i = 0; i < 8; i++) msg[i] = msgRecieve.buf[i];
+      CANData *node;
+      switch (msgRecieve.id) {
+        case 0x64:
+          node = &configCellData;
+          break;
+        case 0x66:
+          node = &ACUControl;
+          break;
+        case 0x67:
+          node = &batteryLimits;
+          break;
+        default:
+          return -1;
+      }
+      for (int i = 0; i < 8; i++) (*node).msg[i] = msgRecieve.buf[i];
+      return 1;
+    }
+
+    int charger_can_recieve() {
+      if (charger_can.readFIFO(msgRecieve) == 0) return 0;
+      //  byte msg[8];
+      //  for (int i = 0; i < 8; i++) msg[i] = msgRecieve.buf[i];
+      CANData *node;
+      switch (msgRecieve.id) {
+        case 0x18FF50E5:
+          node = &chargerData;
+          break;
+        default:
+          return -1;
+      }
+      for (int i = 0; i < 8; i++) (*node).msg[i] = msgRecieve.buf[i];
+      return 1;    
+    }
+
+    int vdm_can_update() {
+      /* pull up to 32 msgs from vdm queue */
+      int ct = 0;
+      for (int i = 0; i < 32 && vdm_can_recieve(); i++) ct = 1;
+      return ct;
+    }
+    int charger_can_update() {
+      /* pull up to 32 msgs from charger queue */
+      int ct = 0;
+      for (int i = 0; i < 32 && charger_can_recieve(); i++) ct = 1;
+      return ct;
+     }
+
+    CANData send(CANData d) {
+      msgSend.id = d.id;
+      for (int i = 0; i < 8; i++) {
+        //Serial.print(message[i]);
+        //Serial.print(" ");
+        msgSend.buf[i] = d.msg[i];
+        
+      }
+      //Serial.println();
+      if (d.id == 0x1806E5F4) charger_can.write(msgSend);
+      else vdm_can.write(msgSend);
+      //Serial.print("Frame sent to id 0x");
+      //Serial.println(id, HEX);
+    }
+
+    /*
+    recieve id: 0x64
+    byte0: cell number
+        1: data type (bool)
+        2 periodic
+    */
+    CANData configCellData = CANData(0x64);
+
+    /*
+    recieve id: 0x66
+    byte0: ts active? (bool)
+    */
+    CANData ACUControl = CANData(0x66);
+
+    /*
+    recieve id: 0x67
+    byte0-1: max voltage
+    2-3: max out current
+    4-5: max temp
+    */
+    CANData batteryLimits = CANData(0x67);
+
+    /*
+    send id: 0x95
+    byte0-3: time millisecs.
+    4-7: time millisecs.
+    */
+    CANData reqPingRequest = CANData(0x95);
+
+    /*
+    send id: 0x96
+    byte0-1: accumualtor voltage (V), 0.01× scale
+    2-3: accumulator current (A), 0.01× scale
+    4-5: max cell temp (°C), 0.01× scale, signed
+    6: errors (bools)
+    7: warnings (bools)
+    */
+    CANData ACUGeneral1 = CANData(0x96);
+
+    /*
+    send id: 0x97
+    byte0-1: ts voltage (V), 0.01× scale
+    2: states (bools)
+    3-4: max bal resistor temp
+    5: sdc Voltage
+    6: glv Voltage
+    7: state of charge
+    */
+    CANData ACUGeneral2 = CANData(0x97);
+
+    /*
+    send id: 0x98
+    byte 0: fan 1 speed (%), 0.5× scale
+    1: fan 2 speed (%), 0.5× scale
+    2: fan 3 speed (%), 0.5× scale
+    3: pump speed (%), 0.5× scale
+    4: acu temp 1
+    5: acu temp 2
+    6: acu temp 3
+    7: errors (bools)
+    */
+    CANData powertrainCooling = CANData(0x98);
+
+    /*
+    recieve id: 0x99
+    byte0-1: max charge current (A), 0.01× scale
+    2-3: max charge voltage (V), 0.01× scale
+    4: states (bools)
+    5: errors (?)
+    */
+    CANData chargeCartConfig = CANData(0x99);
+
+    /*
+    recieve id: 0x18FF50E5
+    byte0-1: output voltage (V), 0.1× scale
+    byte2-3: output current (A), 0.1× scale
+    byte4: status (bools)
+    */
+    CANData chargerData = CANData(0x18FF50E5, true);
+
+    /*
+    send id: 0x1806E5F4
+    byte0-1: requested voltage (V), 0.1× scale
+    byte2-3: requested current (A), 0.1× scale
+    byte4: charge control (bool)
+    */
+    CANData chargerControl = CANData(0x1806E5F4, true);
+};
+
+/*
+  delay(1000);  // Adjust the delay according to your needs
+  APPS1 += 1000;
+  if(APPS1 > 10000){
+    APPS1 = 0;
+  }
+  APPS2 += 1000;
+  if(APPS2 > 10000){
+    APPS2 = 0;
+  }
+  suspensionPos += 5;
+  wheelSpeed += 69;
+  tirePressure += 1;
+}
+*/
+
+#endif
+
