@@ -1,4 +1,3 @@
-
 #include "FanController.h"
 #include "ACU.h"
 #include "adBms_Application.h"
@@ -30,6 +29,10 @@ void setup() {
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
   state = STANDBY;
+
+  battery.can_prim.begin();
+  battery.can_chgr.begin();
+
 }
 
 void loop() {

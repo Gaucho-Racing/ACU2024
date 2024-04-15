@@ -129,8 +129,7 @@ void shutdownState(Battery &battery, States& state){
   digitalWrite(PRECHG_OUT, LOW);
   digitalWrite(AIR_NEG, LOW);
   digitalWrite(AIR_PLUS, LOW);
-  battery.can.ACUGeneral2.msg[3] = 1 << 4;
-  battery.can.send(battery.can.ACUGeneral2);
+  sendCANData(battery, ACU_General2);
   battery.state = OFFSTATE;
 }
 
@@ -140,13 +139,12 @@ void shutdownState(Battery &battery, States& state){
 /// @return N/A
 void normalState(Battery &battery, States& state){
   // System Checks
-  if (!battery.containsError){ state = SHUTDOWN; return; }
-  battery.can.send(battery.can.reqPingRequest); // ping
+  if (battery.containsError){ state = SHUTDOWN; return; }
 
   // Send batt info to VDM at 100Hz ???
-  battery.can.ACUGeneral2.msg[6] = 0b0000001; // No error
-  battery.can.send(battery.can.ACUGeneral1);
-  battery.can.send(battery.can.ACUGeneral2);
+  battery.can.ACUGeneral.msg[6] = 0b00000001; // No error
+  sendCANData(battery, ACU_General);
+  sendCANData(battery, ACU_General2);
 }
 
 /// @brief req charge, system checks
@@ -161,7 +159,7 @@ void chargeState(Battery &battery, States& state){
   }
   // sendMsg if time 0.5 s reached --> TODO
   battery.can.chargeCartConfig.msg[4] = 0b10000000;
-  battery.chargerCan.send(battery.can.chargeCartConfig);
+  battery.can.send(battery.can.chargeCartConfig);
   
 }
 
@@ -170,8 +168,7 @@ void chargeState(Battery &battery, States& state){
 /// @param[in] TBD TBD
 /// @return TBD
 void preChargeState(Battery &battery, States& state){
-  //TODO: close AIR-
-  digitalWrite(AIR_NEG, HIGH);
+  digitalWrite(AIR_NEG, HIGH); // clost AIR-
   // send message to VDM to indicate Precharge
   battery.can.ACUGeneral2.msg[3] = 0b00000110;
   digitalWrite(PRECHG_OUT, HIGH);
@@ -188,7 +185,7 @@ void preChargeState(Battery &battery, States& state){
     delay(100);
   }
   // send error to VDM
-  battery.can.ACUGeneral1.msg[6] |= 1<<5;
+  battery.can.ACUGeneral.msg[6] |= 1<<5;
   battery.can.send(battery.can.ACUGeneral1); 
 }
 
@@ -267,23 +264,31 @@ uint8_t condenseVoltage(uint16_t voltage) {
   return (voltage / 100 + (voltage % 100 > 49));// - 200; // uncomment these when connecting to cells
 }
 
+/// @brief converts float temperature --> uint8_t temperature
+/// @param[in] temperature float
+/// @return uint8_t temperature converted
+uint8_t condenseTemperature(float temperature) {
+  return (uint8_t)((temperature - 10) * 4); // 10C~73.75C --> 0~255
+}
+
 /// @brief Sends data to CANbus
 /// @param[in] cellVoltage array to store voltages
 /// @param[in] TBD TBD
 /// @return None
-void dumpCANbus(CANLine *can, uint16_t cellVoltage[]) {
-  uint8_t message[8];
+void dumpCANbus(Battery &battery) {
   for (uint8_t i = 0; i < 16; i++) {
-    uint16_t id = i + 0xA1;
-    message[0] = condenseVoltage(cellVoltage[i * 8 + 0]);
-    message[1] = condenseVoltage(cellVoltage[i * 8 + 1]);
-    message[2] = condenseVoltage(cellVoltage[i * 8 + 2]);
-    message[3] = condenseVoltage(cellVoltage[i * 8 + 3]);
-    message[4] = condenseVoltage(cellVoltage[i * 8 + 4]);
-    message[5] = condenseVoltage(cellVoltage[i * 8 + 5]);
-    message[6] = condenseVoltage(cellVoltage[i * 8 + 6]);
-    message[7] = condenseVoltage(cellVoltage[i * 8 + 7]);
-    // can -> send(id, message, 8);
+    CAN_message_t message;
+    message.buf[0] = condenseVoltage(battery.cellVoltage[i * 8 + 0]);
+    message.buf[1] = condenseVoltage(battery.cellVoltage[i * 8 + 1]);
+    message.buf[2] = condenseVoltage(battery.cellVoltage[i * 8 + 2]);
+    message.buf[3] = condenseVoltage(battery.cellVoltage[i * 8 + 3]);
+    message.buf[4] = condenseVoltage(battery.cellVoltage[i * 8 + 4]);
+    message.buf[5] = condenseVoltage(battery.cellVoltage[i * 8 + 5]);
+    message.buf[6] = condenseVoltage(battery.cellVoltage[i * 8 + 6]);
+    message.buf[7] = condenseVoltage(battery.cellVoltage[i * 8 + 7]);
+    message.id = Condensed_Cell_Voltage_n0 + i;
+    message.flags.extended = true;
+    battery.can_prim.write(message);
   }
 }
 

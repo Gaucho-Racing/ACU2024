@@ -21,7 +21,22 @@ enum States {
 };
 
 struct Battery{
-    CANLine can,chargerCan;
+    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_prim;
+    FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> can_chgr;
+    CAN_message_t msg;
+    
+    uint8_t errs; // for general 1
+    uint8_t warns; // for general 1
+    
+    uint8_t air_state; // AIR- | AIR+
+    uint16_t ts_voltage; 
+    uint8_t sdc_voltage;    
+    uint8_t glv_voltage;
+
+    uint8_t max_chrg_voltage;
+    uint8_t max_chrg_current;
+    
+
     States state;
     cell_asic *IC;
     float maxCellTemp, maxBalTemp = -1;
@@ -54,14 +69,14 @@ void preChargeState(Battery &battery, States& state);
 void standByState(Battery &battery, States& state);
 bool systemCheck(Battery &battery, States& state);
 
-// functions for cell Voltage
-void updateVoltage(Battery &battery);
-float V2T(float voltage, float B = 4390);
-void updateTemps(Battery &battery);
-void calcCharge(Battery &battery);
-void dumpCANbus(CANLine *can, uint16_t cellVoltage[]);
-void sendCellVoltageError(Battery &battery, const float thresholdType);
-uint8_t condenseVoltage(uint16_t voltage);
-uint16_t getAccumulatorVoltage(uint16_t *cellVoltage);
+// functions for cell data
+void updateVoltage(Battery &battery); // parse and copy cell voltage data from ADI's array into our array
+float V2T(float voltage, float B = 4390); // calculate NTC thermistor temperature
+void updateTemps(Battery &battery); // read cell temperatures
+void calcCharge(Battery &battery); // calculate state of charge
+void dumpCANbus(Battery &battery); // send condensed cell data to primary CAN
+void sendCellVoltageError(Battery &battery, const float thresholdType); // @Rachel explain this
+uint8_t condenseVoltage(uint16_t voltage); // calculate condensed cell voltage value
+uint16_t getAccumulatorVoltage(uint16_t *cellVoltage); // calculate sum of all cell voltages
 
 #endif
