@@ -57,8 +57,7 @@ bool systemCheck(Battery &battery) {
   // TODO: ACU temperatures, DC/DC current
 
   // check relay states by reading on the output pins (should work?)
-  battery.relay_state = digitalRead(PIN_AIR_NEG) << 7 + digitalRead(PIN_AIR_POS) << 6 
-    + digitalRead(PIN_PRECHG) << 5; + digitalRead(PIN_DISCHG_STOP) << 4;
+  battery.relay_state = (digitalRead(PIN_AIR_NEG) << 7) + (digitalRead(PIN_AIR_POS) << 6)+ (digitalRead(PIN_PRECHG) << 5);
 
   // pull data from all 6830's
   adBmsWakeupIc(TOTAL_IC);
@@ -155,20 +154,22 @@ void shutdownState(Battery &battery){
   digitalWrite(PIN_PRECHG, LOW);
   digitalWrite(PIN_AIR_NEG, LOW);
   digitalWrite(PIN_AIR_POS, LOW);
-  digitalWrite(PIN_DISCHG_STOP, LOW);
-  battery.state = OFFSTATE;
+  delay(10);
+  battery.containsError = systemCheck(battery);
+  if (battery.relay_state != 0) {
+    battery.errs |= ERR_Teensy; // Teensy error, output not working
+  }
+  else if (battery.ts_voltage < 5000) { // safe to turn of if TS voltage < 50V
+    battery.state = OFFSTATE;
+  }
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
 /// @param[in] battery
 /// @param[in] state
 /// @return N/A
-void normalState(Battery &battery){
-  // System Checks
-  if (battery.containsError){battery.state = SHUTDOWN; return;}
-
-  // Send batt info to VDM at 100Hz ???
-  battery.containsError = false;
+void normalState(Battery &battery){ // ready to drive
+  // control fans & pump --> TODO
 }
 
 /// @brief req charge, system checks
@@ -176,13 +177,7 @@ void normalState(Battery &battery){
 /// @param[in] TBD TBD
 /// @return TBD
 void chargeState(Battery &battery){
-  // System Checks
-  if (!battery.containsError){
-    battery.state = SHUTDOWN;
-    return;
-  }
   // sendMsg if time 0.5 s reached --> TODO
-  sendCANData(battery, Charging_Cart_Config);
   sendCANData(battery, Charger_Control);
 }
 
@@ -191,46 +186,58 @@ void chargeState(Battery &battery){
 /// @param[in] TBD TBD
 /// @return TBD
 void preChargeState(Battery &battery){
-  if (!(battery.relay_state & 0b00010000)) { // if discharge relay isn't open
-    digitalWrite(PIN_DISCHG_STOP, HIGH); // open discharge relay
-    delay(10); // wait for the relay to switch
-    systemCheck(battery);
-    if (!(battery.relay_state & 0b00010000)) {
-      battery.errs |= 0b00000010; // Teensy error, output pin not working
-      digitalWrite(PIN_DISCHG_STOP, LOW);
-      return;
-    }
-  }
   if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
     digitalWrite(PIN_AIR_NEG, HIGH); // clost AIR-
     delay(50); // wait for the relay to switch
-    systemCheck(battery);
+    battery.containsError = systemCheck(battery);
+    if (!(battery.relay_state & 0b10000000)) {
+      battery.errs |= ERR_Teensy; // Teensy error, output pin not working
+      digitalWrite(PIN_AIR_NEG, LOW);
+      return;
+    }
   }
   if (!(battery.relay_state & 0b00100000)) { // if precharge relay isn't closed
-    digitalWrite(PIN_PRECHG, HIGH); // clost precharge relay
+    digitalWrite(PIN_PRECHG, HIGH); // close precharge relay
     delay(10); // wait for the relay to switch
-    systemCheck(battery);
+    battery.containsError = systemCheck(battery);
+    if (!(battery.relay_state & 0b00100000)) {
+      battery.errs |= ERR_Teensy; // Teensy error, output pin not working
+      digitalWrite(PIN_PRECHG, LOW);
+      digitalWrite(PIN_AIR_NEG, LOW);
+      return;
+    }
   }
   // send message to VDM to indicate Precharge
   sendCANData(battery, ACU_General2);
   // check voltage, if difference > 5V after 2 seconds throw error
   uint32_t startTime = millis();
-  while (battery.ts_voltage < getAccumulatorVoltage(battery) - 500) {
-    systemCheck(battery);
+  while (battery.ts_voltage < getAccumulatorVoltage(battery) - PRECHARGE_THRESHOLD) {
+    battery.containsError = systemCheck(battery);
     if (millis() - startTime > 2000) { // timeout, throw error
       digitalWrite(PIN_AIR_POS, LOW); // open AIR+, shouldn't be closed but just in case
-      digitalWrite(PIN_PRECHG, LOW); // open precharge relay
       digitalWrite(PIN_AIR_NEG, LOW); // open AIR-
-      digitalWrite(PIN_DISCHG_STOP, LOW); // close discharge relay
-      battery.errs |= 0b00000100; // set precharge error bit
-      battery.errs &= 0b11111110; // clear no error bit
-      battery.containsError = true;
-      battery.state = SHUTDOWN; // enter shutdown state
-      dumpCANbus(battery);
+      digitalWrite(PIN_PRECHG, LOW); // open precharge relay, close discharge relay
+      battery.errs |= ERR_Prechrg;
+      battery.containsError = systemCheck(battery);
+      return;
     }
-    delay(20);
     dumpCANbus(battery);
+    delay(20);
   }
+  if (!(battery.relay_state & 0b01000000)) { // if AIR+ isn't closed
+    digitalWrite(PIN_AIR_POS, HIGH); // clost AIR+
+    delay(50); // wait for the relay to switch
+    battery.containsError = systemCheck(battery);
+    if (!(battery.relay_state & 0b01000000)) {
+      battery.errs |= ERR_Teensy; // Teensy error, output pin not working
+      digitalWrite(PIN_PRECHG, LOW);
+      digitalWrite(PIN_AIR_NEG, LOW);
+      digitalWrite(PIN_AIR_POS, LOW);
+      return;
+    }
+  }
+  Serial.println("Precharge Done. Ready to drive. ");
+  battery.state = NORMAL;
 }
 
 /// @brief offState, idk if this is needed
@@ -247,12 +254,6 @@ void updateVoltage(Battery &battery) {
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
     for (uint8_t cell = 0; cell < CELL; cell++) {
       battery.cellVoltage[ic * CELL + cell] = (battery.IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
-      
-      // send to error state & send error to CAN if voltage threshold has issues
-      if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) > OV_THRESHOLD)
-        sendCellVoltageError(battery, OV_THRESHOLD);
-      else if(condenseVoltage(battery.cellVoltage[ic * CELL + cell]) < UV_THRESHOLD)
-        sendCellVoltageError(battery, UV_THRESHOLD);
     }
   }
   if(battery.temp_cycle >= 15){
@@ -327,29 +328,6 @@ void dumpCANbus(Battery &battery) {
   sendCANData(battery, ACU_General2);
   sendCANData(battery, Powertrain_Cooling);
   sendCANData(battery, Charging_Cart_Config);
-}
-
-/// @brief sends CellVoltageError data to CANbus
-/// @param[in] battery
-/// @param[in] thresholdType either OV_THRESHOLD or UW_THRESHOLD
-/// @return N/A
-void sendCellVoltageError(Battery &battery, const float thresholdType){
-  uint8_t message[8];
-
-  uint16_t accVolt = getAccumulatorVoltage(battery);
-  message[0] = (uint8_t)((accVolt & 0xFF00) >> 8);
-  message[1] = (uint8_t)(accVolt & 0x00FF);
-  message[2] = (uint8_t)((battery.accumCurrent & 0xFF00) >> 8);
-  message[3] = (uint8_t)(battery.accumCurrent & 0x00FF);
-  message[4] = (uint8_t)(((uint8_t)(battery.maxCellTemp) & 0xFF00) >> 8);
-  message[5] = (uint8_t)((uint8_t)(battery.maxCellTemp) & 0x00FF);
-  message[7] = 3; // NOT SURE WHAT TO PUT IN HERE
-
-  if(thresholdType == OV_THRESHOLD){ message[6] = 1;}
-  else if(thresholdType == UV_THRESHOLD){ message[6] = 4;}
-
-  // battery.can.send(0x96, message, 8);
-  battery.containsError = true; // SEND TO SHUTDOWN
 }
 
 /// @brief sum of all voltages stored in battery

@@ -29,7 +29,7 @@ struct Battery{
     uint8_t errs; // for general 1
     uint8_t warns; // for general 1
     
-    uint8_t relay_state; // AIR- | AIR+ | Precharge | discharge
+    uint8_t relay_state; // AIR- | AIR+ | Precharge
     uint16_t ts_voltage; // 10mV/LSB
     uint16_t sdc_voltage; // 4mV/LSB
     uint16_t glv_voltage; // 4mV/LSB
@@ -73,11 +73,10 @@ bool systemCheck(Battery &battery);
 
 // functions for cell data
 void updateVoltage(Battery &battery); // parse and copy cell voltage data from ADI's array into our array
-float V2T(float voltage, float B = 4390); // calculate NTC thermistor temperature
+float V2T(float voltage, float B); // calculate NTC thermistor temperature
 void updateTemps(Battery &battery); // read cell temperatures
 void calcCharge(Battery &battery); // calculate state of charge
 void dumpCANbus(Battery &battery); // send EVERYTHING to primary CAN except ping
-void sendCellVoltageError(Battery &battery, const float thresholdType); // @Rachel explain this
 uint8_t condenseVoltage(uint16_t voltage); // calculate condensed cell voltage value
 uint8_t condenseTemperature(float temperature); // calculate condensed cell temperature value
 uint16_t getAccumulatorVoltage(Battery &battery); // calculate sum of all cell voltages

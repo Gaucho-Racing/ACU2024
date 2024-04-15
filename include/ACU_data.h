@@ -12,11 +12,11 @@
 //Pin Definitions
 #define PIN_AIR_POS -1
 #define PIN_AIR_NEG -1
-#define PIN_DISCHG_STOP -1
-#define PIN_PRECHG -1
+#define PIN_PRECHG -1 // also controls discharge relay
 #define CS_ADC -1
 #define PIN_AIR_POS_AUX -1 // auxilary contacts
 #define PIN_AIR_NEG_AUX -1 // auxilary contacts
+#define PIN_AMS_OK -1
 
 // ADC1283 connections
 #define ADC_MUX_GLV_VOLT -1

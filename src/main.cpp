@@ -37,6 +37,7 @@ void setup() {
 void loop() {
   // ACU STATES
   battery.containsError = systemCheck(battery);
+  digitalWrite(PIN_AMS_OK, !battery.containsError);
   if (battery.containsError)battery.state = SHUTDOWN;
   switch (battery.state)
   {
@@ -64,6 +65,5 @@ void loop() {
       break;
   }
   dumpCANbus(battery);
-  delay(100);
   
 }
