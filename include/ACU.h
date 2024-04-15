@@ -9,10 +9,9 @@
 #include "can.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
-
+#include "ADC1283.h"
 
 enum States {
-    STANDBY,
     PRECHARGE,
     NORMAL,
     CHARGE,
@@ -36,6 +35,7 @@ struct Battery{
     float cellTemp[256];
     float balTemp[128];
     bool containsError = false;
+    ADC1283 ACU_ADC = ADC1283(ADC_PIN, 4.096, 3200000);
 };
 
 // helper functions

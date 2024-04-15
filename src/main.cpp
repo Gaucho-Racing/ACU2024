@@ -29,8 +29,21 @@ void setup() {
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
-  state = STANDBY;
-  state = STANDBY;
+  //counts the number of seconds since polling can
+
+  for(int i = 0; i < 10; i++){
+    if(battery.can.charger_can_recieve() == true){
+      state = CHARGE;
+      return;
+    } else if (battery.can.vdm_can_recieve() == true){
+      state = PRECHARGE;
+      return;
+    }
+    Serial.println("Waiting for can");
+    delay(1000);
+  }
+  Serial.println("CAN not connected");
+  state = SHUTDOWN;
 }
 
 void loop() {
@@ -38,9 +51,6 @@ void loop() {
   battery.containsError = systemCheck(battery, state);
   switch (state)
   {
-    case STANDBY:
-      standByState(battery, state);
-      break;
     case PRECHARGE:
       preChargeState(battery, state);
       break;
@@ -53,12 +63,15 @@ void loop() {
     case SHUTDOWN:
       shutdownState(battery, state);
       break;
+    case OFFSTATE:
+      offState(battery, state);
+      break;
     default:
       state = SHUTDOWN;
       Serial.println("Uh oh u dummy, u've entered a non-existent state");
       break;
   }
-
+  //TODO: Uncomment when 
   delay(500);
   
 }

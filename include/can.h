@@ -37,11 +37,12 @@ class CANLine {
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vdm_can;
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> charger_can;
     CAN_message_t msgRecieve, msgSend;
+    bool vdm_recieve_ignore_flags[2] = {0,0};
 
   public:
-    CANLine(FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> vdm_can, FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> charger_can) {
-      this->vdm_can = vdm_can;
-      this->charger_can = charger_can;
+    CANLine() {
+      this->vdm_can = FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16>();
+      this->charger_can = FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16>();
     }
 
     byte high(uint16_t x) { return (uint8_t)(x>>8);}
@@ -54,7 +55,7 @@ class CANLine {
 
     uint16_t toShort(uint8_t x, uint8_t y = 0) { return (uint16_t)(x<<8) + (uint16_t)(y); }
 
-    int vdm_can_recieve() {
+    int vdm_can_recieve(bool set_ignore_flags = false) {
       if (vdm_can.readFIFO(msgRecieve) == 0) return 0;
       //  byte msg[8];
       //  for (int i = 0; i < 8; i++) msg[i] = msgRecieve.buf[i];
@@ -64,11 +65,20 @@ class CANLine {
           node = &configCellData;
           break;
         case 0x66:
+          if (vdm_recieve_ignore_flags[0]) break;
           node = &ACUControl;
+          if (set_ignore_flags) vdm_recieve_ignore_flags[0] = 1;
           break;
         case 0x67:
+          if (vdm_recieve_ignore_flags[1]) break;
           node = &batteryLimits;
+          if (set_ignore_flags) vdm_recieve_ignore_flags[1] = 1;
           break;
+        case 0x95:
+          msgRecieve.id = 0xC7; // ACU to all ping send ID
+          vdm_can.write(msgRecieve);
+          break;
+          //send()
         default:
           return -1;
       }
@@ -95,13 +105,15 @@ class CANLine {
     int vdm_can_update() {
       /* pull up to 32 msgs from vdm queue */
       int ct = 0;
-      for (int i = 0; i < 32 && vdm_can_recieve(); i++) ct = 1;
+      for (int i = 0; i < 32 && vdm_can_recieve(true); i++) {ct = 1;}
+      vdm_recieve_ignore_flags[0] = 0;
+      vdm_recieve_ignore_flags[1] = 0;
       return ct;
     }
     int charger_can_update() {
       /* pull up to 32 msgs from charger queue */
       int ct = 0;
-      for (int i = 0; i < 32 && charger_can_recieve(); i++) ct = 1;
+      for (int i = 0; i < 1 /* only one id, either there is a most recent message, or there isn't */ && charger_can_recieve(); i++) ct = 1;
       return ct;
      }
 
@@ -207,6 +219,45 @@ class CANLine {
     byte4: charge control (bool)
     */
     CANData chargerControl = CANData(0x1806E5F4, true);
+
+    /*
+    stores all the condensed cell data, voltage and temp. the number corresponds to the first cell
+    */
+    struct CellData {
+      CANData CCV0 = CANData(0xA1);
+      CANData CCV8 = CANData(0xA2);
+      CANData CCV16 = CANData(0xA3);
+      CANData CCV24 = CANData(0xA4);
+      CANData CCV32 = CANData(0xA5);
+      CANData CCV40 = CANData(0xA6);
+      CANData CCV48 = CANData(0xA7);
+      CANData CCV56 = CANData(0xA8);
+      CANData CCV64 = CANData(0xA9);
+      CANData CCV72 = CANData(0xAA);
+      CANData CCV80 = CANData(0xAB);
+      CANData CCV88 = CANData(0xAC);
+      CANData CCV96 = CANData(0xAD);
+      CANData CCV104 = CANData(0xAE);
+      CANData CCV112 = CANData(0xAF);
+      CANData CCV120 = CANData(0xB0);
+
+      CANData CCT0 = CANData(0xB3);
+      CANData CCT8 = CANData(0xB4);
+      CANData CCT16 = CANData(0xB5);
+      CANData CCT24 = CANData(0xB6);
+      CANData CCT32 = CANData(0xB7);
+      CANData CCT40 = CANData(0xB8);
+      CANData CCT48 = CANData(0xB9);
+      CANData CCT56 = CANData(0xBA);
+      CANData CCT64 = CANData(0xBB);
+      CANData CCT72 = CANData(0xBC);
+      CANData CCT80 = CANData(0xBD);
+      CANData CCT88 = CANData(0xBE);
+      CANData CCT96 = CANData(0xBF);
+      CANData CCT104 = CANData(0xC0);
+      CANData CCT112 = CANData(0xC1);
+      CANData CCT120 = CANData(0xC2);
+    } CondensedCellData;
 };
 
 /*
@@ -226,4 +277,3 @@ class CANLine {
 */
 
 #endif
-
