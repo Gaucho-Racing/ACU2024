@@ -66,6 +66,8 @@ void readCANData(Battery &battery){
 }
 
 void sendCANData(Battery &battery, uint32_t ID){
+  battery.msg.id = ID;
+  battery.msg.flags.extended = true;
   uint8_t i;
   switch(ID){
     case ACU_General:
@@ -115,8 +117,6 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = condenseVoltage(battery.cellVoltage[i * 8 + 5]);
       battery.msg.buf[6] = condenseVoltage(battery.cellVoltage[i * 8 + 6]);
       battery.msg.buf[7] = condenseVoltage(battery.cellVoltage[i * 8 + 7]);
-      battery.msg.id = Condensed_Cell_Voltage_n0 + i;
-      battery.msg.flags.extended = true;
       battery.can_prim.write(battery.msg);
       break;
       
@@ -147,14 +147,10 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = condenseTemperature((battery.cellTemp[i * 16 + 10] + battery.cellTemp[i * 16 + 11]) / 2);
       battery.msg.buf[6] = condenseTemperature((battery.cellTemp[i * 16 + 12] + battery.cellTemp[i * 16 + 13]) / 2);
       battery.msg.buf[7] = condenseTemperature((battery.cellTemp[i * 16 + 14] + battery.cellTemp[i * 16 + 15]) / 2);
-      battery.msg.id = ID;
-      battery.msg.flags.extended = true;
       battery.can_prim.write(battery.msg);
       break;
       
     case ACU_Ping_Response:
-      battery.msg.id = ACU_Ping_Response;
-      battery.msg.flags.extended = true;
       battery.can_prim.write(battery.msg);
       break;
       

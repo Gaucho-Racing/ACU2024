@@ -53,7 +53,7 @@ struct Battery{
     float cellTemp[256];
     float balTemp[128];
     bool containsError = false;
-    ADC1283 ACU_ADC = ADC1283(ADC_PIN, 4.096, 3200000);
+    ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 3200000);
 };
 
 // helper functions

@@ -37,6 +37,7 @@ void setup() {
 void loop() {
   // ACU STATES
   battery.containsError = systemCheck(battery);
+  if (battery.containsError)battery.state = SHUTDOWN;
   switch (battery.state)
   {
     case STANDBY:
