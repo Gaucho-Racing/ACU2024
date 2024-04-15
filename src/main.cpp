@@ -28,7 +28,6 @@ void setup() {
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
-  state = STANDBY;
 
   battery.can_prim.begin();
   battery.can_chgr.begin();
@@ -37,33 +36,33 @@ void setup() {
 
 void loop() {
   // ACU STATES
-  battery.containsError = systemCheck(battery, state);
-  switch (state)
+  battery.containsError = systemCheck(battery);
+  switch (battery.state)
   {
     case STANDBY:
-      standByState(battery, state);
+      standByState(battery);
       break;
     case PRECHARGE:
-      preChargeState(battery, state);
+      preChargeState(battery);
       break;
     case CHARGE:
-      chargeState(battery, state);
+      chargeState(battery);
       break;
     case NORMAL:
-      normalState(battery, state);
+      normalState(battery);
       break;
     case SHUTDOWN:
-      shutdownState(battery, state);
+      shutdownState(battery);
       break;
     case OFFSTATE:
-      offState(battery, state);
+      offState(battery);
       break;
     default:
-      state = SHUTDOWN;
+      battery.state = SHUTDOWN;
       Serial.println("Uh oh u dummy, u've entered a non-existent state");
       break;
   }
-
-  delay(500);
+  dumpCANbus(battery);
+  delay(100);
   
 }

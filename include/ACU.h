@@ -6,10 +6,11 @@
 #include <vector>
 #include <utility>
 #include "ACU_data.h"
-#include "can.h"
+//#include "can.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
 #include "ADC1283.h"
+#include <FlexCAN_T4.h>
 
 enum States {
     PRECHARGE,
@@ -28,13 +29,13 @@ struct Battery{
     uint8_t errs; // for general 1
     uint8_t warns; // for general 1
     
-    uint8_t air_state; // AIR- | AIR+
-    uint16_t ts_voltage; 
-    uint8_t sdc_voltage;    
-    uint8_t glv_voltage;
+    uint8_t relay_state; // AIR- | AIR+ | Precharge | discharge
+    uint16_t ts_voltage; // 10mV/LSB
+    uint16_t sdc_voltage; // 4mV/LSB
+    uint16_t glv_voltage; // 4mV/LSB
 
-    uint8_t max_chrg_voltage;
-    uint8_t max_chrg_current;
+    uint16_t max_chrg_voltage; // 10mV/LSB
+    uint16_t max_chrg_current; // format TBD???
     
 
     States state;
@@ -45,7 +46,8 @@ struct Battery{
     //every 10 cycles recheck Voltage
     uint8_t chargeCycle = 0;
     uint8_t temp_cycle = 0;
-    uint16_t accumulatorCurrent = 0; 
+    uint16_t accumCurrent = 0;
+    float accumCurrentZero = 1.235; // offset for zeroing accumulator current
     //in 0.1mV
     uint16_t cellVoltage[128];  
     float cellTemp[256];
@@ -61,22 +63,23 @@ void get_Current(Battery &battery);
 void get_Max_Cell_Temp(Battery &battery);
 void get_Max_Bal_Res_Temp(Battery &battery);
 void cell_Balancing(Battery &battery);
-void offState(Battery &battery,States& state);
-void shutdownState(Battery &battery, States& state);
-void normalState(Battery &battery, States& state);
-void chargeState(Battery &battery, States& state);
-void preChargeState(Battery &battery, States& state);
-void standByState(Battery &battery, States& state);
-bool systemCheck(Battery &battery, States& state);
+void offState(Battery &battery);
+void shutdownState(Battery &battery);
+void normalState(Battery &battery);
+void chargeState(Battery &battery);
+void preChargeState(Battery &battery);
+void standByState(Battery &battery);
+bool systemCheck(Battery &battery);
 
 // functions for cell data
 void updateVoltage(Battery &battery); // parse and copy cell voltage data from ADI's array into our array
 float V2T(float voltage, float B = 4390); // calculate NTC thermistor temperature
 void updateTemps(Battery &battery); // read cell temperatures
 void calcCharge(Battery &battery); // calculate state of charge
-void dumpCANbus(Battery &battery); // send condensed cell data to primary CAN
+void dumpCANbus(Battery &battery); // send EVERYTHING to primary CAN except ping
 void sendCellVoltageError(Battery &battery, const float thresholdType); // @Rachel explain this
 uint8_t condenseVoltage(uint16_t voltage); // calculate condensed cell voltage value
-uint16_t getAccumulatorVoltage(uint16_t *cellVoltage); // calculate sum of all cell voltages
+uint8_t condenseTemperature(float temperature); // calculate condensed cell temperature value
+uint16_t getAccumulatorVoltage(Battery &battery); // calculate sum of all cell voltages
 
 #endif

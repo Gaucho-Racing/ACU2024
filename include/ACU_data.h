@@ -12,6 +12,7 @@
 //Pin Definitions
 #define AIR_PLUS -1
 #define AIR_NEG -1
+#define DISCHG_STOP -1
 #define CAN_HI -1
 #define CAN_LO -1
 #define TSAL_RED -1
@@ -32,6 +33,6 @@
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A
 
-#define PRECHARGE_THRESHOLD -1 //V
+#define PRECHARGE_THRESHOLD 500 // * 10mV
 
 #endif

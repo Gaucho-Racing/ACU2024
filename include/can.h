@@ -54,18 +54,19 @@ void readCANData(Battery &battery){
   for(; msgReads >= 0; msgReads--){
     if(!battery.can_prim.read(battery.msg))
       break;
-    sortCANData(battery);
+    parseCANData(battery);
   }
 
   for(; msgReads >= 0; msgReads--){
     if(!battery.can_chgr.read(battery.msg))
       break;
-    sortCANData(battery);
+    parseCANData(battery);
   }
 
 }
 
 void sendCANData(Battery &battery, uint32_t ID){
+  uint8_t i;
   switch(ID){
     case ACU_General:
       //STUFFFFF
@@ -105,7 +106,7 @@ void sendCANData(Battery &battery, uint32_t ID){
     case Condensed_Cell_Voltage_n120:
     case Condensed_Cell_Voltage_n128:
     case Condensed_Cell_Voltage_n136:
-      uint8_t i = ID - Condensed_Cell_Voltage_n0;
+      i = ID - Condensed_Cell_Voltage_n0;
       battery.msg.buf[0] = condenseVoltage(battery.cellVoltage[i * 8 + 0]);
       battery.msg.buf[1] = condenseVoltage(battery.cellVoltage[i * 8 + 1]);
       battery.msg.buf[2] = condenseVoltage(battery.cellVoltage[i * 8 + 2]);
@@ -137,7 +138,7 @@ void sendCANData(Battery &battery, uint32_t ID){
     case Condensed_Cell_Temp_n120:
     case Condensed_Cell_Temp_n128:
     case Condensed_Cell_Temp_n136:
-      uint8_t i = ID - Condensed_Cell_Temp_n0;
+      i = ID - Condensed_Cell_Temp_n0;
       battery.msg.buf[0] = condenseTemperature((battery.cellTemp[i * 16 + 0] + battery.cellTemp[i * 16 + 1]) / 2);
       battery.msg.buf[1] = condenseTemperature((battery.cellTemp[i * 16 + 2] + battery.cellTemp[i * 16 + 3]) / 2);
       battery.msg.buf[2] = condenseTemperature((battery.cellTemp[i * 16 + 4] + battery.cellTemp[i * 16 + 5]) / 2);
