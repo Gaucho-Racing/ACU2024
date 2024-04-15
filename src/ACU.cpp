@@ -50,8 +50,6 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 /// @param[in] state Reference to states
 /// @return The false if fails, true otherwise
 bool systemCheck(Battery &battery, States &state) {
-
-    
     //pull data from all 6830's
     adBmsWakeupIc(TOTAL_IC);
     //update Voltage, balTemp, and cellTemp
@@ -70,10 +68,8 @@ bool systemCheck(Battery &battery, States &state) {
     // if(battery.minCellTemp == -1) battery.minCellTemp = battery.cellTemp[0];
     for (int i = 0 ; i < 128; i++){
       if(battery.chargeCycle > 0 && state == CHARGE){
-
-      }else{
+      }else{ //check Voltage:
         if (battery.minVolt > battery.cellVoltage[i]) battery.minVolt = battery.cellVoltage[i];
-      //check Voltage:
         if (battery.cellVoltage[i] > OV_THRESHOLD || battery.cellVoltage[i] < UV_THRESHOLD){
           return true;
         }
@@ -112,7 +108,6 @@ bool systemCheck(Battery &battery, States &state) {
           return true;
         }
       }
-      
     }
     //TODO: maybe discharge top 10% (std)
     //if next chargeCycle is 0 and Charging, get ready for cell measurement by turing off discharge
@@ -127,7 +122,7 @@ bool systemCheck(Battery &battery, States &state) {
 }
 
 /// @brief shutDown, send errors --> VDM
-/// @param[in] battery TBD
+/// @param[in] battery
 /// @return N/A
 void shutdownState(Battery &battery, States& state){
   // Open AIRS and Precharge if already not open
@@ -140,14 +135,18 @@ void shutdownState(Battery &battery, States& state){
 }
 
 /// @brief timeout checks, system checks, batt data --> VDM
-/// @param[in] TBD TBD
-/// @param[in] TBD TBD
-/// @return TBD
+/// @param[in] battery
+/// @param[in] state
+/// @return N/A
 void normalState(Battery &battery, States& state){
   // System Checks
-  //if (!systemCheck()) mockState = SHUTDOWN; return;
-  
-  // if CAN timeout --> Send battery data to VDM
+  if (!battery.containsError){ state = SHUTDOWN; return; }
+  battery.can.send(battery.can.reqPingRequest); // ping
+
+  // Send batt info to VDM at 100Hz ???
+  battery.can.ACUGeneral2.msg[6] = 0b0000001; // No error
+  battery.can.send(battery.can.ACUGeneral1);
+  battery.can.send(battery.can.ACUGeneral2);
 }
 
 /// @brief req charge, system checks
@@ -155,11 +154,15 @@ void normalState(Battery &battery, States& state){
 /// @param[in] TBD TBD
 /// @return TBD
 void chargeState(Battery &battery, States& state){
+  // System Checks
+  if (!battery.containsError){
+    state = SHUTDOWN;
+    return;
+  }
+  // sendMsg if time 0.5 s reached --> TODO
+  battery.can.chargeCartConfig.msg[4] = 0b10000000;
+  battery.chargerCan.send(battery.can.chargeCartConfig);
   
-  // sendMsg if time 0.5 s reached
-  // do System Check
-  // if (!SYSTEMCHECKOK || TIMEOUT) mockState = SHUTDOWN --> return;
-  // else --> same state
 }
 
 /// @brief error --> VDM if timeout --> (NORMAL/SHUTDOWN)

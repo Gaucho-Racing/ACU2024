@@ -23,6 +23,7 @@ class CANData {
     int id;
     byte msg[8];
     bool isToCharger;
+    CANData();
     CANData(int id, bool isToCharger = false) {
       this->id = id;
       for (int i = 0; i < 8; i++) {
@@ -130,6 +131,7 @@ class CANLine {
       else vdm_can.write(msgSend);
       //Serial.print("Frame sent to id 0x");
       //Serial.println(id, HEX);
+      return CANData(); // fix later
     }
 
     /*
@@ -178,7 +180,8 @@ class CANLine {
     3-4: max bal resistor temp
     5: sdc Voltage
     6: glv Voltage
-    7: state of charge
+    7: state of charge: 0: AIR+ State (1=closed), 1: AIR- State (1=closed), 2: Precharging (1=in progress), 
+                        3: Precharge Done (1=closed), 4: Shutdown (1 = is shutdown)
     */
     CANData ACUGeneral2 = CANData(0x97);
 

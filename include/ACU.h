@@ -16,11 +16,12 @@ enum States {
     NORMAL,
     CHARGE,
     SHUTDOWN,
-    OFFSTATE
+    OFFSTATE, 
+    STANDBY
 };
 
 struct Battery{
-    CANLine can;
+    CANLine can,chargerCan;
     States state;
     cell_asic *IC;
     float maxCellTemp, maxBalTemp = -1;
