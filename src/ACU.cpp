@@ -190,15 +190,13 @@ void shutdownState(Battery &battery){
 
 /// @brief timeout checks, system checks, batt data --> VDM
 /// @param[in] battery
-/// @param[in] state
 /// @return N/A
 void normalState(Battery &battery){ // ready to drive
   // control fans & pump --> TODO
 }
 
 /// @brief req charge, system checks
-/// @param[in] TBD TBD
-/// @param[in] TBD TBD
+/// @param[in] battery
 /// @return TBD
 void chargeState(Battery &battery){
   // sendMsg if time 0.5 s reached --> TODO
@@ -206,8 +204,7 @@ void chargeState(Battery &battery){
 }
 
 /// @brief error --> VDM if timeout --> (NORMAL/SHUTDOWN)
-/// @param[in] TBD TBD
-/// @param[in] TBD TBD
+/// @param[in] battery
 /// @return TBD
 void preChargeState(Battery &battery){
   if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
@@ -333,7 +330,7 @@ uint8_t condenseVoltage(uint16_t voltage) {
   return (voltage / 100 + (voltage % 100 > 49));// - 200; // uncomment these when connecting to cells
 }
 
-/// @brief converts float temperature --> uint8_t temperature
+/// @brief converts float temp --> uint8_t temp
 /// @param[in] temperature float
 /// @return uint8_t temperature converted
 uint8_t condenseTemperature(float temperature) {
@@ -362,6 +359,25 @@ uint16_t getAccumulatorVoltage(Battery &battery){
   for(uint8_t index = 0; index < 128; index++)
     accVoltage += battery.cellVoltage[index] / 100 + (battery.cellVoltage[index] % 100 > 49);
   return accVoltage;
+}
+
+/// @brief sum of all cellTemps stored in battery
+/// @param[in] battery
+/// @return sum for accumulator temp, deg C
+uint8_t getAccumulatorTemp(Battery &battery){
+  uint16_t temp = 0;
+  for(uint8_t index = 0; index < 128; index++)
+    temp += (uint16_t)battery.cellTemp[index];
+  return temp;
+
+}
+
+/// @brief % charge of battery
+/// @param[in] battery
+/// @return 0-100% charge
+uint8_t calcCharge(Battery &battery){ // calculate state of charge --> TODO
+  return 0;
+
 }
 
 /* configuration registers commands */
