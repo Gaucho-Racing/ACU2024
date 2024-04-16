@@ -61,7 +61,6 @@ void init_config(Battery &battery);
 void get_Temperatures(Battery &battery);
 void get_Current(Battery &battery);
 void get_Max_Cell_Temp(Battery &battery);
-void get_Max_Bal_Res_Temp(Battery &battery);
 void cell_Balancing(Battery &battery);
 void offState(Battery &battery);
 void shutdownState(Battery &battery);
@@ -75,7 +74,7 @@ bool systemCheck(Battery &battery);
 void updateVoltage(Battery &battery); // parse and copy cell voltage data from ADI's array into our array
 float V2T(float voltage, float B); // calculate NTC thermistor temperature
 void updateTemps(Battery &battery); // read cell temperatures
-void calcCharge(Battery &battery); // calculate state of charge
+uint8_t calcCharge(Battery &battery); // calculate state of charge --> TODO
 void dumpCANbus(Battery &battery); // send EVERYTHING to primary CAN except ping
 uint8_t condenseVoltage(uint16_t voltage); // calculate condensed cell voltage value
 uint8_t condenseTemperature(float temperature); // calculate condensed cell temperature value
