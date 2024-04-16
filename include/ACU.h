@@ -46,7 +46,7 @@ struct Battery{
     //every 10 cycles recheck Voltage
     uint8_t chargeCycle = 0;
     uint8_t temp_cycle = 0;
-    uint16_t accumCurrent = 0;
+    uint16_t accumCurrent = 0; // 10mA/LSB
     float accumCurrentZero = 1.235; // offset for zeroing accumulator current
     //in 0.1mV
     uint16_t cellVoltage[128];  

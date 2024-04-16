@@ -52,8 +52,22 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 /// @return The false if fails, true otherwise
 bool systemCheck(Battery &battery) {
   // read stuff on ADC1283 chip
+  battery.warns = 0; // clear warnings
+  battery.errs &= ~ERR_OverCurr; // clear over current error bit
   battery.ts_voltage = battery.ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 150;
   battery.accumCurrent = (battery.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - battery.accumCurrentZero) * 6250;
+  if (battery.accumCurrent > 6300) {
+    battery.warns |= WARN_HighCurr;
+    if (battery.accumCurrent > 13500) {
+      battery.errs |= ERR_OverCurr;
+    }
+  }
+  if (V2T(battery.ACU_ADC.readVoltage(ADC_MUX_DCDC_TEMP1), 3380) > 60) {
+    if (V2T(battery.ACU_ADC.readVoltage(ADC_MUX_DCDC_TEMP1), 3380) > 70) {
+      digitalWrite(PIN_DCDC_EN, LOW);
+    }
+    digitalWrite(PIN_DCDC_SLOW, HIGH);
+  }
   // TODO: ACU temperatures, DC/DC current
 
   // check relay states by reading on the output pins (should work?)
@@ -76,9 +90,10 @@ bool systemCheck(Battery &battery) {
   if(battery.minVolt == -1) battery.minVolt = battery.cellVoltage[0];
   // if(battery.minCellTemp == -1) battery.minCellTemp = battery.cellTemp[0];
 
-  // cell voltage stuff
   battery.errs &= ~ERR_OverVolt; // clear over voltage error bit
   battery.errs &= ~ERR_UndrVolt; // clear under voltage error bit
+  battery.errs &= ~ERR_OverTemp; // clear over temp error bit
+  battery.errs &= ~ERR_UndrTemp; // clear under temp error bit
   for (int i = 0 ; i < 128; i++){
     if(battery.chargeCycle > 0 && battery.state == CHARGE){
     }
@@ -109,20 +124,29 @@ bool systemCheck(Battery &battery) {
     // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
 
     //check Bal Temp;
-    if (battery.balTemp[i] > MAX_BAL_TEMP || battery.balTemp[i] < MIN_BAL_TEMP){
-      return true;
+    if (battery.balTemp[i] > MAX_BAL_TEMP){
+      battery.errs |= ERR_OverTemp;
+    }
+    if (battery.balTemp[i] < MIN_BAL_TEMP){
+      battery.errs |= ERR_UndrTemp;
     }
   }
   //check CellTemp:
   for (int i = 0; i < 256; i++){
     if (battery.maxCellTemp < battery.cellTemp[i]) battery.maxCellTemp = battery.cellTemp[i];
     if (battery.state == CHARGE){
-      if (battery.cellTemp[i] > MAX_CHR_TEMP || battery.cellTemp[i] < MIN_CHR_TEMP){
-        return true;
+      if (battery.cellTemp[i] > MAX_CHR_TEMP) {
+        battery.errs |= ERR_OverTemp;
+      }
+      if (battery.cellTemp[i] < MIN_CHR_TEMP) {
+        battery.errs |= ERR_UndrTemp;
       }
     }else{
-      if (battery.cellTemp[i] > MAX_DIS_TEMP || battery.cellTemp[i] < MIN_DIS_TEMP){
-        return true;
+      if (battery.cellTemp[i] > MAX_DIS_TEMP) {
+        battery.errs |= ERR_OverTemp;
+      }
+      if (battery.cellTemp[i] < MIN_DIS_TEMP){
+        battery.errs |= ERR_UndrTemp;
       }
     }
   }
