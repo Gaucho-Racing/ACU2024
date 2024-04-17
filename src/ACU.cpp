@@ -207,21 +207,7 @@ void chargeState(Battery &battery){
 /// @param[in] battery
 /// @return TBD
 void preChargeState(Battery &battery){
-  if (!(battery.relay_state & 0b00010000)) { // if discharge relay isn't open
-    digitalWrite(DISCHG_STOP, HIGH); // open discharge relay
-    delay(10); // wait for the relay to switch
-    battery.relay_state |= 0b00010000;
-  }
-  if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
-    digitalWrite(AIR_NEG, HIGH); // clost AIR-
-    delay(50); // wait for the relay to switch
-    battery.relay_state |= 0b10000000;
-  }
-  if (!(battery.relay_state & 0b00100000)) { // if precharge relay isn't closed
-    digitalWrite(PRECHG_OUT, HIGH); // clost precharge relay
-    delay(10); // wait for the relay to switch
-    battery.relay_state |= 0b00100000;
-  if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
+   if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
     digitalWrite(PIN_AIR_NEG, HIGH); // clost AIR-
     delay(50); // wait for the relay to switch
     battery.containsError = systemCheck(battery);

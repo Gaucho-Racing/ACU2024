@@ -10,9 +10,9 @@
 
 
 //Pin Definitions
-#define PIN_AIR_POS -1
-#define PIN_AIR_NEG -1
-#define PIN_PRECHG -1 // also controls discharge relay
+#define PIN_AIR_POS -1 // assuming closed high
+#define PIN_AIR_NEG -1 //assuming closed high
+#define PIN_PRECHG -1 // also controls discharge relay, assuming preC closed high, disc open high
 #define CS_ADC -1
 #define PIN_AIR_POS_AUX -1 // auxilary contacts
 #define PIN_AIR_NEG_AUX -1 // auxilary contacts

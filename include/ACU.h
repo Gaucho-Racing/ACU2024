@@ -78,6 +78,7 @@ uint8_t calcCharge(Battery &battery); // calculate state of charge --> TODO
 void dumpCANbus(Battery &battery); // send EVERYTHING to primary CAN except ping
 uint8_t condenseVoltage(uint16_t voltage); // calculate condensed cell voltage value
 uint8_t condenseTemperature(float temperature); // calculate condensed cell temperature value
-uint16_t getAccumulatorVoltage(Battery &battery); // calculate sum of all cell voltages
+uint16_t getAccumulatorVoltage(Battery &battery); // calculate sum of all cell voltages; TODO: NOT SURE WHAT THIS DOES
+uint8_t getAccumulatorTemp(Battery &battery); //TODO: NOT SURE WHAT THIS DOES
 
 #endif
