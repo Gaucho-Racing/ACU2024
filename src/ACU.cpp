@@ -168,6 +168,27 @@ bool systemCheck(Battery &battery) {
 void standByState(Battery &battery){
   //STUB
   Serial.println("standby...");
+    for (int i = 0; i < 30; i++)
+  switch (readCANData(battery))
+  {
+  case 0:
+    //normal operations
+    battery.state = PRECHARGE;
+    //send can start precharge
+    return;
+    break;
+  case 1:
+    //charging
+    battery.state = CHARGE;
+    //send charge parameters then acknowledgement ping
+    return;
+    break;
+  case -1:
+    delay(100);
+    break;
+  default:
+    break;
+  }
 }
 
 /// @brief shutDown, send errors --> VDM

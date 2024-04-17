@@ -8,7 +8,7 @@
 
 
 void parseCANData(Battery &battery);
-void readCANData(Battery &battery);
+int readCANData(Battery &battery);
 void sendCANData(Battery &battery, uint32_t ID);
 
 
@@ -60,20 +60,24 @@ void parseCANData(Battery &battery){
   }
 }
 
-void readCANData(Battery &battery){
-  int msgReads = 5;  //Max number of CAN message reads per function call 
+int readCANData(Battery &battery){
+  int which_can = 0;
+  int msgReads = 5;  //Max number of CAN message reads per function call
 
   for(; msgReads >= 0; msgReads--){
     if(!battery.can_prim.read(battery.msg))
       break;
+    which_can = 1;
     parseCANData(battery);
   }
 
   for(; msgReads >= 0; msgReads--){
     if(!battery.can_chgr.read(battery.msg))
       break;
+    which_can = 2;
     parseCANData(battery);
   }
+  return which_can;
 
 }
 
