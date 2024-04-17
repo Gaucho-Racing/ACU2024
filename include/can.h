@@ -66,27 +66,72 @@ void readCANData(Battery &battery){
 }
 
 void sendCANData(Battery &battery, uint32_t ID){
-  uint8_t i;
+  battery.msg.id = ID;
+  battery.msg.flags.extended = true;
   switch(ID){
-    case ACU_General:
-      //STUFFFFF
-      break;
+    case ACU_General:{
+      uint16_t accVolt = getAccumulatorVoltage(battery);
+      battery.msg.buf[0] = accVolt >> 8;
+      battery.msg.buf[1] = accVolt;
+      battery.msg.buf[2] = battery.accumCurrent >> 8;
+      battery.msg.buf[3] = battery.accumCurrent;
+      int16_t tempCodeSend = (int16_t)(battery.maxCellTemp * 100);
+      battery.msg.buf[4] = tempCodeSend >> 8;
+      battery.msg.buf[5] = tempCodeSend;
+      battery.msg.buf[6] = battery.errs;
+      battery.msg.buf[7] = battery.warns;
+    }break;
 
-    case ACU_General2:
-      //STUFFFFF
-      break;
+    case ACU_General2:{
+      uint16_t tsVoltage = battery.ts_voltage;
+      battery.msg.buf[0] = tsVoltage >> 8;
+      battery.msg.buf[1] = tsVoltage;
+      battery.msg.buf[2] = battery.relay_state;
+      int16_t tempCodeSend = (int16_t)(battery.maxBalTemp * 100);
+      battery.msg.buf[3] = tempCodeSend >> 8;
+      battery.msg.buf[4] = tempCodeSend;
+      battery.msg.buf[5] = battery.sdc_voltage;
+      battery.msg.buf[6] = battery.glv_voltage;
+      battery.msg.buf[7] = calcCharge(battery); // calcCharge needs 2B implemented
+    }break;
 
-    case Powertrain_Cooling:
-      //STUFFFFF
-      break;
+    case Powertrain_Cooling:{;
+      battery.msg.buf[0] = 0b0000000;
+      battery.msg.buf[1] = 0b0000000;
+      battery.msg.buf[2] = 0b0000000;
+      battery.msg.buf[3] = 0b0000000;
+      battery.msg.buf[4] = 0b0000000;
+      battery.msg.buf[5] = 0b0000000;
+      battery.msg.buf[6] = 0b0000000;
+      battery.msg.buf[7] = 0b0000000; 
+    }break;
 
-    case Charging_Cart_Config:
-      //STUFFFFF
-      break;
+    case Charging_Cart_Config:{
+      uint16_t max_charge_current = battery.max_chrg_current;
+      uint16_t max_charge_volt = battery.max_chrg_voltage;
+      battery.msg.buf[0] = max_charge_current >> 8;
+      battery.msg.buf[1] = max_charge_current;
+      battery.msg.buf[2] = max_charge_volt >> 8;
+      battery.msg.buf[3] = max_charge_volt;
+      battery.msg.buf[4] = battery.state == CHARGE ? 0b1000000 : 0b01000000; // not sure abt this one
+      battery.msg.buf[5] = 0b0000000; // not sure abt this one either, not spec in datasheet, Bit 0 = ok
+      battery.msg.buf[6] = 0b0000000; // not sure abt this one either, ? in datasheet, Bit 0 = ok
+      battery.msg.buf[7] = 0b0000000; // not sure abt this one either, ? in datasheet, Bit 0 = ok
+    }break;
       
-    case Expanded_Cell_Data:
-      //STUFFFFF
-      break;
+    case Expanded_Cell_Data: {
+      battery.msg.buf[0] = 0xA0; // 0b10100000;
+      uint16_t cell_volt = getAccumulatorVoltage(battery);
+      uint16_t open_cell_volt = 0b0000000; // what's this?
+      uint16_t cell_temp = getAccumulatorTemp(battery);
+      battery.msg.buf[1] = cell_volt >> 8;
+      battery.msg.buf[2] = cell_volt;
+      battery.msg.buf[3] = open_cell_volt >> 8;
+      battery.msg.buf[4] = open_cell_volt;
+      battery.msg.buf[5] = cell_temp >> 8;
+      battery.msg.buf[6] = cell_temp;
+      battery.msg.buf[7] = 0b0000000; // TBD
+    }break;
       
     case Condensed_Cell_Voltage_n0:
     case Condensed_Cell_Voltage_n8:
@@ -105,8 +150,8 @@ void sendCANData(Battery &battery, uint32_t ID){
     case Condensed_Cell_Voltage_n112:
     case Condensed_Cell_Voltage_n120:
     case Condensed_Cell_Voltage_n128:
-    case Condensed_Cell_Voltage_n136:
-      i = ID - Condensed_Cell_Voltage_n0;
+    case Condensed_Cell_Voltage_n136:{
+      uint8_t i = ID - Condensed_Cell_Voltage_n0;
       battery.msg.buf[0] = condenseVoltage(battery.cellVoltage[i * 8 + 0]);
       battery.msg.buf[1] = condenseVoltage(battery.cellVoltage[i * 8 + 1]);
       battery.msg.buf[2] = condenseVoltage(battery.cellVoltage[i * 8 + 2]);
@@ -115,9 +160,8 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = condenseVoltage(battery.cellVoltage[i * 8 + 5]);
       battery.msg.buf[6] = condenseVoltage(battery.cellVoltage[i * 8 + 6]);
       battery.msg.buf[7] = condenseVoltage(battery.cellVoltage[i * 8 + 7]);
-      battery.msg.id = Condensed_Cell_Voltage_n0 + i;
-      battery.msg.flags.extended = true;
       battery.can_prim.write(battery.msg);
+    }
       break;
       
     case Condensed_Cell_Temp_n0:
@@ -137,8 +181,8 @@ void sendCANData(Battery &battery, uint32_t ID){
     case Condensed_Cell_Temp_n112:
     case Condensed_Cell_Temp_n120:
     case Condensed_Cell_Temp_n128:
-    case Condensed_Cell_Temp_n136:
-      i = ID - Condensed_Cell_Temp_n0;
+    case Condensed_Cell_Temp_n136:{
+      uint8_t i = ID - Condensed_Cell_Temp_n0;
       battery.msg.buf[0] = condenseTemperature((battery.cellTemp[i * 16 + 0] + battery.cellTemp[i * 16 + 1]) / 2);
       battery.msg.buf[1] = condenseTemperature((battery.cellTemp[i * 16 + 2] + battery.cellTemp[i * 16 + 3]) / 2);
       battery.msg.buf[2] = condenseTemperature((battery.cellTemp[i * 16 + 4] + battery.cellTemp[i * 16 + 5]) / 2);
@@ -147,14 +191,11 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = condenseTemperature((battery.cellTemp[i * 16 + 10] + battery.cellTemp[i * 16 + 11]) / 2);
       battery.msg.buf[6] = condenseTemperature((battery.cellTemp[i * 16 + 12] + battery.cellTemp[i * 16 + 13]) / 2);
       battery.msg.buf[7] = condenseTemperature((battery.cellTemp[i * 16 + 14] + battery.cellTemp[i * 16 + 15]) / 2);
-      battery.msg.id = ID;
-      battery.msg.flags.extended = true;
       battery.can_prim.write(battery.msg);
+    }
       break;
       
     case ACU_Ping_Response:
-      battery.msg.id = ACU_Ping_Response;
-      battery.msg.flags.extended = true;
       battery.can_prim.write(battery.msg);
       break;
       
@@ -163,7 +204,7 @@ void sendCANData(Battery &battery, uint32_t ID){
       break;
       
     default:
-      Serial.println("FUCK U U IDIOT");
+      Serial.println("FUCK U U IDIOT"); // language, sheesh
   }
 }
 
