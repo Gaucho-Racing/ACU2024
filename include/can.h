@@ -52,7 +52,16 @@ void parseCANData(Battery &battery){
       break;
       
     case Charger_Data:
-      //STUFFFFF
+      // parse the max voltage, max current & chaging/not charging bool & get all failures
+      battery.max_chrg_voltage = (battery.msg.buf[0] << 8) | battery.msg.buf[1];
+      battery.max_chrg_current = (battery.msg.buf[2] << 8) | battery.msg.buf[3];
+      battery.chargerDataStatus.hardwareStatus = battery.msg.buf[4] & 0b00000001;
+      battery.chargerDataStatus.temperatureStatus = battery.msg.buf[4] & 0b00000010;
+      battery.chargerDataStatus.inputVoltageStatus = battery.msg.buf[4] & 0b00000100;
+      battery.chargerDataStatus.startingState = battery.msg.buf[4] & 0b00001000;
+      battery.chargerDataStatus.communicationState = battery.msg.buf[4] & 0b00010000;
+      sendCANData(battery, Charger_Control);
+      Serial.println("Charger Data Read, yaya we won't die");
       break;
 
     default:
@@ -129,10 +138,10 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[1] = max_charge_current;
       battery.msg.buf[2] = max_charge_volt >> 8;
       battery.msg.buf[3] = max_charge_volt;
-      battery.msg.buf[4] = battery.state == CHARGE ? 0b1000000 : 0b01000000; // not sure abt this one
-      battery.msg.buf[5] = 0b0000000; // not sure abt this one either, not spec in datasheet, Bit 0 = ok
-      battery.msg.buf[6] = 0b0000000; // not sure abt this one either, ? in datasheet, Bit 0 = ok
-      battery.msg.buf[7] = 0b0000000; // not sure abt this one either, ? in datasheet, Bit 0 = ok
+      battery.msg.buf[4] = battery.state == CHARGE ? 1: 0; // not sure abt this one
+      battery.msg.buf[5] = 0b0000000;
+      battery.msg.buf[6] = 0b0000000;
+      battery.msg.buf[7] = 0b0000000;
     }break;
       
       //this is unable to be sent reflexively, temporary fix, TODO: fix this
@@ -225,7 +234,16 @@ void sendCANData(Battery &battery, uint32_t ID){
       break;
       
     case Charger_Control:
-      //STUFFFFF
+      uint16_t max_charge_current = battery.max_chrg_current;
+      uint16_t max_charge_volt = battery.max_chrg_voltage;
+      battery.msg.buf[0] = max_charge_current >> 8;
+      battery.msg.buf[1] = max_charge_current;
+      battery.msg.buf[2] = max_charge_volt >> 8;
+      battery.msg.buf[3] = max_charge_volt;
+      battery.msg.buf[4] = battery.state == CHARGE ? 1:0; 
+      battery.msg.buf[5] = 0b0000000;
+      battery.msg.buf[6] = 0b0000000; 
+      battery.msg.buf[7] = 0b0000000; 
       break;
       
     default:

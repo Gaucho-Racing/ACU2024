@@ -221,6 +221,7 @@ void normalState(Battery &battery){ // ready to drive
 /// @return TBD
 void chargeState(Battery &battery){
   // sendMsg if time 0.5 s reached --> TODO
+  // if charge full --> send to standby
   sendCANData(battery, Charger_Control);
 }
 
