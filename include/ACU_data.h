@@ -49,9 +49,16 @@
 #define ERR_Teensy   0b00000010
 #define ERR_UndrTemp 0b00000001
 
+// Error bit positions (Charger Data)
+#define ERR_Hardware  0b00000001
+#define ERR_Temp      0b00000010
+#define ERR_InputVolt 0b00000100
+#define ERR_Start     0b00001000
+#define ERR_Comm      0b00010000
+
 // Charger Values
 #define CHARGER_VOLTAGE 540 //V
-#define CHARGER_CURRENT 5 //A
+#define CHARGER_CURRENT 12 //A
 
 #define PRECHARGE_THRESHOLD 500 // * 10mV
 
