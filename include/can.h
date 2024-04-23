@@ -8,7 +8,7 @@
 
 
 void parseCANData(Battery &battery);
-void readCANData(Battery &battery);
+int readCANData(Battery &battery);
 void sendCANData(Battery &battery, uint32_t ID);
 
 
@@ -16,7 +16,19 @@ void sendCANData(Battery &battery, uint32_t ID);
 void parseCANData(Battery &battery){
   switch(battery.msg.id){
     case Configure_Cell_Data:
-      //STUFFFFF
+      // if single send requested send immediately
+      if (battery.msg.buf[3] == 0x0){
+        //if condensed
+        if(battery.msg.buf[2] == 0x0){
+          sendCANData(battery, Condensed_Cell_Voltage_n0 + battery.msg.buf[1]/8);
+          sendCANData(battery, Condensed_Cell_Temp_n0 + battery.msg.buf[1]/8);
+        }
+        //if expanded
+        else{
+          sendCANData(battery, Expanded_Cell_Data);
+        }
+        
+      }
       break;
 
     case ACU_Control:
@@ -40,7 +52,16 @@ void parseCANData(Battery &battery){
       break;
       
     case Charger_Data:
-      //STUFFFFF
+      // parse the max voltage, max current & chaging/not charging bool & get all failures
+      battery.max_chrg_voltage = (battery.msg.buf[0] << 8) | battery.msg.buf[1];
+      battery.max_chrg_current = (battery.msg.buf[2] << 8) | battery.msg.buf[3];
+      battery.chargerDataStatus.hardwareStatus = battery.msg.buf[4] & 0b00000001;
+      battery.chargerDataStatus.temperatureStatus = battery.msg.buf[4] & 0b00000010;
+      battery.chargerDataStatus.inputVoltageStatus = battery.msg.buf[4] & 0b00000100;
+      battery.chargerDataStatus.startingState = battery.msg.buf[4] & 0b00001000;
+      battery.chargerDataStatus.communicationState = battery.msg.buf[4] & 0b00010000;
+      sendCANData(battery, Charger_Control);
+      Serial.println("Charger Data Read, yaya we won't die");
       break;
 
     default:
@@ -48,25 +69,29 @@ void parseCANData(Battery &battery){
   }
 }
 
-void readCANData(Battery &battery){
+int readCANData(Battery &battery){
+  int which_can = 0;
   int msgReads = 5;  //Max number of CAN message reads per function call
 
   for(; msgReads >= 0; msgReads--){
     if(!battery.can_prim.read(battery.msg))
       break;
+    which_can = 1;
     parseCANData(battery);
   }
 
   for(; msgReads >= 0; msgReads--){
     if(!battery.can_chgr.read(battery.msg))
       break;
+    which_can = 2;
     parseCANData(battery);
   }
+  return which_can;
 
 }
 
 void sendCANData(Battery &battery, uint32_t ID){
-  battery.msg.id = ID;
+  //moved CAN id set to bottom for temp config cell data fix, see line 134
   battery.msg.flags.extended = true;
   switch(ID){
     case ACU_General:{
@@ -113,17 +138,26 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[1] = max_charge_current;
       battery.msg.buf[2] = max_charge_volt >> 8;
       battery.msg.buf[3] = max_charge_volt;
-      battery.msg.buf[4] = battery.state == CHARGE ? 0b1000000 : 0b01000000; // not sure abt this one
-      battery.msg.buf[5] = 0b0000000; // not sure abt this one either, not spec in datasheet, Bit 0 = ok
-      battery.msg.buf[6] = 0b0000000; // not sure abt this one either, ? in datasheet, Bit 0 = ok
-      battery.msg.buf[7] = 0b0000000; // not sure abt this one either, ? in datasheet, Bit 0 = ok
+      battery.msg.buf[4] = battery.state == CHARGE ? 1: 0; // not sure abt this one
+      battery.msg.buf[5] = 0b0000000;
+      battery.msg.buf[6] = 0b0000000;
+      battery.msg.buf[7] = 0b0000000;
     }break;
       
+      //this is unable to be sent reflexively, temporary fix, TODO: fix this
     case Expanded_Cell_Data: {
-      battery.msg.buf[0] = 0xA0; // 0b10100000;
-      uint16_t cell_volt = getAccumulatorVoltage(battery);
-      uint16_t open_cell_volt = 0b0000000; // what's this?
-      uint16_t cell_temp = getAccumulatorTemp(battery);
+      //what's the point of this?
+      // battery.msg.buf[0] = 0xA0; // 0b10100000;
+      uint8_t cell_num = battery.msg.buf[1];
+      if(battery.msg.id == Configure_Cell_Data)
+        cell_num = battery.msg.buf[1];
+      if(cell_num > 128){
+        Serial.println("CAN send Expanded Cell Error: Invalid cell number");
+        cell_num = 128;
+      }
+      uint16_t cell_volt = condenseVoltage(cell_num);
+      uint16_t open_cell_volt = 0b0000000; // what's this? No idea yet
+      uint16_t cell_temp = condenseTemperature(cell_num);
       battery.msg.buf[1] = cell_volt >> 8;
       battery.msg.buf[2] = cell_volt;
       battery.msg.buf[3] = open_cell_volt >> 8;
@@ -200,12 +234,22 @@ void sendCANData(Battery &battery, uint32_t ID){
       break;
       
     case Charger_Control:
-      //STUFFFFF
+      uint16_t max_charge_current = battery.max_chrg_current;
+      uint16_t max_charge_volt = battery.max_chrg_voltage;
+      battery.msg.buf[0] = max_charge_current >> 8;
+      battery.msg.buf[1] = max_charge_current;
+      battery.msg.buf[2] = max_charge_volt >> 8;
+      battery.msg.buf[3] = max_charge_volt;
+      battery.msg.buf[4] = battery.state == CHARGE ? 1:0; 
+      battery.msg.buf[5] = 0b0000000;
+      battery.msg.buf[6] = 0b0000000; 
+      battery.msg.buf[7] = 0b0000000; 
       break;
       
     default:
       Serial.println("FUCK U U IDIOT"); // language, sheesh
   }
+  battery.msg.id = ID;
 }
 
 

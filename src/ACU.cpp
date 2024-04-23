@@ -168,6 +168,27 @@ bool systemCheck(Battery &battery) {
 void standByState(Battery &battery){
   //STUB
   Serial.println("standby...");
+    for (int i = 0; i < 30; i++)
+  switch (readCANData(battery))
+  {
+  case 0:
+    //normal operations
+    battery.state = PRECHARGE;
+    //send can start precharge
+    return;
+    break;
+  case 1:
+    //charging
+    battery.state = CHARGE;
+    //send charge parameters then acknowledgement ping
+    return;
+    break;
+  case -1:
+    delay(100);
+    break;
+  default:
+    break;
+  }
 }
 
 /// @brief shutDown, send errors --> VDM
@@ -200,6 +221,7 @@ void normalState(Battery &battery){ // ready to drive
 /// @return TBD
 void chargeState(Battery &battery){
   // sendMsg if time 0.5 s reached --> TODO
+  // if charge full --> send to standby
   sendCANData(battery, Charger_Control);
 }
 

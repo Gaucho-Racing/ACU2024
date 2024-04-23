@@ -20,11 +20,19 @@ enum States {
     OFFSTATE, 
     STANDBY
 };
+struct chargerDataStatus {
+    bool hardwareStatus;
+    bool temperatureStatus;
+    bool inputVoltageStatus;
+    bool startingState;
+    bool communicationState;
+};
 
 struct Battery{
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_prim;
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> can_chgr;
     CAN_message_t msg;
+    chargerDataStatus chargerDataStatus;
     
     uint8_t errs; // for general 1
     uint8_t warns; // for general 1
@@ -35,7 +43,7 @@ struct Battery{
     uint16_t glv_voltage; // 4mV/LSB
 
     uint16_t max_chrg_voltage; // 10mV/LSB
-    uint16_t max_chrg_current; // format TBD???
+    uint16_t max_chrg_current; // 10mA/LSB
     
 
     States state;
@@ -49,7 +57,7 @@ struct Battery{
     uint16_t accumCurrent = 0; // 10mA/LSB
     float accumCurrentZero = 1.235; // offset for zeroing accumulator current
     //in 0.1mV
-    uint16_t cellVoltage[128];  
+    uint16_t cellVoltage[128];
     float cellTemp[256];
     float balTemp[128];
     bool containsError = false;
