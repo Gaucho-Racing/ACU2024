@@ -233,7 +233,7 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.can_prim.write(battery.msg);
       break;
       
-    case Charger_Control:
+    case Charger_Control:{
       uint16_t max_charge_current = battery.max_chrg_current;
       uint16_t max_charge_volt = battery.max_chrg_voltage;
       battery.msg.buf[0] = max_charge_current >> 8;
@@ -244,8 +244,8 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = 0b0000000;
       battery.msg.buf[6] = 0b0000000; 
       battery.msg.buf[7] = 0b0000000; 
+    }
       break;
-      
     default:
       Serial.println("FUCK U U IDIOT"); // language, sheesh
   }
