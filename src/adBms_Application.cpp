@@ -33,7 +33,6 @@ and its licensor.
 */
 
 
-//#define TOTAL_IC 2
 extern cell_asic IC[TOTAL_IC];
 
 /* ADC Command Configurations */
@@ -221,6 +220,7 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
   adBmsSpiInit();
   for(uint8_t cic = 0; cic < tIC; cic++)
   {
+    Serial.println(cic);
     /* Init config A */
     ic[cic].tx_cfga.refon = PWR_UP;
 //    ic[cic].cfga.cth = CVT_8_1mV;
@@ -269,8 +269,8 @@ void adBms6830_write_read_config(uint8_t tIC, cell_asic *ic)
   adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
   adBmsReadData(tIC, &ic[0], RDCFGA, Config, AA);
   adBmsReadData(tIC, &ic[0], RDCFGB, Config, BB);
-  printWriteConfig(tIC, &ic[0], Config, ALL_GRP);
-  printReadConfig(tIC, &ic[0], Config, ALL_GRP);
+  //printWriteConfig(tIC, &ic[0], Config, ALL_GRP);
+  //printReadConfig(tIC, &ic[0], Config, ALL_GRP);
 }
 
 void adbms6830_write_gpio(uint8_t tIC, cell_asic *ic, bool pinConfig[10])
@@ -450,8 +450,8 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
 
-  Serial.printf("Aux voltage conversion completed\n");
-  printPollAdcConvTime(pladc_count);
+  //Serial.printf("Aux voltage conversion completed\n");
+  //printPollAdcConvTime(pladc_count);
 }
 
 /**
@@ -466,7 +466,7 @@ void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDAUXB, Aux, BB);
   adBmsReadData(tIC, &ic[0], RDAUXC, Aux, CC);
   adBmsReadData(tIC, &ic[0], RDAUXD, Aux, D);
-  printVoltages(tIC, &ic[0], Aux);
+  //printVoltages(tIC, &ic[0], Aux);
 }
 
 /**

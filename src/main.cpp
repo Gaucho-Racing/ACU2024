@@ -65,5 +65,5 @@ void loop() {
       break;
   }
   dumpCANbus(battery);
-  
+  delay(100);
 }

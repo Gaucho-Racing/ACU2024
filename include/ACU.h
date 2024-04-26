@@ -41,7 +41,7 @@ struct Battery{
     
 
     States state;
-    cell_asic *IC;
+    cell_asic IC[TOTAL_IC];
     float maxCellTemp, maxBalTemp = -1;
     uint16_t minVolt = -1;
     uint8_t cycle = 0;

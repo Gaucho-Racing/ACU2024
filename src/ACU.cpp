@@ -6,6 +6,7 @@
 //index i corresponds to the gpio required to get the temperature of the balacing resistor of the ith cell
 //
 uint16_t mux_temp_codes[8] = {0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111}; 
+uint16_t cell_to_mux[8]    = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001};
 
 RD      REDUNDANT_MEASUREMENT           = RD_OFF;
 CH      AUX_CH_TO_CONVERT               = AUX_ALL;
@@ -130,6 +131,8 @@ bool systemCheck(Battery &battery) {
     if (battery.balTemp[i] < MIN_BAL_TEMP){
       battery.errs |= ERR_UndrTemp;
     }
+    Serial.printf("[% 3u]%5.01f; ", i, battery.balTemp[i]);
+    if (i % 8 == 7)Serial.write('\n');
   }
   //check CellTemp:
   for (int i = 0; i < 256; i++){
@@ -315,7 +318,7 @@ float V2T(float voltage, float B = 4390){
 
 void updateTemps(Battery &battery){
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
-    battery.IC[ic].tx_cfga.gpo = mux_temp_codes[battery.cycle];
+    battery.IC[ic].tx_cfga.gpo = cell_to_mux[battery.cycle];
   }
     adBmsWriteData(TOTAL_IC, battery.IC, WRCFGA, Config, AA);
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, battery.IC);
@@ -327,9 +330,9 @@ void updateTemps(Battery &battery){
       //gpio 4: mux 2, temp 8
       battery.cellTemp[ic*32 + (7-battery.cycle) + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
       //gpio 5: mux 3, bal 0
-      battery.balTemp[ic*16 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[5]);
+      battery.balTemp[ic*16 + battery.cycle] = V2T((battery.IC[ic].aux.a_codes[5] + 10000) * 0.000150);
       //gpio 0: mux 4, bal 0
-      battery.balTemp[ic*16 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[0]);
+      battery.balTemp[ic*16 + battery.cycle + 8] = V2T((battery.IC[ic].aux.a_codes[0] + 10000) * 0.000150);
       //gpio 1: mux 5, temp 16
       battery.cellTemp[ic*32 + (7-battery.cycle) + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
       //gpio 2: mux 6, temp 24
