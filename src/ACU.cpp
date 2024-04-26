@@ -131,8 +131,8 @@ bool systemCheck(Battery &battery) {
     if (battery.balTemp[i] < MIN_BAL_TEMP){
       battery.errs |= ERR_UndrTemp;
     }
-    Serial.printf("[% 3u]%5.01f; ", i, battery.balTemp[i]);
-    if (i % 8 == 7)Serial.write('\n');
+    // Serial.printf("[% 3u]%5.01f; ", i, battery.balTemp[i]);
+    // if (i % 8 == 7)Serial.write('\n');
   }
   //check CellTemp:
   for (int i = 0; i < 256; i++){
@@ -370,6 +370,7 @@ void dumpCANbus(Battery &battery) {
     sendCANData(battery, Condensed_Cell_Voltage_n0 + i);
     sendCANData(battery, Condensed_Cell_Temp_n0 + i);
   }
+  Serial.print("Send CANBus: ");
   sendCANData(battery, ACU_General);
   sendCANData(battery, ACU_General2);
   sendCANData(battery, Powertrain_Cooling);

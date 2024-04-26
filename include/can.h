@@ -102,6 +102,7 @@ int readCANData(Battery &battery){
 void sendCANData(Battery &battery, uint32_t ID){
   //moved CAN id set to bottom for temp config cell data fix, see line 134
   battery.msg.flags.extended = true;
+  battery.msg.id = ID;
   switch(ID){
     case ACU_General:{
       uint16_t accVolt = getAccumulatorVoltage(battery);
@@ -114,7 +115,7 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = tempCodeSend;
       battery.msg.buf[6] = battery.errs;
       battery.msg.buf[7] = battery.warns;
-      battery.can_prim.write(battery.msg); 
+      battery.can_prim.write(battery.msg);
     }break;
 
     case ACU_General2:{

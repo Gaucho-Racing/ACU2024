@@ -31,7 +31,8 @@ void setup() {
 
   battery.can_prim.begin();
   battery.can_chgr.begin();
-
+  battery.can_prim.setBaudRate(1000000);
+  battery.can_chgr.setBaudRate(500000);
 }
 
 void loop() {
@@ -65,5 +66,5 @@ void loop() {
       break;
   }
   dumpCANbus(battery);
-  delay(100);
+  //delay(100);
 }
