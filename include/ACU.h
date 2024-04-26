@@ -20,13 +20,6 @@ enum States {
     OFFSTATE, 
     STANDBY
 };
-// struct chargerDataStatus {
-//     bool hardwareStatus;
-//     bool temperatureStatus;
-//     bool inputVoltageStatus;
-//     bool startingState;
-//     bool communicationState;
-// };
 
 struct Battery{
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_prim;

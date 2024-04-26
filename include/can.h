@@ -50,7 +50,15 @@ void parseCANData(Battery &battery){
       break;
 
     case Charging_SDC_States:
-      //STUFFFFF
+      //FILLER
+      battery.msg.buf[0] = 0b0000000;
+      battery.msg.buf[1] = 0b0000000;
+      battery.msg.buf[2] = 0b0000000;
+      battery.msg.buf[3] = 0b0000000;
+      battery.msg.buf[4] = 0b0000000;
+      battery.msg.buf[5] = 0b0000000;
+      battery.msg.buf[6] = 0b0000000;
+      battery.msg.buf[7] = 0b0000000;
       break;
       
     case Charger_Data:
