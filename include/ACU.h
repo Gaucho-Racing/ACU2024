@@ -6,7 +6,7 @@
 #include <vector>
 #include <utility>
 #include "ACU_data.h"
-//#include "can.h"
+// #include "can.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
 #include "ADC1283.h"
@@ -84,6 +84,7 @@ float V2T(float voltage, float B); // calculate NTC thermistor temperature
 void updateTemps(Battery &battery); // read cell temperatures
 uint8_t calcCharge(Battery &battery); // calculate state of charge --> TODO
 void dumpCANbus(Battery &battery); // send EVERYTHING to primary CAN except ping
+void readCANWrapper(Battery &battery); // lol, lmao
 uint8_t condenseVoltage(uint16_t voltage); // calculate condensed cell voltage value
 uint8_t condenseTemperature(float temperature); // calculate condensed cell temperature value
 uint16_t getAccumulatorVoltage(Battery &battery); // calculate sum of all cell voltages; TODO: NOT SURE WHAT THIS DOES

@@ -3,6 +3,7 @@
 #include "adBms_Application.h"
 #include "adBms6830Data.h"
 
+#define DEBUG 1
 
 Battery battery;
 States state;
@@ -30,40 +31,50 @@ void setup() {
   //isoSPI1.setIntFunc(intrFunc);
 
   battery.can_prim.begin();
+  battery.can_prim.setBaudRate(1000000);
   battery.can_chgr.begin();
-
+  battery.can_chgr.setBaudRate(500000);
+  state = STANDBY;
 }
 
 void loop() {
   // ACU STATES
-  battery.containsError = systemCheck(battery);
-  digitalWrite(PIN_AMS_OK, !battery.containsError);
-  if (battery.containsError)battery.state = SHUTDOWN;
-  switch (battery.state)
-  {
-    case STANDBY:
-      standByState(battery);
-      break;
-    case PRECHARGE:
-      preChargeState(battery);
-      break;
-    case CHARGE:
-      chargeState(battery);
-      break;
-    case NORMAL:
-      normalState(battery);
-      break;
-    case SHUTDOWN:
-      shutdownState(battery);
-      break;
-    case OFFSTATE:
-      offState(battery);
-      break;
-    default:
-      battery.state = SHUTDOWN;
-      Serial.println("Uh oh u dummy, u've entered a non-existent state");
-      break;
+  // battery.containsError = systemCheck(battery);
+  // digitalWrite(PIN_AMS_OK, !battery.containsError);
+  // if (battery.containsError)battery.state = SHUTDOWN;
+  // switch (battery.state)
+  // {
+  //   case STANDBY:
+  //     standByState(battery);
+  //     break;
+  //   case PRECHARGE:
+  //     preChargeState(battery);
+  //     break;
+  //   case CHARGE:
+  //     chargeState(battery);
+  //     break;
+  //   case NORMAL:
+  //     normalState(battery);
+  //     break;
+  //   case SHUTDOWN:
+  //     shutdownState(battery);
+  //     break;
+  //   case OFFSTATE:
+  //     offState(battery);
+  //     break;
+  //   default:
+  //     battery.state = SHUTDOWN;
+  //     Serial.println("Uh oh u dummy, u've entered a non-existent state");
+  //     break;
+  // }
+  // dumpCANbus(battery);
+  updateTemps(battery);
+  for(int i = 0; i < TOTAL_IC*16; i++){
+    Serial.printf("[% 3u]%5.01f; ", i, battery.balTemp[i]);
+    if (i % 8 == 7)Serial.write('\n');
   }
-  dumpCANbus(battery);
+  #if DEBUG
+   delay(2000);
+  #endif
   
 }

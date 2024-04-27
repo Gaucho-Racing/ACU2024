@@ -4,7 +4,7 @@
 #include <SPI.h>
 // CONFIG OPTIONS FOR 6830 ARE IN THE CPP FILE
 
-#define TOTAL_IC 8
+#define TOTAL_IC 2
 
 //TODO: Change these to the correct values
 

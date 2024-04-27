@@ -167,7 +167,9 @@ bool systemCheck(Battery &battery) {
 /// @return N/A
 void standByState(Battery &battery){
   //STUB
-  Serial.println("standby...");
+  #ifdef DEBUG
+    Serial.println("State: Standby");
+  #endif
     for (int i = 0; i < 30; i++)
   switch (readCANData(battery))
   {
@@ -195,6 +197,9 @@ void standByState(Battery &battery){
 /// @param[in] battery
 /// @return N/A
 void shutdownState(Battery &battery){
+  #ifdef DEBUG
+    Serial.println("State: Shutdown");
+  #endif
   // Open AIRS and Precharge if already not open, close Discharge
   digitalWrite(PIN_PRECHG, LOW);
   digitalWrite(PIN_AIR_NEG, LOW);
@@ -213,6 +218,9 @@ void shutdownState(Battery &battery){
 /// @param[in] battery
 /// @return N/A
 void normalState(Battery &battery){ // ready to drive
+ #ifdef DEBUG
+    Serial.println("State: Normal");
+  #endif
   // control fans & pump --> TODO
 }
 
@@ -220,6 +228,9 @@ void normalState(Battery &battery){ // ready to drive
 /// @param[in] battery
 /// @return TBD
 void chargeState(Battery &battery){
+   #ifdef DEBUG
+    Serial.println("State: Charge");
+  #endif
   // sendMsg if time 0.5 s reached --> TODO
   // if charge full --> send to standby
   sendCANData(battery, Charger_Control);
@@ -229,6 +240,9 @@ void chargeState(Battery &battery){
 /// @param[in] battery
 /// @return TBD
 void preChargeState(Battery &battery){
+   #ifdef DEBUG
+    Serial.println("State: preCharge");
+  #endif
    if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
     digitalWrite(PIN_AIR_NEG, HIGH); // clost AIR-
     delay(50); // wait for the relay to switch
@@ -287,8 +301,11 @@ void preChargeState(Battery &battery){
 /// @param[in] battery TBD
 /// @return N/A
 void offState(Battery &battery){
+   #ifdef DEBUG
+    Serial.println("State: Off");
+  #endif
   // When it turns on --> go to STANDBY
-  battery.state = OFFSTATE;
+  // if (battery.ts_voltage > 5000) {5Vo
 }
 
 void updateVoltage(Battery &battery) {
@@ -308,7 +325,8 @@ void updateVoltage(Battery &battery) {
 }
 
 float V2T(float voltage, float B = 4390){
-  float R = voltage / ((5.0 - voltage) / 47e3) / 100e3;
+  float actualVoltage = (voltage+10000)* 0.000150;
+  float R = actualVoltage / ((5.0 - actualVoltage) / 47e3) / 100e3;
   float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
   return T - 273.15;
 }
@@ -371,6 +389,11 @@ void dumpCANbus(Battery &battery) {
   sendCANData(battery, ACU_General2);
   sendCANData(battery, Powertrain_Cooling);
   sendCANData(battery, Charging_Cart_Config);
+}
+
+//hack to make it work with linking issues
+void readCANWrapper(Battery &battery){
+  readCANData(battery);
 }
 
 /// @brief sum of all voltages stored in battery
