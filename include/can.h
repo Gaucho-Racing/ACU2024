@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <FlexCAN_T4.h>
-#include <canID.h>
+#include "canID.h"
 #include "ACU.h"
 
 
@@ -27,16 +27,18 @@ void parseCANData(Battery &battery){
         else{
           sendCANData(battery, Expanded_Cell_Data);
         }
-        
       }
       break;
 
     case ACU_Control:
-      //STUFFFFF
+      battery.relay_state = battery.msg.buf[0];
       break;
 
     case Battery_Limits:
-      //STUFFFFF
+      battery.max_chrg_voltage =    (battery.msg.buf[0] << 8) | battery.msg.buf[1];
+      battery.max_output_current =  (battery.msg.buf[2] << 8) | battery.msg.buf[3];
+      battery.maxCellTemp =         ((battery.msg.buf[4] << 8) | battery.msg.buf[5])*0.01;
+      battery.max_chrg_current =    (battery.msg.buf[6] << 8) | battery.msg.buf[7];
       break;
 
     case ACU_Ping_Request:
@@ -44,23 +46,30 @@ void parseCANData(Battery &battery){
       break;
 
     case Charging_SDC_Ping_Response:
-      //STUFFFFF
+      sendCANData(battery, Charging_SDC_Ping_Request);
       break;
 
     case Charging_SDC_States:
-      //STUFFFFF
+      //FILLER
+      battery.msg.buf[0] = 0b0000000;
+      battery.msg.buf[1] = 0b0000000;
+      battery.msg.buf[2] = 0b0000000;
+      battery.msg.buf[3] = 0b0000000;
+      battery.msg.buf[4] = 0b0000000;
+      battery.msg.buf[5] = 0b0000000;
+      battery.msg.buf[6] = 0b0000000;
+      battery.msg.buf[7] = 0b0000000;
       break;
       
     case Charger_Data:
       // parse the max voltage, max current & chaging/not charging bool & get all failures
       battery.max_chrg_voltage = (battery.msg.buf[0] << 8) | battery.msg.buf[1];
       battery.max_chrg_current = (battery.msg.buf[2] << 8) | battery.msg.buf[3];
-      battery.chargerDataStatus.hardwareStatus = battery.msg.buf[4] & 0b00000001;
-      battery.chargerDataStatus.temperatureStatus = battery.msg.buf[4] & 0b00000010;
-      battery.chargerDataStatus.inputVoltageStatus = battery.msg.buf[4] & 0b00000100;
-      battery.chargerDataStatus.startingState = battery.msg.buf[4] & 0b00001000;
-      battery.chargerDataStatus.communicationState = battery.msg.buf[4] & 0b00010000;
-      sendCANData(battery, Charger_Control);
+      // battery.chargerDataStatus.hardwareStatus = battery.msg.buf[4] & ERR_Hardware;
+      // battery.chargerDataStatus.temperatureStatus = battery.msg.buf[4] & ERR_Temp;
+      // battery.chargerDataStatus.inputVoltageStatus = battery.msg.buf[4] & ERR_InputVolt;
+      // battery.chargerDataStatus.startingState = battery.msg.buf[4] & ERR_Start;
+      // battery.chargerDataStatus.communicationState = battery.msg.buf[4] & ERR_Comm;
       Serial.println("Charger Data Read, yaya we won't die");
       break;
 
@@ -93,6 +102,7 @@ int readCANData(Battery &battery){
 void sendCANData(Battery &battery, uint32_t ID){
   //moved CAN id set to bottom for temp config cell data fix, see line 134
   battery.msg.flags.extended = true;
+  battery.msg.id = ID;
   switch(ID){
     case ACU_General:{
       uint16_t accVolt = getAccumulatorVoltage(battery);
@@ -105,6 +115,7 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = tempCodeSend;
       battery.msg.buf[6] = battery.errs;
       battery.msg.buf[7] = battery.warns;
+      battery.can_prim.write(battery.msg);
     }break;
 
     case ACU_General2:{
@@ -118,9 +129,10 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = battery.sdc_voltage;
       battery.msg.buf[6] = battery.glv_voltage;
       battery.msg.buf[7] = calcCharge(battery); // calcCharge needs 2B implemented
+      battery.can_prim.write(battery.msg); 
     }break;
 
-    case Powertrain_Cooling:{;
+    case Powertrain_Cooling:{
       battery.msg.buf[0] = 0b0000000;
       battery.msg.buf[1] = 0b0000000;
       battery.msg.buf[2] = 0b0000000;
@@ -128,7 +140,8 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[4] = 0b0000000;
       battery.msg.buf[5] = 0b0000000;
       battery.msg.buf[6] = 0b0000000;
-      battery.msg.buf[7] = 0b0000000; 
+      battery.msg.buf[7] = 0b0000000;
+      battery.can_prim.write(battery.msg); 
     }break;
 
     case Charging_Cart_Config:{
@@ -142,6 +155,7 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.msg.buf[5] = 0b0000000;
       battery.msg.buf[6] = 0b0000000;
       battery.msg.buf[7] = 0b0000000;
+      battery.can_prim.write(battery.msg);
     }break;
       
       //this is unable to be sent reflexively, temporary fix, TODO: fix this
@@ -233,19 +247,18 @@ void sendCANData(Battery &battery, uint32_t ID){
       battery.can_prim.write(battery.msg);
       break;
       
-    case Charger_Control:{
-      uint16_t max_charge_current = battery.max_chrg_current;
-      uint16_t max_charge_volt = battery.max_chrg_voltage;
-      battery.msg.buf[0] = max_charge_current >> 8;
-      battery.msg.buf[1] = max_charge_current;
-      battery.msg.buf[2] = max_charge_volt >> 8;
-      battery.msg.buf[3] = max_charge_volt;
+    case Charger_Control:
+      battery.msg.buf[0] = battery.max_chrg_current >> 8;
+      battery.msg.buf[1] = battery.max_chrg_current;
+      battery.msg.buf[2] = battery.max_chrg_voltage >> 8;
+      battery.msg.buf[3] = battery.max_chrg_voltage;
       battery.msg.buf[4] = battery.state == CHARGE ? 1:0; 
       battery.msg.buf[5] = 0b0000000;
       battery.msg.buf[6] = 0b0000000; 
       battery.msg.buf[7] = 0b0000000; 
-    }
+      battery.can_chgr.write(battery.msg);
       break;
+      
     default:
       Serial.println("FUCK U U IDIOT"); // language, sheesh
   }
