@@ -297,6 +297,7 @@ void preChargeState(Battery &battery){
   battery.state = NORMAL;
 }
 
+
 /// @brief offState, idk if this is needed
 /// @param[in] battery TBD
 /// @return N/A
