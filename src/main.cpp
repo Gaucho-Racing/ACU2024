@@ -17,12 +17,12 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA};
-test_case debug = VOLTAGE;
+test_case debug = THERMAL;
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 float temp[8][2];
-uint16_t cell_to_mux[8];
+uint16_t cell_to_mux[8] ={0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111};
 // std::unordered_map<u_int8_t, u_int16_t> cell_to_mux;
 unsigned long previousMillis = 0;
 
@@ -45,15 +45,6 @@ void setup() {
   Serial.println("Setup done");
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
-
-  cell_to_mux[1] = 0b0000100001;
-  cell_to_mux[2] = 0b0001100001;
-  cell_to_mux[3] = 0b0010100001;
-  cell_to_mux[0] = 0b0011100001;
-  cell_to_mux[4] = 0b0100100001;
-  cell_to_mux[7] = 0b0101100001;
-  cell_to_mux[5] = 0b0110100001;
-  cell_to_mux[6] = 0b0111100001;
 
 }
 
@@ -90,7 +81,7 @@ void loop() {
   case THERMAL:
     previousMillis = millis();
     for(int i = 0; i < 8; i++){
-      IC[1].tx_cfga.gpo = cell_to_mux[i];
+      IC[0].tx_cfga.gpo = cell_to_mux[i];
       
       // previousMillis = millis();
       
@@ -101,10 +92,9 @@ void loop() {
       
       adBms6830_start_aux_voltage_measurment(TOTAL_IC, IC);
       adBms6830_read_aux_voltages(TOTAL_IC, IC);
-      temp[i][0] = getVoltage(IC[1].aux.a_codes[0]);
-      temp[i][1] = getVoltage(IC[1].aux.a_codes[5]);
+      temp[i][0] = getVoltage(IC[0].aux.a_codes[0]);
+      temp[i][1] = getVoltage(IC[0].aux.a_codes[5]);
     }
-    Serial.printf("Time: %lu\n", millis() - previousMillis);
     //print out the temperatures
     for(int i = 0; i < 8; i++){
       Serial.printf("Cell %d: %f, Cell %d: %f\n", i+1, V2T(temp[i][1]), 8+i+1, V2T(temp[i][0]));

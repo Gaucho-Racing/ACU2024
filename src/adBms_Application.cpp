@@ -437,7 +437,7 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
 
-  Serial.printf("Aux voltage conversion completed\n");
+  // Serial.printf("Aux voltage conversion completed\n");
   printPollAdcConvTime(pladc_count);
 }
 
@@ -453,7 +453,7 @@ void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDAUXB, Aux, BB);
   adBmsReadData(tIC, &ic[0], RDAUXC, Aux, CC);
   adBmsReadData(tIC, &ic[0], RDAUXD, Aux, D);
-  // printVoltages(tIC, &ic[0], Aux);
+  printVoltages(tIC, &ic[0], Aux);
 }
 
 /**
