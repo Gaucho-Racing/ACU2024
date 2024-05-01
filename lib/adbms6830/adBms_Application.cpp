@@ -86,30 +86,10 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 //    ic[cic].cfga.fc = IIR_FPA256;
 
     /* Init config B */
-    ic[cic].tx_cfgb.dtmen = DTMEN_ON;
     ic[cic].tx_cfgb.vov = SetOverVoltageThreshold(OV_THRESHOLD);
     ic[cic].tx_cfgb.vuv = SetUnderVoltageThreshold(UV_THRESHOLD);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC1, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC2, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC3, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC4, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC5, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC6, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC7, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC8, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC9, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC10, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC11, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC12, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC13, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC14, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC15, DCC_BIT_SET);
-    ic[cic].tx_cfgb.dcc = ConfigB_DccBit(DCC16, DCC_BIT_SET);
     //SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR); // seems that this thing makes daisy chain not work???
   }
-  adBmsWakeupIc(tIC);
-  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
-  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }
 
 /**
@@ -298,15 +278,14 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   {
     /* Init config A */
     ic[cic].tx_cfga.refon = PWR_UP;
-    ic[cic].tx_cfga.gpo = 0X001; /* All GPIO pull down off */
   }
   adBmsWakeupIc(tIC);
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
+  
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
-
-  Serial.printf("Aux voltage conversion completed\n");
-  printPollAdcConvTime(pladc_count);
+  // Serial.printf("Aux voltage conversion completed\n");
+  // printPollAdcConvTime(pladc_count);
 }
 
 /**
@@ -321,7 +300,7 @@ void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDAUXB, Aux, BB);
   adBmsReadData(tIC, &ic[0], RDAUXC, Aux, CC);
   adBmsReadData(tIC, &ic[0], RDAUXD, Aux, D);
-  printVoltages(tIC, &ic[0], Aux);
+  // printVoltages(tIC, &ic[0], Aux);
 }
 
 /**

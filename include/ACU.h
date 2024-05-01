@@ -35,7 +35,8 @@ struct Battery{
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_chgr;
     CAN_message_t msg;
     // chargerDataStatus chargerDataStatus;
-    
+
+
     uint8_t errs; // for general 1
     uint8_t warns; // for general 1
     
@@ -84,7 +85,8 @@ bool systemCheck(Battery &battery);
 // functions for cell data
 void updateVoltage(Battery &battery); // parse and copy cell voltage data from ADI's array into our array
 float V2T(float voltage, float B); // calculate NTC thermistor temperature
-void updateTemps(Battery &battery); // read cell temperatures
+void updateTemps(Battery &battery); // update cell/bal temperatures slowly to prevent large lockout times
+void updateAllTemps(Battery &battery); // update all cell/bal temperatures at once, used for first cycle as it will give junk values if not initalized
 uint8_t calcCharge(Battery &battery); // calculate state of charge --> TODO
 void dumpCANbus(Battery &battery); // send EVERYTHING to primary CAN except ping
 void readCANWrapper(Battery &battery); // lol, lmao

@@ -46,7 +46,7 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
-/// @brief performs system check
+/// @brief performs system check, TODO: temps variance too large
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
 /// @return The false if fails, true otherwise
@@ -309,6 +309,8 @@ void offState(Battery &battery){
   // if (battery.ts_voltage > 5000) {5Vo
 }
 
+/// @brief updates all voltage
+/// @param battery 
 void updateVoltage(Battery &battery) {
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
   adBms6830_read_cell_voltages(TOTAL_IC, battery.IC);
@@ -325,6 +327,10 @@ void updateVoltage(Battery &battery) {
   }
 }
 
+/// @brief converts thermistor voltage to temperature; TODO: calibrate B values per thermistor
+/// @param[in] voltage
+/// @param[in] B
+/// @return temperature in deg C
 float V2T(float voltage, float B = 4390){
   float actualVoltage = (voltage+10000)* 0.000150;
   float R = actualVoltage / ((5.0 - actualVoltage) / 47e3) / 100e3;
@@ -332,34 +338,73 @@ float V2T(float voltage, float B = 4390){
   return T - 273.15;
 }
 
+//this slowly updates the temperatures of the cells, one mux at a time
+/// @brief updates temperatures
+/// @param[in] battery
+/// @return None
 void updateTemps(Battery &battery){
+  //write the mux to the gpio
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
     battery.IC[ic].tx_cfga.gpo = mux_temp_codes[battery.cycle];
   }
-    adBmsWriteData(TOTAL_IC, battery.IC, WRCFGA, Config, AA);
-    adBms6830_start_aux_voltage_measurment(TOTAL_IC, battery.IC);
-    adBms6830_read_aux_voltages(TOTAL_IC, battery.IC);
-    for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
-      //all values are subtracted by one to account for indexing from 0
-      //gpio 3: mux1, temp 0
-      battery.cellTemp[ic*32 + (7-battery.cycle)] = V2T(battery.IC[ic].aux.a_codes[3]);
-      //gpio 4: mux 2, temp 8
-      battery.cellTemp[ic*32 + (7-battery.cycle) + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
-      //gpio 5: mux 3, bal 0
-      battery.balTemp[ic*16 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[5]);
-      //gpio 0: mux 4, bal 0
-      battery.balTemp[ic*16 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[0]);
-      //gpio 1: mux 5, temp 16
-      battery.cellTemp[ic*32 + (7-battery.cycle) + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
-      //gpio 2: mux 6, temp 24
-      battery.cellTemp[ic*32 + (7-battery.cycle) + 24] = V2T(battery.IC[ic].aux.a_codes[2]);
-    }
+
+  adBms6830_start_aux_voltage_measurment(TOTAL_IC, battery.IC);
+  adBms6830_read_aux_voltages(TOTAL_IC, battery.IC);
+  
+  //parse the data and store it in the battery struct
+  for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+    //all values are subtracted by one to account for indexing from 0
+    //gpio 3: mux1, temp 0
+    battery.cellTemp[ic*32 + (7-battery.cycle)] = V2T(battery.IC[ic].aux.a_codes[3]);
+    //gpio 4: mux 2, temp 8
+    battery.cellTemp[ic*32 + (7-battery.cycle) + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
+    //gpio 5: mux 3, bal 0
+    battery.balTemp[ic*16 + battery.cycle] = V2T(battery.IC[ic].aux.a_codes[5]);
+    //gpio 0: mux 4, bal 0
+    battery.balTemp[ic*16 + battery.cycle + 8] = V2T(battery.IC[ic].aux.a_codes[0]);
+    //gpio 1: mux 5, temp 16
+    battery.cellTemp[ic*32 + (7-battery.cycle) + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
+    //gpio 2: mux 6, temp 24
+    battery.cellTemp[ic*32 + (7-battery.cycle) + 24] = V2T(battery.IC[ic].aux.a_codes[2]);
+  }
+  //increment the cycle
   if (battery.cycle >= 7){
     battery.cycle = 0;
   }
   else {
     battery.cycle++;
   }
+}
+
+/// @brief updates all temperatures, using same structure as updateTemps but using a for loop instead of cycles
+/// @param[in] battery
+/// @return None
+void updateAllTemps(Battery &battery){
+  //8 input mux, 8 cycles
+  for(uint8_t i = 0; i < 8; i++){
+    for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+    battery.IC[ic].tx_cfga.gpo = mux_temp_codes[i];
+  }
+    // adBmsWriteData(TOTAL_IC, battery.IC, WRCFGA, Config, AA);
+    adBms6830_start_aux_voltage_measurment(TOTAL_IC, battery.IC);
+    adBms6830_read_aux_voltages(TOTAL_IC, battery.IC);
+    for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+      //all values are subtracted by one to account for indexing from 0
+      //gpio 3: mux1, temp 0
+      battery.cellTemp[ic*32 + (7-i)] = V2T(battery.IC[ic].aux.a_codes[3]);
+      //gpio 4: mux 2, temp 8
+      battery.cellTemp[ic*32 + (7-i) + 8] = V2T(battery.IC[ic].aux.a_codes[4]);
+      //gpio 5: mux 3, bal 0
+      battery.balTemp[ic*16 + i] = V2T(battery.IC[ic].aux.a_codes[5]);
+      //gpio 0: mux 4, bal 0
+      battery.balTemp[ic*16 + i + 8] = V2T(battery.IC[ic].aux.a_codes[0]);
+      //gpio 1: mux 5, temp 16
+      battery.cellTemp[ic*32 + (7-i) + 16] = V2T(battery.IC[ic].aux.a_codes[1]);
+      //gpio 2: mux 6, temp 24
+      battery.cellTemp[ic*32 + (7-i) + 24] = V2T(battery.IC[ic].aux.a_codes[2]);
+    }
+  }
+  
 }
 
 
@@ -423,7 +468,6 @@ uint8_t getAccumulatorTemp(Battery &battery){
 /// @return 0-100% charge
 uint8_t calcCharge(Battery &battery){ // calculate state of charge --> TODO
   return 0;
-
 }
 
 /* configuration registers commands */
