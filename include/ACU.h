@@ -1,6 +1,8 @@
 #ifndef _ACU_H
 #define _ACU_H
 
+#define DEBUG 1
+
 #include "adBms6830Data.h"
 #include "adBms6830GenericType.h"
 #include <vector>
@@ -29,7 +31,7 @@ struct chargerDataStatus {
 };
 
 struct Battery{
-      FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> can_prim;
+    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> can_prim;
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_chgr;
     CAN_message_t msg;
     // chargerDataStatus chargerDataStatus;
@@ -58,9 +60,9 @@ struct Battery{
     uint16_t accumCurrent = 0; // 10mA/LSB
     float accumCurrentZero = 1.235; // offset for zeroing accumulator current
     //in 0.1mV
-    uint16_t cellVoltage[128];
-    float cellTemp[256];
-    float balTemp[128];
+    uint16_t cellVoltage[16 * TOTAL_IC]; // 16 * 8
+    float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
+    float balTemp[16 * TOTAL_IC];
     bool containsError = false;
     ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 3200000);
 };

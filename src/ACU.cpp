@@ -5,7 +5,7 @@
 
 //index i corresponds to the gpio required to get the temperature of the balacing resistor of the ith cell
 //
-uint16_t mux_temp_codes[8] = {0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111}; 
+uint16_t mux_temp_codes[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001}; 
 
 RD      REDUNDANT_MEASUREMENT           = RD_OFF;
 CH      AUX_CH_TO_CONVERT               = AUX_ALL;
