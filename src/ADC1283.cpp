@@ -71,8 +71,8 @@ uint16_t* ADC1283::readRaw(uint8_t mux, uint8_t nextMux, uint16_t results[2]) {
 float* ADC1283::readVoltage(uint8_t mux, uint8_t nextMux, float results[2]) {
   uint16_t* resultsRaw;
   readRaw(mux, nextMux, resultsRaw);
-  results[0] = resultsRaw[0] / 4095.0 * _vref;
-  results[1] = resultsRaw[1] / 4095.0 * _vref;
+  results[0] = resultsRaw[0] / 4096.0 * _vref;
+  results[1] = resultsRaw[1] / 4096.0 * _vref;
   return results;
 }
 
@@ -87,7 +87,7 @@ uint16_t ADC1283::readRawLast(uint8_t nextMux) {
 }
 
 float ADC1283::readVoltageLast(uint8_t nextMux) {
-  return readRawLast(nextMux) / 4095.0 * _vref;
+  return readRawLast(nextMux) / 4096.0 * _vref;
 }
 
 uint16_t ADC1283::readRawTot(uint8_t mux, uint8_t nSample) {
@@ -123,9 +123,9 @@ uint32_t ADC1283::readRawTotLong(uint8_t mux, uint16_t nSample) {
 
 float ADC1283::readVoltageTot(uint8_t mux, uint16_t nSample) {
   if (nSample > 16) {
-    return readRawTotLong(mux, nSample) / 4095.0 / nSample * _vref;
+    return readRawTotLong(mux, nSample) / 4096.0 / nSample * _vref;
   }
   else {
-    return readRawTot(mux, nSample) / 4095.0 / nSample * _vref;
+    return readRawTot(mux, nSample) / 4096.0 / nSample * _vref;
   }
 }
