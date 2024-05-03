@@ -10,16 +10,19 @@
 
 
 //Pin Definitions
-#define PIN_AIR_POS -1 // assuming closed high
-#define PIN_AIR_NEG -1 //assuming closed high
-#define PIN_PRECHG -1 // also controls discharge relay, assuming preC closed high, disc open high
-#define CS_ADC -1
-#define PIN_AIR_POS_AUX -1 // auxilary contacts
-#define PIN_AIR_NEG_AUX -1 // auxilary contacts
-#define PIN_AMS_OK -1
-#define PIN_DCDC_EN -1 // enable DC/DC converter
-#define PIN_DCDC_SLOW -1 // DC/DC low power mode
-#define PIN_IMD_OK -1 // Isolation monitoring device
+#define PIN_AIR_POS 19 // assuming closed high
+#define PIN_AIR_NEG 20 //assuming closed high
+#define PIN_AIR_RESET 21
+#define PIN_PRECHG 41 // also controls discharge relay, assuming preC closed high, disc open high
+#define CS_ADC 1
+// #define PIN_AIR_POS_AUX -1 // auxilary contacts
+// #define PIN_AIR_NEG_AUX -1 // auxilary contacts
+#define PIN_AMS_OK 39
+#define PIN_DCDC_ER 18 //in the words of owen: "if it's high it's fucked", Buck Bad pin
+#define PIN_DCDC_EN 15 // enable DC/DC converter
+#define PIN_DCDC_SLOW 16 // DC/DC low power mode
+#define PIN_IMD_OK 17 // Isolation monitoring device
+#define PIN_BSPD_CLK 14 // PWM_CLK, 50k
 
 // ADC1283 connections
 #define ADC_MUX_GLV_VOLT -1

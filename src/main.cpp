@@ -35,6 +35,13 @@ void setup() {
   Serial.println("Setup done");
 
   pinMode(PIN_IMD_OK, INPUT_PULLUP);  
+  pinMode(PIN_AMS_OK, OUTPUT);
+  pinMode(PIN_DCDC_EN, OUTPUT);
+  pinMode(PIN_DCDC_SLOW, OUTPUT);
+  pinMode(PIN_DCDC_ER, INPUT);
+  pinMode(PIN_BSPD_CLK, OUTPUT);
+  analogWriteFrequency(PIN_BSPD_CLK, 50000);
+  analogWrite(PIN_BSPD_CLK, 127);
 
   battery.can_prim.begin();
   battery.can_prim.setBaudRate(1000000);
@@ -67,9 +74,6 @@ void loop() {
       break;
     case SHUTDOWN:
       shutdownState(battery);
-      break;
-    case OFFSTATE:
-      offState(battery);
       break;
     default:
       battery.state = SHUTDOWN;

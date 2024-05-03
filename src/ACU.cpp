@@ -147,6 +147,10 @@ bool systemCheck(Battery &battery) {
       }
     }
   }
+
+  if(digitalRead(PIN_DCDC_ER) == HIGH || digitalRead(PIN_IMD_OK) == LOW){
+    battery.errs |= ERR_BMS;
+  }
   
   return battery.errs != 0;
 }
@@ -160,22 +164,20 @@ void standByState(Battery &battery){
     Serial.println("State: Standby");
   #endif
     for (int i = 0; i < 30; i++){
-      if(digitalRead(PIN_IMD_OK) == LOW){
-        battery.state = SHUTDOWN;
-        Serial.println("IMD Error");
-        return;
-      }
+      
       switch (readCANData(battery))
       {
       case 0:
         //normal operations
-        battery.state = PRECHARGE;
         //send can start precharge
-        break;
+        return;
       case 1:
         //charging
         battery.state = CHARGE;
         //send charge parameters then acknowledgement ping
+        sendCANData(battery, Charger_Control);
+        battery.prevMillis = millis();
+
         break;
       case -1:
         delay(100);
@@ -214,6 +216,7 @@ void normalState(Battery &battery){ // ready to drive
  #ifdef DEBUG
     Serial.println("State: Normal");
   #endif
+  digitalWrite(PIN_DCDC_EN, HIGH);
   // control fans & pump --> TODO
 }
 
@@ -235,18 +238,31 @@ void chargeState(Battery &battery){
 
   // sendMsg if time 0.5 s reached --> TODO
   // if charge full --> send to standby
-  sendCANData(battery, Charger_Control);
+  if (millis() - battery.prevMillis > 500) {
+    battery.prevMillis = millis();
+    sendCANData(battery, Charger_Control);
+  }
 }
 
 /// @brief error --> VDM if timeout --> (NORMAL/SHUTDOWN)
 /// @param[in] battery
 /// @return TBD
 void preChargeState(Battery &battery){
-   #ifdef DEBUG
+  #ifdef DEBUG
     Serial.println("State: preCharge");
   #endif
-   if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
-    digitalWrite(PIN_AIR_NEG, HIGH); // clost AIR-
+  if (battery.glv_voltage - battery.sdc_voltage > 100) { // if latch is not closed
+    digitalWrite(PIN_AIR_RESET, HIGH); // close latch
+    delay(50); // wait for the relay to switch
+    digitalWrite(PIN_AIR_RESET, LOW);
+    battery.containsError = systemCheck(battery);
+    if (battery.glv_voltage - battery.sdc_voltage > 100) {
+      battery.errs |= ERR_UndrVolt; // Shutdown circuit is not closed
+      return;
+    }
+  }
+  if (!(battery.relay_state & 0b10000000)) { // if AIR- isn't closed
+    digitalWrite(PIN_AIR_NEG, HIGH); // close AIR-
     delay(50); // wait for the relay to switch
     battery.containsError = systemCheck(battery);
     if (!(battery.relay_state & 0b10000000)) {
@@ -299,17 +315,6 @@ void preChargeState(Battery &battery){
   battery.state = NORMAL;
 }
 
-
-/// @brief offState, idk if this is needed
-/// @param[in] battery TBD
-/// @return N/A
-void offState(Battery &battery){
-   #ifdef DEBUG
-    Serial.println("State: Off");
-  #endif
-  // When it turns on --> go to STANDBY
-  // if (battery.ts_voltage > 5000) {5Vo
-}
 
 /// @brief updates all voltage
 /// @param battery 

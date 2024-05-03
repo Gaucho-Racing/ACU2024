@@ -37,7 +37,6 @@ struct Battery{
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> can_prim;
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_chgr;
     CAN_message_t msg;
-    IntervalTimer primTimer, charTimer;
     // chargerDataStatus chargerDataStatus;
 
 
@@ -63,6 +62,7 @@ struct Battery{
     //every 10 cycles recheck Voltage
     uint8_t chargeCycle = 0;
     uint8_t temp_cycle = 0;
+    uint32_t prevMillis;
     uint16_t accumCurrent = 0; // 10mA/LSB
     float accumCurrentZero = 1.235; // offset for zeroing accumulator current
     
@@ -76,7 +76,7 @@ struct Battery{
     
     // fan thingamajigs
     fanController fans = fanController(&Serial8);
-    float accumVoltage, accumCurrent, tsVoltage;
+    float accumVoltage, tsVoltage;
     float acuTemp[3]; // DC-DC converter, something, something
     uint16_t fanRpm[4];
     float fanVoltage[4];
@@ -89,7 +89,6 @@ void get_Temperatures(Battery &battery);
 void get_Current(Battery &battery);
 void get_Max_Cell_Temp(Battery &battery);
 void cell_Balancing(Battery &battery);
-void offState(Battery &battery);
 void shutdownState(Battery &battery);
 void normalState(Battery &battery);
 void chargeState(Battery &battery);

@@ -31,7 +31,15 @@ void parseCANData(Battery &battery){
       break;
 
     case ACU_Control:
-      battery.relay_state = battery.msg.buf[0];
+      if(battery.msg.buf[0] & 0b00000001){
+        if(battery.state == STANDBY)
+          battery.state = PRECHARGE;
+          digitalWrite(PIN_AIR_RESET, HIGH);
+          delayMicroseconds(1);
+          digitalWrite(PIN_AIR_RESET, LOW);
+
+      } else {
+      }
       break;
 
     case Battery_Limits:
