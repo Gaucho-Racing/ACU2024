@@ -5,7 +5,8 @@
 #include "debug.h"
 
 
-IntervalTimer canTimer;
+
+
 
 Battery battery;
 States state;
@@ -20,9 +21,11 @@ void dumpCANwrapper(){
   dumpCANbus(battery);
 }
 
-void test(){
-  digitalToggle(13);
-}
+// void chargerSendWrapper(){
+//   sendCANData(battery, Charger_Control);
+// }
+
+//wrapper for battery interrupt
 
 void setup() {
   Serial.begin(115200);
@@ -31,13 +34,16 @@ void setup() {
   adBms6830_init_config(TOTAL_IC, battery.IC);
   Serial.println("Setup done");
 
+  pinMode(PIN_IMD_OK, INPUT_PULLUP);  
+
   battery.can_prim.begin();
   battery.can_prim.setBaudRate(1000000);
   battery.can_chgr.begin();
   battery.can_chgr.setBaudRate(500000);
+
   updateAllTemps(battery);
   state = STANDBY;
-  canTimer.begin(dumpCANwrapper, 1000);
+
 }
 
 void loop() {

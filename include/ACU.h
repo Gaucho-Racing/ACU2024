@@ -16,6 +16,7 @@
 #include "ADC1283.h"
 #include <FlexCAN_T4.h>
 
+
 enum States {
     PRECHARGE,
     NORMAL,
@@ -36,6 +37,7 @@ struct Battery{
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> can_prim;
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_chgr;
     CAN_message_t msg;
+    IntervalTimer primTimer, charTimer;
     // chargerDataStatus chargerDataStatus;
 
 

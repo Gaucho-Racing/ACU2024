@@ -46,6 +46,8 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
+
+
 /// @brief performs system check, TODO: temps variance too large
 /// @param[in] battery Battery struct
 /// @param[in] state Reference to states
@@ -53,7 +55,8 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 bool systemCheck(Battery &battery) {
   // read stuff on ADC1283 chip
   battery.warns = 0; // clear warnings
-  battery.errs &= ~ERR_OverCurr; // clear over current error bit
+  battery.errs &= ~(ERR_OverCurr|ERR_OverVolt|ERR_UndrVolt|ERR_OverTemp|ERR_UndrTemp); // clear all error bit that are checked in sysCheck
+
   battery.ts_voltage = battery.ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 150;
   battery.accumCurrent = (battery.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - battery.accumCurrentZero) * 6250;
   if (battery.accumCurrent > 6300) {
@@ -71,33 +74,26 @@ bool systemCheck(Battery &battery) {
   // TODO: ACU temperatures, DC/DC current
 
   // check relay states by reading on the output pins (should work?)
-  battery.relay_state = (digitalRead(PIN_AIR_NEG) << 7) + (digitalRead(PIN_AIR_POS) << 6)+ (digitalRead(PIN_PRECHG) << 5);
-
-  // pull data from all 6830's
-  adBmsWakeupIc(TOTAL_IC);
-  // update Voltage, balTemp, and cellTemp
-  adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
-
-  pladc_count = adBmsPollAdc(PLADC);
+  battery.relay_state = (digitalRead(PIN_AIR_NEG) << 7) + (digitalRead(PIN_AIR_POS) << 6) + (digitalRead(PIN_PRECHG) << 5);
+  
   // every 10 cycles recheck Voltage while in charge
   if(battery.chargeCycle>0 && battery.state == CHARGE){
   } else {
     updateVoltage(battery);
   }
   if (battery.temp_cycle == 0) updateTemps(battery);
-  if(battery.maxBalTemp==-1) battery.maxBalTemp = battery.balTemp[0];
+
+  if(battery.maxBalTemp == -1) battery.maxBalTemp = battery.balTemp[0];
   if(battery.maxCellTemp == -1) battery.maxCellTemp = battery.cellTemp[0];
   if(battery.minVolt == -1) battery.minVolt = battery.cellVoltage[0];
   // if(battery.minCellTemp == -1) battery.minCellTemp = battery.cellTemp[0];
 
-  battery.errs &= ~ERR_OverVolt; // clear over voltage error bit
-  battery.errs &= ~ERR_UndrVolt; // clear under voltage error bit
-  battery.errs &= ~ERR_OverTemp; // clear over temp error bit
-  battery.errs &= ~ERR_UndrTemp; // clear under temp error bit
-  for (int i = 0 ; i < 128; i++){
+//iterate though cellVoltage
+  for (int i = 0 ; i < TOTAL_IC*16; i++){
+    // if voltage was updated, check for OV/UV
     if(battery.chargeCycle > 0 && battery.state == CHARGE){
     }
-    else{ //check Voltage:
+    else{ 
       if (battery.minVolt > battery.cellVoltage[i]) battery.minVolt = battery.cellVoltage[i];
       if (battery.cellVoltage[i] > OV_THRESHOLD){
         battery.errs |= ERR_OverVolt;
@@ -106,6 +102,7 @@ bool systemCheck(Battery &battery) {
         battery.errs |= ERR_UndrVolt;
       }
     }
+
     if (battery.chargeCycle == 0 && battery.state == CHARGE){
       uint16_t toDischarge = 0;
       //figure out which cells to discharge
@@ -132,7 +129,7 @@ bool systemCheck(Battery &battery) {
     }
   }
   //check CellTemp:
-  for (int i = 0; i < 256; i++){
+  for (int i = 0; i < TOTAL_IC * 16 * 2; i++){
     if (battery.maxCellTemp < battery.cellTemp[i]) battery.maxCellTemp = battery.cellTemp[i];
     if (battery.state == CHARGE){
       if (battery.cellTemp[i] > MAX_CHR_TEMP) {
@@ -150,15 +147,7 @@ bool systemCheck(Battery &battery) {
       }
     }
   }
-  //TODO: maybe discharge top 10% (std) // @Will move this to chargeState
-  //if next chargeCycle is 0 and Charging, get ready for cell measurement by turing off discharge
-  if(battery.chargeCycle >= 9 && battery.state == CHARGE){
-    battery.chargeCycle = 0;
-    for(int ic = 0; ic < TOTAL_IC; ic++){
-      battery.IC[ic].tx_cfgb.dcc = 0x0;
-    }
-  }
-  adBms6830_write_read_config(TOTAL_IC, battery.IC);
+  
   return battery.errs != 0;
 }
 
@@ -170,27 +159,31 @@ void standByState(Battery &battery){
   #ifdef DEBUG
     Serial.println("State: Standby");
   #endif
-    for (int i = 0; i < 30; i++)
-  switch (readCANData(battery))
-  {
-  case 0:
-    //normal operations
-    battery.state = PRECHARGE;
-    //send can start precharge
-    return;
-    break;
-  case 1:
-    //charging
-    battery.state = CHARGE;
-    //send charge parameters then acknowledgement ping
-    return;
-    break;
-  case -1:
-    delay(100);
-    break;
-  default:
-    break;
-  }
+    for (int i = 0; i < 30; i++){
+      if(digitalRead(PIN_IMD_OK) == LOW){
+        battery.state = SHUTDOWN;
+        Serial.println("IMD Error");
+        return;
+      }
+      switch (readCANData(battery))
+      {
+      case 0:
+        //normal operations
+        battery.state = PRECHARGE;
+        //send can start precharge
+        break;
+      case 1:
+        //charging
+        battery.state = CHARGE;
+        //send charge parameters then acknowledgement ping
+        break;
+      case -1:
+        delay(100);
+        break;
+      default:
+        break;
+      }
+    }
 }
 
 /// @brief shutDown, send errors --> VDM
@@ -209,7 +202,7 @@ void shutdownState(Battery &battery){
   if (battery.relay_state != 0) {
     battery.errs |= ERR_Teensy; // Teensy error, output not working
   }
-  else if (battery.ts_voltage < 5000) { // safe to turn of if TS voltage < 50V
+  else if (battery.ts_voltage < 5000) { // safe to turn off if TS voltage < 50V
     battery.state = OFFSTATE;
   }
 }
@@ -231,6 +224,15 @@ void chargeState(Battery &battery){
    #ifdef DEBUG
     Serial.println("State: Charge");
   #endif
+  //if next chargeCycle is 0 and Charging, get ready for cell measurement by turing off discharge
+  if(battery.chargeCycle >= 9 && battery.state == CHARGE){
+    battery.chargeCycle = 0;
+    for(int ic = 0; ic < TOTAL_IC; ic++){
+      battery.IC[ic].tx_cfgb.dcc = 0x0;
+    }
+  }
+  adBms6830_write_read_config(TOTAL_IC, battery.IC);
+
   // sendMsg if time 0.5 s reached --> TODO
   // if charge full --> send to standby
   sendCANData(battery, Charger_Control);

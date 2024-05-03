@@ -92,7 +92,8 @@ int readCANData(Battery &battery){
   for(; msgReads >= 0; msgReads--){
     if(!battery.can_chgr.read(battery.msg))
       break;
-    which_can = 2;
+    if(battery.msg.id == Charger_Data)
+      which_can = 2;
     parseCANData(battery);
   }
   return which_can;

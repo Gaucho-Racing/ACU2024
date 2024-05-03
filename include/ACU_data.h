@@ -19,6 +19,7 @@
 #define PIN_AMS_OK -1
 #define PIN_DCDC_EN -1 // enable DC/DC converter
 #define PIN_DCDC_SLOW -1 // DC/DC low power mode
+#define PIN_IMD_OK -1 // Isolation monitoring device
 
 // ADC1283 connections
 #define ADC_MUX_GLV_VOLT -1
