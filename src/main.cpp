@@ -9,15 +9,7 @@ IntervalTimer canTimer;
 
 Battery battery;
 States state;
-
-fanController fans(&Serial8);
-
-float accumVoltage, accumCurrent, tsVoltage;
-float acuTemp[3]; // DC-DC converter, something, something
-
-uint16_t fanRpm[4];
-float fanVoltage[4];
-float fanCurrent[4];
+// fanController fans(&Serial8); moved under battery
 
 bool tsActive = false;
 uint8_t errors = 0b00000000;

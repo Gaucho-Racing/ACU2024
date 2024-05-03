@@ -49,6 +49,14 @@
 #define ERR_Teensy   0b00000010
 #define ERR_UndrTemp 0b00000001
 
+// Error bit positions (Powertrain Cooling)
+#define ERR_WaterOverTemp   0b10000000
+#define ERR_Fan_One         0b01000000
+#define ERR_Fan_Two         0b00100000
+#define ERR_Fan_Three       0b00010000
+#define ERR_Fan_Four        0b00001000
+#define ERR_Pump            0b00000100
+
 // Charger Values
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A

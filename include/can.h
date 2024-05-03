@@ -133,14 +133,14 @@ void sendCANData(Battery &battery, uint32_t ID){
     }break;
 
     case Powertrain_Cooling:{
-      battery.msg.buf[0] = 0b0000000;
-      battery.msg.buf[1] = 0b0000000;
-      battery.msg.buf[2] = 0b0000000;
-      battery.msg.buf[3] = 0b0000000;
-      battery.msg.buf[4] = 0b0000000;
-      battery.msg.buf[5] = 0b0000000;
-      battery.msg.buf[6] = 0b0000000;
-      battery.msg.buf[7] = 0b0000000;
+      battery.msg.buf[0] = (int)(battery.fanRpm[0] / 50);
+      battery.msg.buf[1] = (int)(battery.fanRpm[1] / 50);
+      battery.msg.buf[2] = (int)(battery.fanRpm[2] / 50);
+      battery.msg.buf[3] = 0; // --> PUMP SPEED TBD
+      battery.msg.buf[4] = (int)(battery.acuTemp[0] / 2);
+      battery.msg.buf[5] = (int)(battery.acuTemp[1] / 2);
+      battery.msg.buf[6] = (int)(battery.acuTemp[2] / 2);
+      battery.msg.buf[7] = (int)(battery.fans.readRegister(0x00)); // fan status --> to be implemented
       battery.can_prim.write(battery.msg); 
     }break;
 

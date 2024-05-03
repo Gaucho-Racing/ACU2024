@@ -5,12 +5,14 @@
 
 #include "adBms6830Data.h"
 #include "adBms6830GenericType.h"
+
 #include <vector>
 #include <utility>
 #include "ACU_data.h"
 // #include "can.h"
 #include "ADBMS.h"
 #include "adBms_Application.h"
+#include "FanController.h"
 #include "ADC1283.h"
 #include <FlexCAN_T4.h>
 
@@ -55,17 +57,28 @@ struct Battery{
     float maxCellTemp, maxBalTemp = -1;
     uint16_t minVolt = -1;
     uint8_t cycle = 0;
+
     //every 10 cycles recheck Voltage
     uint8_t chargeCycle = 0;
     uint8_t temp_cycle = 0;
     uint16_t accumCurrent = 0; // 10mA/LSB
     float accumCurrentZero = 1.235; // offset for zeroing accumulator current
+    
     //in 0.1mV
     uint16_t cellVoltage[16 * TOTAL_IC]; // 16 * 8
     float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
     float balTemp[16 * TOTAL_IC];
     bool containsError = false;
     ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 3200000);
+
+    
+    // fan thingamajigs
+    fanController fans = fanController(&Serial8);
+    float accumVoltage, accumCurrent, tsVoltage;
+    float acuTemp[3]; // DC-DC converter, something, something
+    uint16_t fanRpm[4];
+    float fanVoltage[4];
+    float fanCurrent[4];
 };
 
 // helper functions
