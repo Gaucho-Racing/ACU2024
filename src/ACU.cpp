@@ -160,7 +160,7 @@ bool systemCheck(Battery &battery) {
 /// @return N/A
 void standByState(Battery &battery){
   //STUB
-  #ifdef DEBUG
+  #if DEBUG
     Serial.println("State: Standby");
   #endif
     for (int i = 0; i < 30; i++){
@@ -192,7 +192,7 @@ void standByState(Battery &battery){
 /// @param[in] battery
 /// @return N/A
 void shutdownState(Battery &battery){
-  #ifdef DEBUG
+  #if DEBUG
     Serial.println("State: Shutdown");
   #endif
   // Open AIRS and Precharge if already not open, close Discharge
@@ -213,7 +213,7 @@ void shutdownState(Battery &battery){
 /// @param[in] battery
 /// @return N/A
 void normalState(Battery &battery){ // ready to drive
- #ifdef DEBUG
+ #if DEBUG
     Serial.println("State: Normal");
   #endif
   digitalWrite(PIN_DCDC_EN, HIGH);

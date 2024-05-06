@@ -84,7 +84,7 @@ void loop() {
 
   #if DEBUG
     debug(battery);
-    delay(2000);
+    delay(100);
   #endif
 
 }

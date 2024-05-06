@@ -90,6 +90,8 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
     ic[cic].tx_cfgb.vuv = SetUnderVoltageThreshold(UV_THRESHOLD);
     //SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR); // seems that this thing makes daisy chain not work???
   }
+  adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
+  adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }
 
 /**
@@ -300,7 +302,7 @@ void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDAUXB, Aux, BB);
   adBmsReadData(tIC, &ic[0], RDAUXC, Aux, CC);
   adBmsReadData(tIC, &ic[0], RDAUXD, Aux, D);
-  // printVoltages(tIC, &ic[0], Aux);
+  //printVoltages(tIC, &ic[0], Aux);
 }
 
 /**
