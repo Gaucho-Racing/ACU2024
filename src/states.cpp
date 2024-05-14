@@ -71,46 +71,7 @@ bool systemCheck(Battery &battery) {
   if(battery.minVolt == -1) battery.minVolt = battery.cellVoltage[0];
   // if(battery.minCellTemp == -1) battery.minCellTemp = battery.cellTemp[0];
 
-//iterate though cellVoltage
-  for (int i = 0 ; i < TOTAL_IC*16; i++){
-    // if voltage was updated, check for OV/UV
-    if(battery.chargeCycle > 0 && battery.state == CHARGE){
-    }
-    else{ 
-      if (battery.minVolt > battery.cellVoltage[i]) battery.minVolt = battery.cellVoltage[i];
-      if (battery.cellVoltage[i] > OV_THRESHOLD){
-        battery.errs |= ERR_OverVolt;
-      }
-      if (battery.cellVoltage[i] < UV_THRESHOLD){
-        battery.errs |= ERR_UndrVolt;
-      }
-    }
 
-    if (battery.chargeCycle == 0 && battery.state == CHARGE){
-      uint16_t toDischarge = 0;
-      //figure out which cells to discharge
-      for(int ic = 0; ic < TOTAL_IC; ic++){
-        for(int cell = 0; cell < CELL; cell++){
-          //diff between the minimum cell voltage and the current cell is 20mV discharge
-          if(battery.cellVoltage[ic*CELL + cell]-battery.minVolt > 200){
-            toDischarge |= 1 << cell;
-          }
-        }
-        battery.IC[ic].tx_cfgb.dcc = toDischarge;
-      }
-    }
-    
-    if (battery.maxBalTemp < battery.balTemp[i]) battery.maxBalTemp = battery.balTemp[i];
-    // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
-
-    //check Bal Temp;
-    if (battery.balTemp[i] > MAX_BAL_TEMP){
-      battery.errs |= ERR_OverTemp;
-    }
-    if (battery.balTemp[i] < MIN_BAL_TEMP){
-      battery.errs |= ERR_UndrTemp;
-    }
-  }
   //check CellTemp:
   for (int i = 0; i < TOTAL_IC * 16 * 2; i++){
     if (battery.maxCellTemp < battery.cellTemp[i]) battery.maxCellTemp = battery.cellTemp[i];

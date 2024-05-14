@@ -12,6 +12,7 @@
 
 Battery battery;
 States state;
+uint8_t cycle = 0;
 // fanController fans(&Serial8); moved under battery
 
 bool tsActive = false;
@@ -68,9 +69,6 @@ void setup() {
 
 void loop() {
   // ACU STATES
-  battery.containsError = systemCheck(battery);
-  digitalWrite(PIN_AMS_OK, !battery.containsError);
-  if (battery.containsError)state = SHUTDOWN;
   switch (state)
   {
     case STANDBY:
@@ -94,7 +92,7 @@ void loop() {
       break;
   }
   // dumpCANbus(battery); //uncomment if interrupt don't work
-
+cycle++;
   #if DEBUG
     debug(battery);
     delay(100);

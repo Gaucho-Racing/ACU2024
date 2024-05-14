@@ -24,6 +24,19 @@
 #define PIN_IMD_OK 17 // Isolation monitoring device
 #define PIN_BSPD_CLK 14 // PWM_CLK, 50k
 
+//limits, need to change prob to extern when we read from EEPROM
+#define OV_THRESHOLD 42000                 /* Volt in 0.1 mV*/
+#define UV_THRESHOLD 30000                 /* Volt in 0.1 mV*/
+//Discharge
+#define MIN_DIS_TEMP -40 //TODO: Modify later
+#define MAX_DIS_TEMP 60 
+//Charging
+#define MIN_CHR_TEMP 0 //TODO: Modify later
+#define MAX_CHR_TEMP 60 
+//Balance Resistor Temp
+#define MIN_BAL_TEMP -273.1 //TODO: Modify later
+#define MAX_BAL_TEMP 80 
+
 // ADC1283 connections
 #define ADC_MUX_GLV_VOLT -1
 #define ADC_MUX_HV_VOLT -1
@@ -66,5 +79,6 @@
 #define CHARGER_CURRENT 5 //A
 
 #define PRECHARGE_THRESHOLD 500 // * 10mV
+
 
 #endif

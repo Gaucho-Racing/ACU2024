@@ -16,9 +16,25 @@ void updateVoltage(Battery &battery){
     }
   }
 }
-bool checkVoltage(Battery &battery){
+/// @brief check Voltage and update min/max values; update errs 
+/// @param battery 
+/// @param errs 
+void checkVoltage(Battery &battery, uint8_t &errs){
+  //if first check, set extremes to first cell
+  
+  if(battery.minVolt == -1) battery.minVolt = battery.cellVoltage[0];
+  bool isOK = true;
+  //iterate though cellVoltage
+  for (int i = 0 ; i < TOTAL_IC*16; i++){
 
-    return false;
+    if (battery.minVolt > battery.cellVoltage[i]) battery.minVolt = battery.cellVoltage[i];
+    if (battery.cellVoltage[i] > OV_THRESHOLD){
+      errs |= ERR_OverVolt;
+    }
+    if (battery.cellVoltage[i] < UV_THRESHOLD){
+      errs |= ERR_UndrVolt;
+    }
+  }
 }
 
 /// @brief converts thermistor voltage to temperature; TODO: calibrate B values per thermistor
@@ -32,6 +48,10 @@ float V2T(float voltage, float B = 4390){
   return T - 273.15;
 }
 
+/// @brief updates the temperature of the battery, one mux code at a time, based on the cycle
+/// @param[in] battery
+/// @param[in] cycle
+/// @return None
 void updateTemp(Battery &battery, uint8_t cycle){
   //write the mux to the gpio
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
@@ -59,10 +79,40 @@ void updateTemp(Battery &battery, uint8_t cycle){
   }
   //increment the cycle
 }
-bool checkTemp(Battery &battery){
 
-    return false;
+/// @brief 
+/// @param battery 
+/// @param errs 
+void checkTemp(Battery &battery, uint8_t &errs){
+  if(battery.maxBalTemp == -1) battery.maxBalTemp = battery.balTemp[0];
+  if(battery.maxCellTemp == -1) battery.maxCellTemp = battery.cellTemp[0];
+  for(int i = 0; i < TOTAL_IC*16; i++){
+    if (battery.maxBalTemp < battery.balTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+    // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+    //check Bal Temp;
+    if (battery.balTemp[i] > MAX_BAL_TEMP){
+      errs |= ERR_OverTemp;
+    }
+    if (battery.balTemp[i] < MIN_BAL_TEMP){
+      errs |= ERR_UndrTemp;
+    }
+  }
+  for(int i = 0; i < TOTAL_IC*2*16; i++){
+    if (battery.maxCellTemp < battery.cellTemp[i]) battery.maxCellTemp = battery.cellTemp[i];
+    // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+    //check Bal Temp;
+    if (battery.cellTemp[i] > MAX_BAL_TEMP){
+      errs |= ERR_OverTemp;
+    }
+    if (battery.cellTemp[i] < MIN_BAL_TEMP){
+      errs |= ERR_UndrTemp;
+    }
+  }
 }
+
+/// @brief updates all temperatures, using same structure as updateTemps but using a for loop instead of cycles
+/// @param[in] battery
+/// @return None
 void updateAllTemps(Battery &battery){
     //8 input mux, 8 cycles
   for(uint8_t i = 0; i < 8; i++){
@@ -91,42 +141,6 @@ void updateAllTemps(Battery &battery){
     return;
 }
 
-uint8_t condenseVoltage(uint16_t voltage){
-
-    return 0;
-}
-uint8_t condenseTemperature(float temperature){
-
-    return 0;
-}
-uint8_t calcCharge(Battery &battery){
-
-    return 0;
-}
-
-void cell_Balancing(Battery &battery){
-
-    return;
-}
-
-/*
-
-//this slowly updates the temperatures of the cells, one mux at a time
-/// @brief updates temperatures
-/// @param[in] battery
-/// @return None
-void updateTemps(Battery &battery){
-  
-}
-
-/// @brief updates all temperatures, using same structure as updateTemps but using a for loop instead of cycles
-/// @param[in] battery
-/// @return None
-void updateAllTemps(Battery &battery){
-  
-}
-
-
 /// @brief converts uint16_t voltage --> uint8_t voltage
 /// @param[in] voltage uint16_t
 /// @return uint8_t voltage converted
@@ -141,4 +155,36 @@ uint8_t condenseVoltage(uint16_t voltage) {
 uint8_t condenseTemperature(float temperature) {
   return (uint8_t)((temperature - 10) * 4); // 10C~73.75C --> 0~255
 }
-*/
+
+uint8_t calcCharge(Battery &battery){
+
+    return 0;
+}
+
+void cell_Balancing(Battery &battery){
+  uint16_t toDischarge = 0;
+
+  //check new voltage to find min cell temp
+  updateVoltage(battery);
+  if(!(checkVoltage(battery))){
+
+    return;
+  } 
+
+  for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
+    toDischarge = 0;
+    
+  }
+  //figure out which cells to discharge
+  for(int ic = 0; ic < TOTAL_IC; ic++){
+    for(int cell = 0; cell < CELL; cell++){
+      //diff between the minimum cell voltage and the current cell is 20mV discharge
+      if(battery.cellVoltage[ic*CELL + cell]-battery.minVolt > 200){
+        toDischarge |= 1 << cell;
+      }
+    }
+    battery.IC[ic].tx_cfgb.dcc = toDischarge;
+  }
+  
+  
+}

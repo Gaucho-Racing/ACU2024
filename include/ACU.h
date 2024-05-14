@@ -21,22 +21,16 @@ struct chargerDataStatus {
     bool communicationState;
 };
 
-struct ACU{
-    
+struct ACU{ 
     // chargerDataStatus chargerDataStatus;
 
     uint8_t errs; // for general 1
     uint8_t warns; // for general 1
     
-   
     uint8_t relay_state; // AIR- | AIR+ | Precharge
     uint16_t ts_voltage; // 10mV/LSB
     uint16_t sdc_voltage; // 4mV/LSB
     uint16_t glv_voltage; // 4mV/LSB
-
-    
-    
-    uint8_t cycle = 0;
 
     //every 10 cycles recheck Voltage
     uint8_t chargeCycle = 0;
