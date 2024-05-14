@@ -30,9 +30,31 @@ and its licensor.
 //UART_HandleTypeDef *huart       = &huart5;      /* MUC UART Handler     */
 //I2C_HandleTypeDef *hi2c         = &hi2c1;       /* MUC I2C Handler      */
 //TIM_HandleTypeDef *htim         = &htim2;       /* Mcu TIM handler */
-
-isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
-isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
+//isoSPI(SPIClass* mySPI, uint8_t csPin, uint8_t intPin, uint8_t wakePin, uint8_t mstrPin, uint8_t rtoPin, uint8_t xModePinA, uint8_t xModePinB, uint8_t sModePinA, uint8_t sModePinB);
+//0 cspin, 1 intpin, 2 wakepin, 3 mstrpin, 4 rtopin,
+//5 xmodepina, 6 xmodepinb, 7 smodepina, 8 smodepinb
+isoSPI isoSPI1(&SPI,
+ 10, //cspin
+ 8, //intpin
+ 7, //wakepin
+ 9, //mstrpin
+ 5, //rtopin
+ 6, //xmodepina
+ 4, //xmodepinb
+ 3, // smodepina
+2// smodepinb
+ );
+isoSPI isoSPI2(&SPI, 
+ 38, //cspin
+ 25, //intpin
+ 24, //wakepin
+ 37, //mstrpin
+ 29, //rtopin
+ 28, //xmodepina
+ 36, //xmodepinb
+ 33, // smodepina
+ 32 // smodepinb
+ );
 
 /**
  *******************************************************************************
