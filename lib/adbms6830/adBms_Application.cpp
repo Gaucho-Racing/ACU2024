@@ -36,34 +36,36 @@ and its licensor.
 
 
 /* ADC Command Configurations */
-extern RD      REDUNDANT_MEASUREMENT;
-extern CH      AUX_CH_TO_CONVERT;
-extern CONT    CONTINUOUS_MEASUREMENT;
-extern OW_C_S  CELL_OPEN_WIRE_DETECTION;
-extern OW_AUX  AUX_OPEN_WIRE_DETECTION;
-extern PUP     OPEN_WIRE_CURRENT_SOURCE;
-extern DCP     DISCHARGE_PERMITTED;
-extern RSTF    RESET_FILTER;
-extern ERR     INJECT_ERR_SPI_READ;
+RD      REDUNDANT_MEASUREMENT = RD_OFF;
+CH      AUX_CH_TO_CONVERT = AUX_ALL;
+CONT    CONTINUOUS_MEASUREMENT = SINGLE;
+OW_C_S  CELL_OPEN_WIRE_DETECTION = OW_OFF_ALL_CH;
+OW_AUX  AUX_OPEN_WIRE_DETECTION = AUX_OW_OFF;
+PUP     OPEN_WIRE_CURRENT_SOURCE = PUP_DOWN;
+DCP     DISCHARGE_PERMITTED = DCP_OFF;
+RSTF    RESET_FILTER = RSTF_OFF;
+ERR     INJECT_ERR_SPI_READ = WITHOUT_ERR;
 
 /* Set Under Voltage and Over Voltage Thresholds */
-extern const float OV_THRESHOLD;                 /* Volt */
-extern const float UV_THRESHOLD;                 /* Volt */
-extern const int OWC_Threshold;                 /* Cell Open wire threshold(mili volt) */
-extern const int OWA_Threshold;                /* Aux Open wire threshold(mili volt) */
-extern const uint32_t LOOP_MEASUREMENT_COUNT;      /* Loop measurment count */
-extern const uint16_t MEASUREMENT_LOOP_TIME;     /* milliseconds(mS)*/
-extern uint32_t loop_count;
-extern uint32_t pladc_count;
+/* Set Under Voltage and Over Voltage Thresholds */
+const float OV_THRESHOLD = 42000;                 /* Volt in 0.1 mV*/
+const float UV_THRESHOLD = 30000;                 /* Volt in 0.1 mV*/
+//Discharge
+const float MIN_DIS_TEMP = -40; //TODO: Modify later
+const float MAX_DIS_TEMP = 60; 
+//Charging
+const float MIN_CHR_TEMP = 0; //TODO: Modify later
+const float MAX_CHR_TEMP = 60; 
+//Balance Resistor Temp
+const float MIN_BAL_TEMP = -273.15; //TODO: Modify later
+const float MAX_BAL_TEMP = 80; 
 
-/*Loop Measurement Setup These Variables are ENABLED or DISABLED Remember ALL CAPS*/
-extern LOOP_MEASURMENT MEASURE_CELL;        /*   This is ENABLED or DISABLED       */
-extern LOOP_MEASURMENT MEASURE_AVG_CELL;        /*   This is ENABLED or DISABLED       */
-extern LOOP_MEASURMENT MEASURE_F_CELL;        /*   This is ENABLED or DISABLED       */
-extern LOOP_MEASURMENT MEASURE_S_VOLTAGE;        /*   This is ENABLED or DISABLED       */
-extern LOOP_MEASURMENT MEASURE_AUX;        /*   This is ENABLED or DISABLED       */
-extern LOOP_MEASURMENT MEASURE_RAUX;        /*   This is ENABLED or DISABLED       */
-extern LOOP_MEASURMENT MEASURE_STAT;        /*   This is ENABLED or DISABLED       */
+const int OWC_Threshold = 2000;                 /* Cell Open wire threshold(mili volt) */
+const int OWA_Threshold = 50000;                /* Aux Open wire threshold(mili volt) */
+const uint32_t LOOP_MEASUREMENT_COUNT = 1;      /* Loop measurment count */
+const uint16_t MEASUREMENT_LOOP_TIME  = 10;     /* milliseconds(mS)*/
+uint32_t loop_count = 0;
+uint32_t pladc_count;
 
 /**
 *******************************************************************************
@@ -81,7 +83,7 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
 //    ic[cic].cfga.cth = CVT_8_1mV;
 //    ic[cic].cfga.flag_d = ConfigA_Flag(FLAG_D0, FLAG_SET) | ConfigA_Flag(FLAG_D1, FLAG_SET);
 //    ic[cic].cfga.gpo = ConfigA_Gpo(GPO2, GPO_SET) | ConfigA_Gpo(GPO10, GPO_SET);
-    ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
+    ic[cic].tx_cfga.gpo = 0b0111111111; /* All GPIO pull down off */ //TODO: TEST
 //    ic[cic].cfga.soakon = SOAKON_CLR;
 //    ic[cic].cfga.fc = IIR_FPA256;
 
