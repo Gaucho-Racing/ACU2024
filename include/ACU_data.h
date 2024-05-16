@@ -38,13 +38,14 @@
 #define MAX_BAL_TEMP 80 
 
 // ADC1283 connections
-#define ADC_MUX_GLV_VOLT -1
-#define ADC_MUX_HV_VOLT -1
-#define ADC_MUX_HV_CURRENT -1
-#define ADC_MUX_DCDC_CURRENT -1
-#define ADC_MUX_DCDC_TEMP1 -1
-#define ADC_MUX_DCDC_TEMP2 -1
-#define ADC_MUX_DCDC_TEMP3 -1
+#define ADC_MUX_GLV_VOLT 7
+#define ADC_MUX_HV_VOLT 6
+#define ADC_MUX_HV_CURRENT 0
+#define ADC_MUX_SHDN_POW 1
+#define ADC_MUX_DCDC_CURRENT 5
+#define ADC_MUX_DCDC_TEMP1 2
+#define ADC_MUX_DCDC_TEMP2 3
+#define ADC_MUX_FAN_REF 4
 
 // Warning bit positions (ACU General)
 #define WARN_OpenWire 0b10000000
