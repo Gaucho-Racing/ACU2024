@@ -1,17 +1,17 @@
 #ifndef _ACU_H
 #define _ACU_H
 
-#define DEBUG 1
-
-
-// #include "can.h"
+#include <Arduino.h>
 #include "adBms_Application.h"
 #include "FanController.h"
 #include "ADC1283.h"
 #include "ACU_data.h"
+#include "battery.h"
 
-
-
+#define HV_Current_Ref 1.235
+#define AIR_NEG 0b00000100
+#define AIR_POS 0b00000010
+#define Precharge 0b00000001
 
 struct chargerDataStatus {
     bool hardwareStatus;
@@ -21,50 +21,50 @@ struct chargerDataStatus {
     bool communicationState;
 };
 
-struct ACU{ 
+class ACU{ 
     // chargerDataStatus chargerDataStatus;
+    private:
+        ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 3200000);
+        uint8_t relay_state; // first 5 bits D/C | AIR- | AIR+ | Precharge
+        float glv_voltage; 
+        float ts_voltage; 
+        float ts_current;
+        float shdn_volt; 
+        float dcdc_current; 
+        float DCDC_temp[2]; // DC-DC converter
+        float fan_Ref;
+        
+    public:
+        uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
+        uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen
 
-    uint8_t errs; // for general 1
-    uint8_t warns; // for general 1
-    
-    uint8_t relay_state; // AIR- | AIR+ | Precharge
-    uint16_t ts_voltage; // 10mV/LSB
-    uint16_t sdc_voltage; // 4mV/LSB
-    uint16_t glv_voltage; // 4mV/LSB
+        // TODO: fan thingamajigs
+        fanController fans = fanController(&Serial8);
 
-    //every 10 cycles recheck Voltage
-    uint8_t chargeCycle = 0;
-    uint8_t temp_cycle = 0;
-    uint32_t prevMillis;
-    uint16_t accumCurrent = 0; // 10mA/LSB
-    float accumCurrentZero = 1.235; // offset for zeroing accumulator current
-    
-   
-    bool containsError = false;
-    ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 3200000);
+        uint16_t fanRpm[4];
+        float fanVoltage[4];
+        float fanCurrent[4];
 
-    
-    // fan thingamajigs
-    fanController fans = fanController(&Serial8);
-    float accumVoltage, tsVoltage;
-    float acuTemp[3]; // DC-DC converter, something, something
-    uint16_t fanRpm[4];
-    float fanVoltage[4];
-    float fanCurrent[4];
+        void updateGlvVoltage();
+        void updateTsVoltage();
+        void updateAccumCurrent();
+        void updateShdnVolt();
+        void updateDcdcCurrent();
+        void updateDcdcTemp1();
+        void updateDcdcTemp2();
+        void updateFanRef();
+        void updateAll();
+
+        
+        uint8_t getRelayState();
+        float getGlvVoltage();
+        float getTsVoltage();
+        float getTsCurrent();
+        float getShdnVolt();
+        float getDcdcCurrent();
+        float getDcdcTemp1();
+        float getDcdcTemp2();
+        float getFanRef();
 };
-
-// helper functions
-void init_config(Battery &battery);
-void get_Temperatures(Battery &battery);
-void get_Current(Battery &battery);
-void get_Max_Cell_Temp(Battery &battery);
-
-bool systemCheck(Battery &battery);
-
-void dumpCANbus(Battery &battery); // send EVERYTHING to primary CAN except ping
-void readCANWrapper(Battery &battery); // lol, lmao
-
-uint16_t getAccumulatorVoltage(Battery &battery); // calculate sum of all cell voltages; TODO: NOT SURE WHAT THIS DOES
-uint8_t getAccumulatorTemp(Battery &battery); //TODO: NOT SURE WHAT THIS DOES
 
 #endif

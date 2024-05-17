@@ -11,6 +11,7 @@
 
 
 Battery battery;
+ACU acu;
 States state;
 uint8_t cycle = 0;
 // fanController fans(&Serial8); moved under battery
@@ -25,13 +26,13 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_chgr;
 CAN_message_t msg;
 
 //wrapper includes battery argument, necessary for passing as a function pointer to IntervalTimer
-void primCANISR(){
-  dumpCANbus(battery);
-}
+// void primCANISR(){
+//   dumpCANbus(battery);
+// }
 
-void chgrCANISR(){
-  dumpCANbus(battery);
-}
+// void chgrCANISR(){
+//   dumpCANbus(battery);
+// }
 
 void pinSetup(){
   pinMode(PIN_IMD_OK, INPUT_PULLUP);  
@@ -72,22 +73,22 @@ void loop() {
   switch (state)
   {
     case STANDBY:
-      standByState(battery);
+      standByState();
       break;
     case PRECHARGE:
-      preChargeState(battery);
+      preChargeState();
       break;
     case CHARGE:
-      chargeState(battery);
+      chargeState();
       break;
     case NORMAL:
-      normalState(battery);
+      normalState();
       break;
     case SHUTDOWN:
-      shutdownState(battery);
+      shutdownState();
       break;
     default:
-      battery.state = SHUTDOWN;
+      state = SHUTDOWN;
       Serial.println("Uh oh u dummy, u've entered a non-existent state");
       break;
   }

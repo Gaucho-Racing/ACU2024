@@ -6,21 +6,72 @@
 //index i corresponds to the gpio required to get the temperature of the balacing resistor of the ith cell
 //
 
-
-
-/// @brief Sends data to CANbus
-/// @param[in] battery
-/// @return None
-void dumpCANbus(Battery &battery) {
-  for (uint8_t i = 0; i < 16; i++) {
-    sendCANData(battery, Condensed_Cell_Voltage_n0 + i);
-    sendCANData(battery, Condensed_Cell_Temp_n0 + i);
-  }
-  sendCANData(battery, ACU_General);
-  sendCANData(battery, ACU_General2);
-  sendCANData(battery, Powertrain_Cooling);
-  sendCANData(battery, Charging_Cart_Config);
+void ACU::updateGlvVoltage(){
+  glv_voltage = ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT);
 }
+void ACU::updateTsVoltage(){
+  ts_voltage = ACU_ADC.readVoltage(ADC_MUX_HV_VOLT);
+}
+void ACU::updateShdnVolt(){
+  shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW);
+}
+void ACU::updateDcdcCurrent(){
+  dcdc_current = ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) / HV_Current_Ref;
+}
+void ACU::updateDcdcTemp1(){
+  DCDC_temp[0] = ACU_ADC.readVoltage(ADC_MUX_DCDC_TEMP1);
+}
+void ACU::updateDcdcTemp2(){
+  DCDC_temp[1] = ACU_ADC.readVoltage(ADC_MUX_DCDC_TEMP2);
+}
+void ACU::updateFanRef(){
+  fan_Ref = ACU_ADC.readVoltage(ADC_MUX_FAN_REF);
+}
+
+void ACU::updateAccumCurrent(){
+  ts_current = ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) / HV_Current_Ref;
+}
+void ACU::updateAll(){
+  updateGlvVoltage();
+  updateTsVoltage();
+  updateAccumCurrent();
+  updateShdnVolt();
+  updateDcdcCurrent();
+  updateDcdcTemp1();
+  updateDcdcTemp2();
+  updateFanRef();
+}
+
+
+uint8_t ACU::getRelayState(){
+  return relay_state;
+}
+float ACU::getGlvVoltage(){
+  return glv_voltage;
+}
+float ACU::getTsVoltage(){
+  return ts_voltage;
+}
+float ACU::getTsCurrent(){
+  return ts_current;
+}
+float ACU::getShdnVolt(){
+  return shdn_volt;
+}
+float ACU::getDcdcCurrent(){
+  return dcdc_current;
+}
+float ACU::getDcdcTemp1(){
+  return DCDC_temp[0];
+}
+float ACU::getDcdcTemp2(){
+  return DCDC_temp[1];
+}
+float ACU::getFanRef(){
+  return fan_Ref;
+}
+
+
 
 //hack to make it work with linking issues
 void readCANWrapper(Battery &battery){
