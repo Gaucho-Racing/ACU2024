@@ -1,5 +1,6 @@
 #ifndef STATES_H
 #define STATES_H
+#include "FlexCAN_T4.h"
 #include "battery.h"
 #include "ACU.h"
 
@@ -13,7 +14,6 @@ enum States {
     NORMAL,
     CHARGE,
     SHUTDOWN,
-    OFFSTATE, 
     STANDBY
 };
 

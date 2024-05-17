@@ -6,7 +6,6 @@
 #include "FanController.h"
 #include "ADC1283.h"
 #include "ACU_data.h"
-#include "battery.h"
 
 #define HV_Current_Ref 1.235
 #define AIR_NEG 0b00000100
@@ -67,6 +66,6 @@ class ACU{
         float getDcdcTemp1();
         float getDcdcTemp2();
         float getFanRef();
-};
+        };
 
 #endif

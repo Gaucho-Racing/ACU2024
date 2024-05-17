@@ -2,6 +2,10 @@
 
 uint16_t mux_temp_codes[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001}; 
 
+void Battery::init_config(){
+  adBms6830_init_config(TOTAL_IC, this->IC);
+}
+
 void Battery::updateVoltage(){
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
   adBms6830_read_cell_voltages(TOTAL_IC, this->IC);
@@ -20,8 +24,8 @@ void Battery::checkVoltage(uint8_t &errs){
   if(this->minVolt == -1) this->minVolt = this->cellVoltage[0];
   bool isOK = true;
   //iterate though cellVoltage
+  this->batVoltage = 0;
   for (int i = 0 ; i < TOTAL_IC*16; i++){
-
     if (this->minVolt > this->cellVoltage[i]) this->minVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
       errs |= ERR_OverVolt;
@@ -29,6 +33,7 @@ void Battery::checkVoltage(uint8_t &errs){
     if (this->cellVoltage[i] < UV_THRESHOLD){
       errs |= ERR_UndrVolt;
     }
+    this->batVoltage += this->cellVoltage[i];
   }
 }
 
@@ -164,11 +169,9 @@ void Battery::cell_Balancing(){
   uint16_t toDischarge = 0;
 
   //check new voltage to find min cell temp
-  this->updateVoltage();
-  if(!(this->checkVoltage())){
-
-    return;
-  } 
+    this->updateVoltage();
+    this->checkVoltage(acu.errs);
+    
 
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
     toDischarge = 0;

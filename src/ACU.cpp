@@ -75,41 +75,6 @@ float ACU::getFanRef(){
   return fan_Ref;
 }
 
-
-
-//hack to make it work with linking issues
-void readCANWrapper(Battery &battery){
-  readCANData(battery);
-}
-
-/// @brief sum of all voltages stored in battery
-/// @param[in] battery
-/// @return sum for accumulator voltage, 10mV/LSB
-uint16_t getAccumulatorVoltage(Battery &battery){
-  uint16_t accVoltage = 0;
-  for(uint8_t index = 0; index < 128; index++)
-    accVoltage += battery.cellVoltage[index] / 100 + (battery.cellVoltage[index] % 100 > 49);
-  return accVoltage;
-}
-
-/// @brief sum of all cellTemps stored in battery
-/// @param[in] battery
-/// @return sum for accumulator temp, deg C
-uint8_t getAccumulatorTemp(Battery &battery){
-  uint16_t temp = 0;
-  for(uint8_t index = 0; index < 128; index++)
-    temp += (uint16_t)battery.cellTemp[index];
-  return temp;
-
-}
-
-/// @brief % charge of battery
-/// @param[in] battery
-/// @return 0-100% charge
-uint8_t calcCharge(Battery &battery){ // calculate state of charge --> TODO
-  return 0;
-}
-
 /* configuration registers commands */
 uint8_t WRCFGA[2]        = { 0x00, 0x01 };
 uint8_t WRCFGB[2]        = { 0x00, 0x24 };

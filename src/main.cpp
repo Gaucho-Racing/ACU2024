@@ -54,8 +54,7 @@ void setup() {
   Serial.begin(115200);
   // fans.begin();
   Serial.println("Init config");
-  init_config(battery);
-  adBms6830_init_config(TOTAL_IC, battery.IC);
+  battery.init_config();
   Serial.println("Setup done");
   pinSetup();
   

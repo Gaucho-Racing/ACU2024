@@ -1,4 +1,20 @@
 #include "states.h"
+void shutdownState(){
+  return;
+}
+void normalState(){
+  return;
+}
+void chargeState(){
+  return;
+}
+void preChargeState(){
+  return;
+}
+void standByState(){
+  return;
+}
+
 /*
 
 /// @brief standby, send data --> VDM

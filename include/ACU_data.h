@@ -25,8 +25,8 @@
 #define PIN_BSPD_CLK 14 // PWM_CLK, 50k
 
 //limits, need to change prob to extern when we read from EEPROM
-#define OV_THRESHOLD 42000                 /* Volt in 0.1 mV*/
-#define UV_THRESHOLD 30000                 /* Volt in 0.1 mV*/
+// #define OV_THRESHOLD 42000                 /* Volt in 0.1 mV*/
+// #define UV_THRESHOLD 30000                 /* Volt in 0.1 mV*/
 //Discharge
 #define MIN_DIS_TEMP -40 //TODO: Modify later
 #define MAX_DIS_TEMP 60 
@@ -46,6 +46,8 @@
 #define ADC_MUX_DCDC_TEMP1 2
 #define ADC_MUX_DCDC_TEMP2 3
 #define ADC_MUX_FAN_REF 4
+
+
 
 // Warning bit positions (ACU General)
 #define WARN_OpenWire 0b10000000
