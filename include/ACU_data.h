@@ -9,6 +9,7 @@
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A
 
+#define CS_ADC 0
 
 #define ADC_MUX_GLV_VOLT 7
 #define ADC_MUX_HV_VOLT 6
