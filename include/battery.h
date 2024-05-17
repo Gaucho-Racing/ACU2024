@@ -38,6 +38,7 @@ class Battery{
     
     friend void parseCANData();
     friend int readCANData();
+    friend void sendCANData(uint32_t ID);
 };
 
 void init_config(Battery &battery);

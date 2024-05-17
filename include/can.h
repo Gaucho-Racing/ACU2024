@@ -15,7 +15,6 @@ extern FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_chgr;
 extern CAN_message_t msg;
 extern States state;
 
-void sendCANData(uint32_t ID);
 
 
 
@@ -123,8 +122,8 @@ void sendCANData(uint32_t ID){
       uint16_t accVolt = getAccumulatorVoltage(battery);
       msg.buf[0] = accVolt >> 8;
       msg.buf[1] = accVolt;
-      msg.buf[2] = acu.getTsCurrent() >> 8;
-      msg.buf[3] = acu.getTsCurrent();
+      msg.buf[2] = (int)acu.getTsCurrent() >> 8;
+      msg.buf[3] = (int) acu.getTsCurrent();
       int16_t tempCodeSend = (int16_t)(battery.maxCellTemp * 100);
       msg.buf[4] = tempCodeSend >> 8;
       msg.buf[5] = tempCodeSend;

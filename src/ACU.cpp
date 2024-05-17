@@ -6,6 +6,10 @@
 //index i corresponds to the gpio required to get the temperature of the balacing resistor of the ith cell
 //
 
+void ACU::ACU_init(){
+  this->ACU_ADC.begin();
+}
+
 void ACU::updateGlvVoltage(){
   glv_voltage = ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT);
 }
