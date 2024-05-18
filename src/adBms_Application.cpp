@@ -467,13 +467,13 @@ void adBms6830_start_raux_voltage_measurment(uint8_t tIC,  cell_asic *ic)
   {
     /* Init config A */
     ic[cic].tx_cfga.refon = PWR_UP;
-    ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
+    // ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
   }
   adBmsWakeupIc(tIC);
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
   adBms6830_Adax2(AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
-  Serial.printf("RAux voltage conversion completed\n");
+  // Serial.printf("RAux voltage conversion completed\n");
   printPollAdcConvTime(pladc_count);
 }
 

@@ -18,14 +18,17 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, ADC};
-test_case debug = ADC;
+test_case debug = THERMAL;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
-float temp[8][2];
+float baltemp[16*TOTAL_IC];
+float celltemp[32*TOTAL_IC];
 uint16_t cell_to_mux[8] ={0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111};
+// uint16_t mux_temp_codes[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001}; 
+
 // std::unordered_map<u_int8_t, u_int16_t> cell_to_mux;
 unsigned long previousMillis = 0;
 
@@ -83,6 +86,10 @@ void loop() {
     //start aux voltage measurement sets all the GPIO pins to low, this is adjustable in the code
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
     adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+    adBms6830_start_raux_voltage_measurment(TOTAL_IC, &IC[0]);
+    adBms6830_read_raux_voltages(TOTAL_IC, &IC[0]);
+    delay(200);
+    Serial.println();
     break;
 
   case THERMAL:
@@ -99,13 +106,31 @@ void loop() {
       
       adBms6830_start_aux_voltage_measurment(TOTAL_IC, IC);
       adBms6830_read_aux_voltages(TOTAL_IC, IC);
-      temp[i][0] = getVoltage(IC[0].aux.a_codes[0]);
-      temp[i][1] = getVoltage(IC[0].aux.a_codes[5]);
+
+      baltemp[i] = getVoltage(IC[0].aux.a_codes[0]);
+      baltemp[i+8] = getVoltage(IC[0].aux.a_codes[5]);
+      celltemp[(7-i)] = getVoltage(IC[0].aux.a_codes[3]);
+      celltemp[(7-i)+8] = getVoltage(IC[0].aux.a_codes[4]);
+      celltemp[(7-i)+16] = getVoltage(IC[0].aux.a_codes[1]);
+      celltemp[(7-i)+24] = getVoltage(IC[0].aux.a_codes[2]);
     }
     //print out the temperatures
-    for(int i = 0; i < 8; i++){
-      Serial.printf("Cell %d: %f, Cell %d: %f\n", i+1, V2T(temp[i][1]), 8+i+1, V2T(temp[i][0]));
+    
+    Serial.println("Bal Temp: --------------------------");
+    for(int i = 0; i < TOTAL_IC; i++){
+        Serial.printf("Segment %d: ", i);
+        for(int j = 0; j < 16; j++){
+            Serial.printf("[%3u]%5.01f; ", j, V2T(baltemp[i*16 + j]));
+        }
+        Serial.println();
     }
+        
+    Serial.println("Cell Temp: --------------------------");
+    for(int j = 0; j < 32; j++){
+        Serial.printf("[%5u]%5.01f; ", j, V2T(celltemp[j]));
+    }
+    Serial.println();
+    Serial.println("-------------END-------------");
 
     break;
 
