@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, ADC};
-test_case debug = THERMAL;
+test_case debug = EXTRA;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -114,8 +114,23 @@ void loop() {
       celltemp[(7-i)+16] = getVoltage(IC[0].aux.a_codes[1]);
       celltemp[(7-i)+24] = getVoltage(IC[0].aux.a_codes[2]);
     }
-    //print out the temperatures
     
+    // bool issue;
+    // int mux_codes[4] = {6,1,4,5};
+    // //print out the temperatures
+    // for(int i = 0; i <TOTAL_IC; i++){
+    //   issue = false;
+    //   for(int mux = 0; mux < 4; mux++){
+    //       for(int j = 0; j < 8; j++){
+    //         if(baltemp[mux*8 + j] > 4.0){
+    //           issue = true;
+    //         }
+    //       }
+    //       if(issue) Serial.printf("Mux %d has issue \n", mux_codes[i]);
+    //   }
+    // }
+    
+
     Serial.println("Bal Temp: --------------------------");
     for(int i = 0; i < TOTAL_IC; i++){
         Serial.printf("Segment %d: ", i);
@@ -160,6 +175,71 @@ void loop() {
 
     delay(1000);
     break;
+
+  case EXTRA:
+  Serial.println("Cell Voltages: --------------------------");
+    adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+    //for some reason this doesn't work, why not?
+    adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+
+  Serial.println("TEMPS: --------------------------");
+
+    previousMillis = millis();
+    for(int i = 0; i < 8; i++){
+      IC[0].tx_cfga.gpo = cell_to_mux[i];
+      
+      // previousMillis = millis();
+      
+      adBmsWriteData(TOTAL_IC, IC, Wrcfga, Config, AA);
+
+      // Serial.printf("Time (1): %lu\n", millis() - previousMillis);
+      // previousMillis = millis();
+      
+      adBms6830_start_aux_voltage_measurment(TOTAL_IC, IC);
+      adBms6830_read_aux_voltages(TOTAL_IC, IC);
+
+      baltemp[i] = getVoltage(IC[0].aux.a_codes[0]);
+      baltemp[i+8] = getVoltage(IC[0].aux.a_codes[5]);
+      celltemp[(7-i)] = getVoltage(IC[0].aux.a_codes[3]);
+      celltemp[(7-i)+8] = getVoltage(IC[0].aux.a_codes[4]);
+      celltemp[(7-i)+16] = getVoltage(IC[0].aux.a_codes[1]);
+      celltemp[(7-i)+24] = getVoltage(IC[0].aux.a_codes[2]);
+    }
+    
+    // bool issue;
+    // int mux_codes[4] = {6,1,4,5};
+    // //print out the temperatures
+    // for(int i = 0; i <TOTAL_IC; i++){
+    //   issue = false;
+    //   for(int mux = 0; mux < 4; mux++){
+    //       for(int j = 0; j < 8; j++){
+    //         if(baltemp[mux*8 + j] > 4.0){
+    //           issue = true;
+    //         }
+    //       }
+    //       if(issue) Serial.printf("Mux %d has issue \n", mux_codes[i]);
+    //   }
+    // }
+    
+
+    Serial.println("Bal Temp: --------------------------");
+    for(int i = 0; i < TOTAL_IC; i++){
+        Serial.printf("Segment %d: ", i);
+        for(int j = 0; j < 16; j++){
+            Serial.printf("[%3u]%5.01f; ", j, V2T(baltemp[i*16 + j]));
+        }
+        Serial.println();
+    }
+        
+    Serial.println("Cell Temp: --------------------------");
+    for(int j = 0; j < 32; j++){
+        Serial.printf("[%5u]%5.01f; ", j, V2T(celltemp[j]));
+    }
+    Serial.println();
+    Serial.println("-------------END-------------");
+  
+  break;
+
   case ADC:
     Serial.printf("ADC GLV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4);
     Serial.printf("ADC HV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT));
@@ -176,7 +256,7 @@ void loop() {
     break;
   }
 
-  delay(1000);
+  delay(2000);
   
 }
 
