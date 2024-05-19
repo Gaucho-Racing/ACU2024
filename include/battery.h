@@ -41,6 +41,8 @@ class Battery{
         float getBalTemp(uint8_t index);
         float getBatVoltage();
 
+        void checkBattery(uint8_t &errs);
+
     friend void parseCANData();
     friend int readCANData();
     friend void sendCANData(uint32_t ID);

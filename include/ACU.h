@@ -7,10 +7,15 @@
 #include "ADC1283.h"
 #include "ACU_data.h"
 
+//error/warning masks defined in ACU_data
+
 #define HV_Current_Ref 1.235
-#define AIR_NEG 0b00000100
-#define AIR_POS 0b00000010
-#define Precharge 0b00000001
+#define AIR_NEG 0b10000000
+#define AIR_POS 0b01000000
+#define PRECHARGE 0b00100000
+#define Precharge_DONE 0b00010000
+#define SHUTDOWN 0b00001000
+
 
 struct chargerDataStatus {
     bool hardwareStatus;
@@ -30,14 +35,15 @@ class ACU{
         float ts_current;
         float shdn_volt; 
         float dcdc_current; 
-        float DCDC_temp[2]; // DC-DC converter
+        //TRIAGE 4: consider if we want to do some sort of "sanity" checking for the temps
+        float DCDC_temp[2]; // DC-DC converter, given in volts, need to call V2T to convert to temp
         float fan_Ref;
         
     public:
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
         uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen
 
-        // TODO: fan thingamajigs
+        // TRIAGE 2: fan thingamajigs
         fanController fans = fanController(&Serial8);
 
         uint16_t fanRpm[4];
@@ -48,7 +54,7 @@ class ACU{
 
         void updateGlvVoltage();
         void updateTsVoltage();
-        void updateAccumCurrent();
+        void updateTsCurrent();
         void updateShdnVolt();
         void updateDcdcCurrent();
         void updateDcdcTemp1();
@@ -56,7 +62,8 @@ class ACU{
         void updateFanRef();
         void updateAll();
 
-        
+        void checkACU();
+
         uint8_t getRelayState();
         float getGlvVoltage();
         float getTsVoltage();
@@ -66,6 +73,11 @@ class ACU{
         float getDcdcTemp1();
         float getDcdcTemp2();
         float getFanRef();
+
+        friend class Battery;
+        friend void debug();
         };
+
+float V2T(float voltage, float B = 4390);
 
 #endif

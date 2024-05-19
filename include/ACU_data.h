@@ -6,7 +6,7 @@
 
 #define TOTAL_IC 1
 
-//TODO: Change these to the correct values
+//TRIAGE 2: Change these to the correct values
 
 
 //Pin Definitions
@@ -28,13 +28,13 @@
 // #define OV_THRESHOLD 42000                 /* Volt in 0.1 mV*/
 // #define UV_THRESHOLD 30000                 /* Volt in 0.1 mV*/
 //Discharge
-#define MIN_DIS_TEMP -40 //TODO: Modify later
+#define MIN_DIS_TEMP -40 //TRIAGE 3: Modify later
 #define MAX_DIS_TEMP 60 
 //Charging
-#define MIN_CHR_TEMP 0 //TODO: Modify later
+#define MIN_CHR_TEMP 0 //TRIAGE 3: Modify later
 #define MAX_CHR_TEMP 60 
 //Balance Resistor Temp
-#define MIN_BAL_TEMP -273.1 //TODO: Modify later
+#define MIN_BAL_TEMP -273.1 //TRIAGE 3: Modify later
 #define MAX_BAL_TEMP 80 
 
 // ADC1283 connections
@@ -82,6 +82,28 @@
 #define CHARGER_CURRENT 5 //A
 
 #define PRECHARGE_THRESHOLD 500 // * 10mV
+
+//masks
+//error 
+#define ERR_OverTemp 0b10000000
+#define ERR_OverVolt 0b01000000
+#define ERR_OverCurr 0b00100000
+#define ERR_BMS      0b00010000
+#define ERR_UndrVolt 0b00001000
+#define ERR_Prechrg  0b00000100
+#define ERR_Teensy   0b00000010
+#define ERR_UndrTemp 0b00000001
+
+//warnings
+#define WARN_OpenWire 0b10000000
+#define WARN_ADBMSADC 0b01000000
+#define WARN_CellDrop 0b00100000
+#define WARN_HighCurr 0b00010000
+#define WARN_LowChrg  0b00001000
+#define WARN_CellInbl 0b00000100
+#define WARN_Humidity 0b00000010
+#define WARN_Hydrogen 0b00000001
+
 
 
 #endif

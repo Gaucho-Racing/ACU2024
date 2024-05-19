@@ -23,6 +23,9 @@
 #define printCellTemp false
 #define printBalTemp true
 
+extern ACU acu;
+extern Battery battery;
+
 void debug(Battery &battery){
     if(printErrs);
     if(printRelayState);

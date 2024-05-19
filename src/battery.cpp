@@ -37,16 +37,6 @@ void Battery::checkVoltage(uint8_t &errs){
   }
 }
 
-/// @brief converts thermistor voltage to temperature; TODO: calibrate B values per thermistor
-/// @param[in] voltage
-/// @param[in] B
-/// @return temperature in deg C
-float V2T(float voltage, float B = 4390){
-  float actualVoltage = (voltage+10000)* 0.000150;
-  float R = actualVoltage / ((5.0 - actualVoltage) / 47e3) / 100e3;
-  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
-  return T - 273.15;
-}
 
 /// @brief updates the temperature of the battery, one mux code at a time, based on the cycle
 /// @param[in] battery
