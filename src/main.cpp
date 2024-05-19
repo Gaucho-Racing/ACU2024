@@ -17,17 +17,20 @@ float V2T(float voltage, float B = 4390);
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, ADC};
+enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
 test_case debug = EXTRA;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
+float cellVoltage[16 * TOTAL_IC];
 float baltemp[16*TOTAL_IC];
 float celltemp[32*TOTAL_IC];
 uint16_t cell_to_mux[8] ={0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111};
 // uint16_t mux_temp_codes[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001}; 
+
+
 
 // std::unordered_map<u_int8_t, u_int16_t> cell_to_mux;
 unsigned long previousMillis = 0;
@@ -45,6 +48,21 @@ uint8_t Wrpwm2[2] = { 0x00, 0x21 };
 uint8_t Wrcfgb[2] = { 0x00, 0x24 };
 uint8_t Wrcfga[2] = { 0x00, 0x01 };
 
+float getAccumulatorVoltage() {
+  adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+  adBms6830_read_cell_voltages(TOTAL_IC, IC);
+  for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
+    for (uint8_t cell = 0; cell < CELL; cell++) {
+      cellVoltage[ic * CELL + cell] = (IC[ic].cell.c_codes[cell] + 10000) * 0.000150;
+    }
+  }
+  float accumulatorVoltage = 0;
+  for (uint8_t cell = 0; cell < CELL * TOTAL_IC; cell++) {
+    accumulatorVoltage += cellVoltage[cell];
+  }
+  return accumulatorVoltage;
+}
+
 void setup() {
   Serial.begin(115200);
   fans.begin();
@@ -55,6 +73,10 @@ void setup() {
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
   acu_adc.begin();
+  pinMode(PIN_AIR_POS, OUTPUT);
+  pinMode(PIN_AIR_NEG, OUTPUT);
+  pinMode(PIN_AIR_RESET, OUTPUT); 
+  pinMode(PIN_PRECHG, OUTPUT);
   
 }
 
@@ -251,6 +273,48 @@ void loop() {
     Serial.printf("ADC Fan Ref: %f\n", acu_adc.readVoltage(ADC_MUX_FAN_REF)*2);
     Serial.println();
     break;
+  case PRECHARGE:
+  Serial.println("Precharge, AIR pins reset");
+    digitalWrite(PIN_AIR_NEG, LOW);
+    digitalWrite(PIN_PRECHG, LOW);
+
+
+  Serial.println("Precharge Start");
+  if (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4) { // if latch is not closed
+    digitalWrite(PIN_AIR_RESET, HIGH); // close latch
+    delay(50); // wait for the relay to switch
+    digitalWrite(PIN_AIR_RESET, LOW);
+    while (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4) {
+      Serial.println("Latch not closed, error");
+    }
+  }
+
+    digitalWrite(PIN_AIR_NEG, HIGH); // close AIR-
+    delay(50); // wait for the relay to switch
+    
+    digitalWrite(PIN_PRECHG, HIGH); // close precharge relay
+    delay(10); // wait for the relay to switch
+    
+  // send message to VDM to indicate Precharge
+  // check voltage, if difference > 5V after 2 seconds throw error
+  uint32_t startTime = millis();
+  while (acu_adc.readVoltage(ADC_MUX_HV_VOLT) < getAccumulatorVoltage() * PRECHARGE_THRESHOLD) {
+    if (millis() - startTime > 3000) { // timeout, throw error
+      digitalWrite(PIN_AIR_POS, LOW); // open AIR+, shouldn't be closed but just in case
+      digitalWrite(PIN_AIR_NEG, LOW); // open AIR-
+      digitalWrite(PIN_PRECHG, LOW); // open precharge relay, close discharge relay
+      Serial.println("Precharge timeout, error");
+      return;
+    }
+    delay(20);
+  }
+    digitalWrite(PIN_AIR_POS, HIGH); // clost AIR+
+    delay(50); // wait for the relay to switch
+
+  Serial.println("Precharge Done. Ready to drive. ");
+  break;
+
+
   default:
     Serial.println("Uh oh u dummy u didn't set what to debug");
     break;
