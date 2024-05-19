@@ -298,7 +298,7 @@ void loop() {
   // send message to VDM to indicate Precharge
   // check voltage, if difference > 5V after 2 seconds throw error
   uint32_t startTime = millis();
-  while (acu_adc.readVoltage(ADC_MUX_HV_VOLT) < getAccumulatorVoltage() * PRECHARGE_THRESHOLD) {
+  while (acu_adc.readVoltage(ADC_MUX_HV_VOLT)*200 < getAccumulatorVoltage() * PRECHARGE_THRESHOLD) {
     if (millis() - startTime > 3000) { // timeout, throw error
       digitalWrite(PIN_AIR_POS, LOW); // open AIR+, shouldn't be closed but just in case
       digitalWrite(PIN_AIR_NEG, LOW); // open AIR-
