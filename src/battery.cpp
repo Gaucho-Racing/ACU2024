@@ -11,7 +11,7 @@ void Battery::updateVoltage(){
   adBms6830_read_cell_voltages(TOTAL_IC, this->IC);
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
     for (uint8_t cell = 0; cell < CELL; cell++) {
-      this->cellVoltage[ic * CELL + cell] = (this->IC[ic].cell.c_codes[cell] + 10000) * 3 / 2;
+      this->cellVoltage[ic * CELL + cell] = (this->IC[ic].cell.c_codes[cell] + 10000) * 0.000150;
     }
   }
 }
@@ -153,6 +153,13 @@ uint8_t condenseTemperature(float temperature) {
 uint8_t Battery::calcCharge(){
 
     return 0;
+}
+
+float Battery::getTotalVoltage(){
+  float totVoltage = 0;
+  for(int i = 0; i < TOTAL_IC*16; i++){
+    totVoltage += this->cellVoltage[i];
+  }
 }
 
 void Battery::cell_Balancing(){

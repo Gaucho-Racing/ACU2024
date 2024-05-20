@@ -12,9 +12,9 @@
 #define HV_Current_Ref 1.235
 #define AIR_NEG 0b10000000
 #define AIR_POS 0b01000000
-#define PRECHARGE 0b00100000
+#define PRE_CHARGE 0b00100000
 #define Precharge_DONE 0b00010000
-#define SHUTDOWN 0b00001000
+#define SHUT_DOWN 0b00001000
 
 
 struct chargerDataStatus {
@@ -29,7 +29,7 @@ class ACU{
     // chargerDataStatus chargerDataStatus;
     private:
         ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 3200000);
-        uint8_t relay_state; // first 5 bits D/C | AIR- | AIR+ | Precharge
+        uint8_t relay_state; // first 5 bits D/C | AIR- | AIR+ | Pre_charge
         float glv_voltage; 
         float ts_voltage; 
         float ts_current;

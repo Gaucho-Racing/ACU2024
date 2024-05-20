@@ -32,11 +32,11 @@ void preChargeState(){
       return;
     }
   }
-  if (!(acu.getRelayState() & PRECHARGE)) { // if precharge relay isn't closed
+  if (!(acu.getRelayState() & PRE_CHARGE)) { // if precharge relay isn't closed
     digitalWrite(PIN_PRECHG, HIGH); // close precharge relay
     delay(10); // wait for the relay to switch
     // battery.containsError = systemCheck(battery);
-    if (!(acu.getRelayState() & PRECHARGE)) {
+    if (!(acu.getRelayState() & PRE_CHARGE)) {
       acu.errs |= ERR_Teensy; // Teensy error, output pin not working
       digitalWrite(PIN_PRECHG, LOW);
       digitalWrite(PIN_AIR_NEG, LOW);
@@ -45,28 +45,28 @@ void preChargeState(){
   }
   //TRIAGE 1: continue new update
   // send message to VDM to indicate Precharge
-  sendCANData(battery, ACU_General2);
+  sendCANData(ACU_General2);
   // check voltage, if difference > 5V after 2 seconds throw error
   uint32_t startTime = millis();
-  while (battery.ts_voltage < getAccumulatorVoltage(battery) * PRECHARGE_THRESHOLD) {
-    battery.containsError = systemCheck(battery);
+  while (acu.getTsVoltage() < battery.getBatVoltage() * PRECHARGE_THRESHOLD) {
+    // battery.containsError = systemCheck(battery);
     if (millis() - startTime > 3000) { // timeout, throw error
       digitalWrite(PIN_AIR_POS, LOW); // open AIR+, shouldn't be closed but just in case
       digitalWrite(PIN_AIR_NEG, LOW); // open AIR-
       digitalWrite(PIN_PRECHG, LOW); // open precharge relay, close discharge relay
-      battery.errs |= ERR_Prechrg;
-      battery.containsError = systemCheck(battery);
+      acu.errs |= ERR_Prechrg;
+      // battery.containsError = systemCheck(battery);
       return;
     }
-    dumpCANbus(battery);
+    dumpCANbus();
     delay(20);
   }
-  if (!(battery.relay_state & 0b01000000)) { // if AIR+ isn't closed
+  if (!(acu.errs & 0b01000000)) { // if AIR+ isn't closed
     digitalWrite(PIN_AIR_POS, HIGH); // clost AIR+
     delay(50); // wait for the relay to switch
-    battery.containsError = systemCheck(battery);
-    if (!(battery.relay_state & 0b01000000)) {
-      battery.errs |= ERR_Teensy; // Teensy error, output pin not working
+    // battery.containsError = systemCheck(battery);
+    if (!(acu.getRelayState() & 0b01000000)) {
+      acu.errs |= ERR_Teensy; // Teensy error, output pin not working
       digitalWrite(PIN_PRECHG, LOW);
       digitalWrite(PIN_AIR_NEG, LOW);
       digitalWrite(PIN_AIR_POS, LOW);
@@ -74,8 +74,8 @@ void preChargeState(){
     }
   }
   Serial.println("Precharge Done. Ready to drive. ");
-  battery.state = NORMAL;
-}
+  state = NORMAL;
+
   return;
 }
 void standByState(){

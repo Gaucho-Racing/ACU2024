@@ -6,6 +6,7 @@
 #include "ACU_data.h"
 #include "adBms_Application.h"
 #include "ACU.h"
+#include "can.h"
 
 extern ACU acu;
 class Battery{
@@ -17,7 +18,7 @@ class Battery{
         float maxCellTemp, maxBalTemp = -1;
         uint16_t minVolt = -1;
 
-        uint16_t cellVoltage[16 * TOTAL_IC]; // 16 * 8
+        float cellVoltage[16 * TOTAL_IC]; // 16 * 8
         float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
         float balTemp[16 * TOTAL_IC];
         
@@ -40,6 +41,7 @@ class Battery{
         float getCellTemp(uint8_t index);
         float getBalTemp(uint8_t index);
         float getBatVoltage();
+        float getTotalVoltage();
 
         void checkBattery(uint8_t &errs);
 
