@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {ADBMS6830, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = EXTRA;
+test_case debug = ADC;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -39,7 +39,7 @@ cell_asic IC[TOTAL_IC];
 
 fanController fans(&Serial8);
 
-ADC1283 acu_adc(CS_ADC, 4.096, 1000000);
+ADC1283 acu_adc(CS_ADC, 4.096, 800000);
 
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,0};
 
@@ -73,10 +73,16 @@ void setup() {
   //isoSPI1.begin();
   //isoSPI1.setIntFunc(intrFunc);
   acu_adc.begin();
+  pinMode(PIN_AMS_OK, OUTPUT);
+  digitalWrite(PIN_AMS_OK, HIGH);
   pinMode(PIN_AIR_POS, OUTPUT);
+  digitalWrite(PIN_AIR_POS, LOW);
   pinMode(PIN_AIR_NEG, OUTPUT);
+  digitalWrite(PIN_AIR_NEG, LOW);
   pinMode(PIN_AIR_RESET, OUTPUT); 
+  digitalWrite(PIN_AIR_RESET, LOW);
   pinMode(PIN_PRECHG, OUTPUT);
+  digitalWrite(PIN_PRECHG, LOW);
   
 }
 
@@ -203,33 +209,34 @@ void loop() {
     
   break;
   case ADC:
-    Serial.printf("ADC GLV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4);
-    Serial.printf("ADC HV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT*200));
-    Serial.printf("ADC HV Current: %f\n", acu_adc.readVoltage(ADC_MUX_HV_CURRENT));
-    Serial.printf("ADC Shutdown Power: %f\n", acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4);
-    Serial.printf("ADC DCDC Current: %f\n", acu_adc.readVoltage(ADC_MUX_DCDC_CURRENT));
-    Serial.printf("ADC DCDC Temp1: %f\n", V2T(acu_adc.readVoltage(ADC_MUX_DCDC_TEMP1)));
-    Serial.printf("ADC DCDC Temp2: %f\n", V2T(acu_adc.readVoltage(ADC_MUX_DCDC_TEMP2)));
-    Serial.printf("ADC Fan Ref: %f\n", acu_adc.readVoltage(ADC_MUX_FAN_REF)*2);
+    Serial.printf("ADC GLV Voltage: %.03f\n", acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4);
+    Serial.printf("ADC HV Voltage: %.03f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT)*200);
+    Serial.printf("ADC HV Current: %.03f\n", (acu_adc.readVoltage(ADC_MUX_HV_CURRENT) - 1.235) / 5 /0.0032);
+    Serial.printf("ADC Shutdown Power: %.03f\n", acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4);
+    Serial.printf("ADC DCDC Current: %.03f\n", (acu_adc.readVoltage(ADC_MUX_DCDC_CURRENT) - 2.5) / 0.09);
+    Serial.printf("ADC DCDC Temp1: %.03f\n", V2T(acu_adc.readVoltage(ADC_MUX_DCDC_TEMP1)));
+    Serial.printf("ADC DCDC Temp2: %.03f\n", V2T(acu_adc.readVoltage(ADC_MUX_DCDC_TEMP2)));
+    Serial.printf("ADC Fan Ref: %0.3f\n", acu_adc.readVoltage(ADC_MUX_FAN_REF)*2);
     Serial.println();
     break;
-  case PRECHARGE:
+  case PRECHARGE:{
   Serial.println("Precharge, AIR pins reset");
     digitalWrite(PIN_AIR_NEG, LOW);
     digitalWrite(PIN_PRECHG, LOW);
 
 
   Serial.println("Precharge Start");
-  if (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4) { // if latch is not closed
+  if (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4>0.1) { // if latch is not closed
     digitalWrite(PIN_AIR_RESET, HIGH); // close latch
     delay(50); // wait for the relay to switch
     digitalWrite(PIN_AIR_RESET, LOW);
-    while (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4) {
+    while (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4>0.1) {
       Serial.println("Latch not closed, error");
     }
   }
 
     digitalWrite(PIN_AIR_NEG, HIGH); // close AIR-
+    digitalWrite(PIN_AIR_POS, LOW);
     delay(50); // wait for the relay to switch
     
     digitalWrite(PIN_PRECHG, HIGH); // close precharge relay
@@ -237,6 +244,7 @@ void loop() {
     
   // send message to VDM to indicate Precharge
   // check voltage, if difference > 5V after 2 seconds throw error
+  delay(10000);
   uint32_t startTime = millis();
   while (acu_adc.readVoltage(ADC_MUX_HV_VOLT)*200 < getAccumulatorVoltage() * PRECHARGE_THRESHOLD) {
     if (millis() - startTime > 3000) { // timeout, throw error
@@ -252,8 +260,9 @@ void loop() {
     delay(50); // wait for the relay to switch
 
   Serial.println("Precharge Done. Ready to drive. ");
+  debug = ADC;
   break;
-
+  }
 
   default:
     Serial.println("Uh oh u dummy u didn't set what to debug");
