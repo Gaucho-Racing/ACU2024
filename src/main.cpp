@@ -17,7 +17,7 @@ float V2T(float voltage, float B = 4390);
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
+enum test_case {ADBMS6830, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
 test_case debug = EXTRA;
 
 CANLine can;
@@ -83,123 +83,8 @@ void setup() {
 void loop() {
   switch (debug)
   {
-  case VOLTAGE:
-    //expected result: print out the cell voltages
-    adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-    //for some reason this doesn't work, why not?
-    adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-    // adBms6830_read_cell_voltages(TOTAL_IC, &IC[1]);
-    break;
-
-  case CAN:  
-      //sends Precharge stuff to VDM, expects a response back of some kind
-      can.send(97, message);
-      can.recieve_one();
-      pong = can.recieve(97);
-      break;
-
-  case FAN:
-    //dunno yet
-    break;
-
-  case GPIO:
-    adbms6830_write_gpio(TOTAL_IC, &IC[0], test_bool);
-
-    //start aux voltage measurement sets all the GPIO pins to low, this is adjustable in the code
-    adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
-    adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-    adBms6830_start_raux_voltage_measurment(TOTAL_IC, &IC[0]);
-    adBms6830_read_raux_voltages(TOTAL_IC, &IC[0]);
-    delay(200);
-    Serial.println();
-    break;
-
-  case THERMAL:
-    previousMillis = millis();
-    for(int i = 0; i < 8; i++){
-      IC[0].tx_cfga.gpo = cell_to_mux[i];
-      
-      // previousMillis = millis();
-      
-      adBmsWriteData(TOTAL_IC, IC, Wrcfga, Config, AA);
-
-      // Serial.printf("Time (1): %lu\n", millis() - previousMillis);
-      // previousMillis = millis();
-      
-      adBms6830_start_aux_voltage_measurment(TOTAL_IC, IC);
-      adBms6830_read_aux_voltages(TOTAL_IC, IC);
-
-      baltemp[i] = getVoltage(IC[0].aux.a_codes[0]);
-      baltemp[i+8] = getVoltage(IC[0].aux.a_codes[5]);
-      celltemp[(7-i)] = getVoltage(IC[0].aux.a_codes[3]);
-      celltemp[(7-i)+8] = getVoltage(IC[0].aux.a_codes[4]);
-      celltemp[(7-i)+16] = getVoltage(IC[0].aux.a_codes[1]);
-      celltemp[(7-i)+24] = getVoltage(IC[0].aux.a_codes[2]);
-    }
-    
-    // bool issue;
-    // int mux_codes[4] = {6,1,4,5};
-    // //print out the temperatures
-    // for(int i = 0; i <TOTAL_IC; i++){
-    //   issue = false;
-    //   for(int mux = 0; mux < 4; mux++){
-    //       for(int j = 0; j < 8; j++){
-    //         if(baltemp[mux*8 + j] > 4.0){
-    //           issue = true;
-    //         }
-    //       }
-    //       if(issue) Serial.printf("Mux %d has issue \n", mux_codes[i]);
-    //   }
-    // }
-    
-
-    Serial.println("Bal Temp: --------------------------");
-    for(int i = 0; i < TOTAL_IC; i++){
-        Serial.printf("Segment %d: ", i);
-        for(int j = 0; j < 16; j++){
-            Serial.printf("[%3u]%5.01f; ", j, V2T(baltemp[i*16 + j]));
-        }
-        Serial.println();
-    }
-        
-    Serial.println("Cell Temp: --------------------------");
-    for(int j = 0; j < 32; j++){
-        Serial.printf("[%5u]%5.01f; ", j, V2T(celltemp[j]));
-    }
-    Serial.println();
-    Serial.println("-------------END-------------");
-
-    break;
-
-  case TEENSY:
-    Serial.println("Teensy is probably not the issue");
-    break;
-
-  case CELLBAL:
-    //random non-cell related command to keep from going into extended
-    adBms6830_read_s_voltages(TOTAL_IC, IC);
-    
-  case EXTENDEDCELLBAL: 
-    //test discharge first
-    Serial.println("Set duty cycle");
-    SetPwmDutyCycle(TOTAL_IC, IC, PWM_100_0_PCT);
-    Serial.println("Create PWMs");
-    adBms6830CreatePwma(TOTAL_IC, IC);
-    adBms6830CreatePwmb(TOTAL_IC, IC);
-    Serial.println("Write data");
-    adBmsWriteData(TOTAL_IC, IC, Wrpwm1, Pwm, AA);
-    adBmsWriteData(TOTAL_IC, IC, Wrpwm2, Pwm, BB);
-    printPWM(TOTAL_IC, IC);
-    // IC[0].tx_cfgb.dcc = 0xFFFF;
-    // run_command(22);
-    adBms6830_write_read_config(TOTAL_IC, IC);
-
-
-    delay(1000);
-    break;
-
-  case EXTRA:
-  Serial.println("Cell Voltages: --------------------------");
+  case ADBMS6830:
+    Serial.println("Cell Voltages: --------------------------");
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     //for some reason this doesn't work, why not?
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
@@ -262,9 +147,64 @@ void loop() {
   
   break;
 
+    break;
+
+  case CAN:  
+      //sends Precharge stuff to VDM, expects a response back of some kind
+      can.send(97, message);
+      can.recieve_one();
+      pong = can.recieve(97);
+      break;
+
+  case FAN:
+    //dunno yet
+    break;
+
+  case GPIO:
+    adbms6830_write_gpio(TOTAL_IC, &IC[0], test_bool);
+
+    //start aux voltage measurement sets all the GPIO pins to low, this is adjustable in the code
+    adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
+    adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+    adBms6830_start_raux_voltage_measurment(TOTAL_IC, &IC[0]);
+    adBms6830_read_raux_voltages(TOTAL_IC, &IC[0]);
+    delay(200);
+    Serial.println();
+    break;
+
+  case TEENSY:
+    Serial.println("Teensy is probably not the issue");
+    break;
+
+  case CELLBAL:
+    //random non-cell related command to keep from going into extended
+    adBms6830_read_s_voltages(TOTAL_IC, IC);
+    
+  case EXTENDEDCELLBAL: 
+    //test discharge first
+    Serial.println("Set duty cycle");
+    SetPwmDutyCycle(TOTAL_IC, IC, PWM_100_0_PCT);
+    Serial.println("Create PWMs");
+    adBms6830CreatePwma(TOTAL_IC, IC);
+    adBms6830CreatePwmb(TOTAL_IC, IC);
+    Serial.println("Write data");
+    adBmsWriteData(TOTAL_IC, IC, Wrpwm1, Pwm, AA);
+    adBmsWriteData(TOTAL_IC, IC, Wrpwm2, Pwm, BB);
+    printPWM(TOTAL_IC, IC);
+    // IC[0].tx_cfgb.dcc = 0xFFFF;
+    // run_command(22);
+    adBms6830_write_read_config(TOTAL_IC, IC);
+
+
+    delay(1000);
+    break;
+
+  case EXTRA:
+    
+  break;
   case ADC:
     Serial.printf("ADC GLV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4);
-    Serial.printf("ADC HV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT));
+    Serial.printf("ADC HV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT*200));
     Serial.printf("ADC HV Current: %f\n", acu_adc.readVoltage(ADC_MUX_HV_CURRENT));
     Serial.printf("ADC Shutdown Power: %f\n", acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4);
     Serial.printf("ADC DCDC Current: %f\n", acu_adc.readVoltage(ADC_MUX_DCDC_CURRENT));
