@@ -46,6 +46,7 @@ uint16_t ADC1283::readRaw(uint8_t mux) {
   mux = min(mux, 8);
   spi.beginTransaction(_mySetting);
   digitalWrite(_csPin, LOW);
+  delayNanoseconds(50);
   spi.transfer16(mux << 11);
   uint16_t rcvdData = spi.transfer16(mux << 11);
   digitalWrite(_csPin, HIGH);

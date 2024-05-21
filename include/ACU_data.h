@@ -25,7 +25,6 @@
 #define PIN_AIR_NEG 20 //assuming closed high
 #define PIN_AIR_RESET 21
 #define PIN_PRECHG 41 // also controls discharge relay, assuming preC closed high, disc open high
-#define CS_ADC 1
 // #define PIN_AIR_POS_AUX -1 // auxilary contacts
 // #define PIN_AIR_NEG_AUX -1 // auxilary contacts
 #define PIN_AMS_OK 39

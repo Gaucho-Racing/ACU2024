@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = EXTRA;
+test_case debug = PRECHARGE;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -39,7 +39,7 @@ cell_asic IC[TOTAL_IC];
 
 fanController fans(&Serial8);
 
-ADC1283 acu_adc(CS_ADC, 4.096, 1000000);
+ADC1283 acu_adc(CS_ADC, 4.096, 800000);
 
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,0};
 
@@ -81,6 +81,8 @@ void setup() {
 }
 
 void loop() {
+  Serial.printf("millis: %ld\n", millis());
+
   switch (debug)
   {
   case VOLTAGE:
@@ -264,7 +266,7 @@ void loop() {
 
   case ADC:
     Serial.printf("ADC GLV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4);
-    Serial.printf("ADC HV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT));
+    Serial.printf("ADC HV Voltage: %f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT)*200);
     Serial.printf("ADC HV Current: %f\n", acu_adc.readVoltage(ADC_MUX_HV_CURRENT));
     Serial.printf("ADC Shutdown Power: %f\n", acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4);
     Serial.printf("ADC DCDC Current: %f\n", acu_adc.readVoltage(ADC_MUX_DCDC_CURRENT));
@@ -275,43 +277,52 @@ void loop() {
     break;
   case PRECHARGE:
   Serial.println("Precharge, AIR pins reset");
-    digitalWrite(PIN_AIR_NEG, LOW);
-    digitalWrite(PIN_PRECHG, LOW);
+  digitalWrite(PIN_AIR_POS, LOW);
+  digitalWrite(PIN_AIR_NEG, LOW);
+  digitalWrite(PIN_PRECHG, LOW);
 
-
+  float Vglv, Vsdp;
+  Vglv = acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4;
+  Vsdp = acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4;
   Serial.println("Precharge Start");
-  if (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4) { // if latch is not closed
+  while (Vglv - Vsdp > 0.2) {
+    Serial.println("Latch not closed");
     digitalWrite(PIN_AIR_RESET, HIGH); // close latch
     delay(50); // wait for the relay to switch
     digitalWrite(PIN_AIR_RESET, LOW);
-    while (acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4 - acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4) {
-      Serial.println("Latch not closed, error");
-    }
+    delay(950);
+    Vglv = acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4;
+    Vsdp = acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4;
   }
 
     digitalWrite(PIN_AIR_NEG, HIGH); // close AIR-
-    delay(50); // wait for the relay to switch
+    delay(100); // wait for the relay to switch
     
     digitalWrite(PIN_PRECHG, HIGH); // close precharge relay
-    delay(10); // wait for the relay to switch
+    delay(20); // wait for the relay to switch
+
+    delay(5000); // minimum precharge time
     
-  // send message to VDM to indicate Precharge
+  // TODO: send message to VDM to indicate Precharge
   // check voltage, if difference > 5V after 2 seconds throw error
   uint32_t startTime = millis();
   while (acu_adc.readVoltage(ADC_MUX_HV_VOLT)*200 < getAccumulatorVoltage() * PRECHARGE_THRESHOLD) {
-    if (millis() - startTime > 3000) { // timeout, throw error
+    if (millis() - startTime > 5000) { // timeout, throw error
       digitalWrite(PIN_AIR_POS, LOW); // open AIR+, shouldn't be closed but just in case
       digitalWrite(PIN_AIR_NEG, LOW); // open AIR-
       digitalWrite(PIN_PRECHG, LOW); // open precharge relay, close discharge relay
       Serial.println("Precharge timeout, error");
+      delay(2000);
       return;
     }
-    delay(20);
+    delay(100);
   }
     digitalWrite(PIN_AIR_POS, HIGH); // clost AIR+
     delay(50); // wait for the relay to switch
 
   Serial.println("Precharge Done. Ready to drive. ");
+  debug = ADC;
+  
   break;
 
 
@@ -320,7 +331,7 @@ void loop() {
     break;
   }
 
-  delay(2000);
+  delay(1000);
   
 }
 

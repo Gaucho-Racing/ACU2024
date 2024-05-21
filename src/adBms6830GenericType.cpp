@@ -713,8 +713,13 @@ uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
   startTimer();
   adBmsCsLow();
   spiWriteBytes(4, &cmd[0]);
+  uint32_t startTime = millis();
   do{
     spiReadBytes(1, &read_data);
+    if (millis() - startTime > 200) {
+      Serial.println("adbms timeout!");
+      break;
+    }
   }while(!(read_data == SDO_Line));
   adBmsCsHigh();
   conv_count = getTimCount();

@@ -105,7 +105,7 @@ void isoSPI::setSpiMode(uint8_t mode) {
 
 void isoSPI::begin() {
     _mySPI -> begin();
-    _mySPI -> setCS(_csPin); // don't know why this doesn't work
+    //_mySPI -> setCS(_csPin); // don't know why this doesn't work
     pinMode(_csPin, OUTPUT);
     pinMode(_intPin, INPUT);
     pinMode(_wakePin, INPUT);
