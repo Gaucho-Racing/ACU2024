@@ -48,7 +48,7 @@ void preChargeState(){
   sendCANData(ACU_General2);
   // check voltage, if difference > 5V after 2 seconds throw error
   uint32_t startTime = millis();
-  while (acu.getTsVoltage() < battery.getBatVoltage() * PRECHARGE_THRESHOLD) {
+  while (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
     // battery.containsError = systemCheck(battery);
     if (millis() - startTime > 3000) { // timeout, throw error
       digitalWrite(PIN_AIR_POS, LOW); // open AIR+, shouldn't be closed but just in case

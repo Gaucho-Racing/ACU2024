@@ -2,7 +2,6 @@
 #define _ACU_H
 
 #include <Arduino.h>
-#include "adBms_Application.h"
 #include "FanController.h"
 #include "ADC1283.h"
 #include "ACU_data.h"
@@ -16,6 +15,14 @@
 #define Precharge_DONE 0b00010000
 #define SHUT_DOWN 0b00001000
 
+//included here because can and states have a circular dependency if States is defined in states.h
+enum States {
+    PRECHARGE,
+    NORMAL,
+    CHARGE,
+    SHUTDOWN,
+    STANDBY
+};
 
 struct chargerDataStatus {
     bool hardwareStatus;

@@ -3,10 +3,8 @@
 
 #include "adBms6830Data.h"
 #include "adBms6830GenericType.h"
-#include "ACU_data.h"
 #include "adBms_Application.h"
 #include "ACU.h"
-#include "can.h"
 
 extern ACU acu;
 class Battery{
