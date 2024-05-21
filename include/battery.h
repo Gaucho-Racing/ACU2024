@@ -30,19 +30,20 @@ class Battery{
         // Battery();
         void init_config();
         void updateVoltage();
-        void checkVoltage();
         void updateTemp();
-        void checkTemp();
         void updateAllTemps();
+        void checkVoltage();
+        void checkTemp();
         void checkFuse();
         uint8_t calcCharge();
         void cell_Balancing();
+        void disable_Mux();
+        float getCellVoltage(uint8_t index);
         float getCellTemp(uint8_t index);
         float getBalTemp(uint8_t index);
-        float getBatVoltage();
         float getTotalVoltage();
 
-        void checkBattery(uint8_t &errs);
+        void checkBattery(bool fullCheck = false);
 
     friend void parseCANData();
     friend int readCANData();

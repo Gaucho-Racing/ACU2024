@@ -27,20 +27,28 @@
 //limits, need to change prob to extern when we read from EEPROM
 // #define OV_THRESHOLD 42000                 /* Volt in 0.1 mV*/
 // #define UV_THRESHOLD 30000                 /* Volt in 0.1 mV*/
-//Discharge
-#define MIN_DIS_TEMP -40 //TRIAGE 3: Modify later
-#define MAX_DIS_TEMP 60 
 //Charging
 #define MIN_CHR_TEMP 0 //TRIAGE 3: Modify later
 #define MAX_CHR_TEMP 60 
+
+//Bat limits
+#define SAFE_V_TO_TURN_OFF 50
 //Balance Resistor Temp
 #define MIN_BAL_TEMP -273.1 //TRIAGE 3: Modify later
 #define MAX_BAL_TEMP 80 
+//Discharge
+#define MIN_DIS_TEMP -40 //TRIAGE 3: Modify later
+#define MAX_DIS_TEMP 60 
+
 
 //acu limits
 #define MAX_HV_CURRENT 135 //TRIAGE 3: Modify later
 #define MAX_DCDC_TEMP 70
+#define MAX_DCDC_CURRENT 10
 #define MIN_GLV_VOLT 10
+#define MIN_FAN_REF_VOLT 4.9
+#define MAX_FAN_REF_VOLT 5.1
+
 
 // ADC1283 connections
 #define ADC_MUX_GLV_VOLT 7

@@ -55,6 +55,7 @@ void setup() {
   // fans.begin();
   Serial.println("Init config");
   battery.init_config();
+  acu.init_config();
   Serial.println("Setup done");
   pinSetup();
   
@@ -63,7 +64,23 @@ void setup() {
   can_chgr.begin();
   can_chgr.setBaudRate(500000);
 
-  state = STANDBY;
+  // needs to wait a bit before good values
+  SystemCheck();
+  SystemCheck();
+  acu.warns = 0;
+  acu.errs = 0;
+  if(SystemCheck()){
+    state = SHUTDOWN;
+    #if DEBUG > 1
+      Serial.println("System check failed, shutting down");
+    #endif
+  }
+  else{
+    state = STANDBY;
+    #if DEBUG > 1
+      Serial.println("System check passed, entering standby");
+    #endif
+  }
 
 }
 

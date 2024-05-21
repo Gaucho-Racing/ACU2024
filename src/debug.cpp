@@ -25,6 +25,7 @@
 
 extern ACU acu;
 extern Battery battery;
+extern uint8_t cycle;
 
 void debug(Battery &battery){
     if(printErrs);
@@ -46,6 +47,9 @@ void debug(Battery &battery){
     if(printAccumCurrent);
     if(printAccumCurrentZero);
     if(printACUTemp);
+    if(printCycle){
+        Serial.printf("----------- Cycle: %d --------------\n", cycle);
+    }
     if(printCellVoltage){
         Serial.println("Cell Voltage: --------------------------");
         for(int i = 0; i < TOTAL_IC; i++){

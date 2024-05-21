@@ -57,7 +57,7 @@ class ACU{
         float fanVoltage[4];
         float fanCurrent[4];
 
-        void ACU_init();
+        void init_config();
 
         void updateGlvVoltage();
         void updateTsVoltage();

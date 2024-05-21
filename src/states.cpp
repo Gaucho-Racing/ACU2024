@@ -1,15 +1,60 @@
 #include "states.h"
 void shutdownState(){
+  dumpCANbus();
+  #if DEBUG
+    Serial.println("State: Shutdown");
+  #endif
+  acu.warns = 0;
+  //errors can only be reset when shutdown
+  acu.errs = 0;
+  // Open AIRS and Precharge if already not open, close Discharge
+  digitalWrite(PIN_PRECHG, LOW);
+  digitalWrite(PIN_AIR_NEG, LOW);
+  digitalWrite(PIN_AIR_POS, LOW);
+  delay(10);
+
+  acu.updateRelayState();
+  SystemCheck(true);
+  if (acu.getRelayState() != 0) {
+    acu.errs |= ERR_Teensy; // Teensy error, output not working
+    while(acu.errs & ERR_Teensy){
+      digitalWrite(PIN_PRECHG, LOW);
+      digitalWrite(PIN_AIR_NEG, LOW);
+      digitalWrite(PIN_AIR_POS, LOW);
+      acu.updateRelayState();
+    }
+  }
+
+  if (acu.getGlvVoltage() < SAFE_V_TO_TURN_OFF) { // safe to turn off if TS voltage < 50V
+    state = STANDBY;
+  }
   return;
 }
+
+//may newed more??
 void normalState(){
+  if(SystemCheck()){
+    state = SHUTDOWN;
+    return;
+  };
+  // TRIAGE 1: CAN?
+  //cycle maxes out at 8
+  cycle++;
+  cycle = cycle % 9;
+  dumpCANbus();
   return;
 }
+
+//TRIAGE 1.5: implement
 void chargeState(){
+  acu.warns = 0;
   return;
 }
+
+//REVIEW BEFORE USE
 void preChargeState(){
-  #ifdef DEBUG
+  acu.warns = 0;
+  #if DEBUG
     Serial.println("State: preCharge");
   #endif
   if (acu.getGlvVoltage() - acu.getShdnVolt() > 100) { // if latch is not closed, TRIAGE 2: 100 is probably in some sort of other units that need to be figured out
@@ -35,7 +80,7 @@ void preChargeState(){
   if (!(acu.getRelayState() & PRE_CHARGE)) { // if precharge relay isn't closed
     digitalWrite(PIN_PRECHG, HIGH); // close precharge relay
     delay(10); // wait for the relay to switch
-    // battery.containsError = systemCheck(battery);
+    
     if (!(acu.getRelayState() & PRE_CHARGE)) {
       acu.errs |= ERR_Teensy; // Teensy error, output pin not working
       digitalWrite(PIN_PRECHG, LOW);
@@ -43,13 +88,18 @@ void preChargeState(){
       return;
     }
   }
+
   //TRIAGE 1: continue new update
   // send message to VDM to indicate Precharge
   sendCANData(ACU_General2);
   // check voltage, if difference > 5V after 2 seconds throw error
   uint32_t startTime = millis();
   while (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
-    // battery.containsError = systemCheck(battery);
+    SystemCheck();
+    if(acu.errs){
+      state = SHUTDOWN;
+      return;
+    }
     if (millis() - startTime > 3000) { // timeout, throw error
       digitalWrite(PIN_AIR_POS, LOW); // open AIR+, shouldn't be closed but just in case
       digitalWrite(PIN_AIR_NEG, LOW); // open AIR-
@@ -64,7 +114,11 @@ void preChargeState(){
   if (!(acu.errs & 0b01000000)) { // if AIR+ isn't closed
     digitalWrite(PIN_AIR_POS, HIGH); // clost AIR+
     delay(50); // wait for the relay to switch
-    // battery.containsError = systemCheck(battery);
+    SystemCheck();
+    if(acu.errs){
+      state = SHUTDOWN;
+      return;
+    }
     if (!(acu.getRelayState() & 0b01000000)) {
       acu.errs |= ERR_Teensy; // Teensy error, output pin not working
       digitalWrite(PIN_PRECHG, LOW);
@@ -73,21 +127,32 @@ void preChargeState(){
       return;
     }
   }
-  Serial.println("Precharge Done. Ready to drive. ");
+  #if DEBUG > 1
+    Serial.println("Precharge Done. Ready to drive. ");
+  #endif
+  cycle = 0;
   state = NORMAL;
 
   return;
 }
+
+//
+/// @brief do nothing, in initial state wait for VDM to send start command, might need to poll CAN
 void standByState(){
-  return;
+  acu.warns = 0;
+  battery.disable_Mux();
+  for(int i = 0; i < 30; i++){
+    readCANData();
+  }
 }
 
-void fullSystemCheck(){
-  
-}
-void standardSyschecks(){
-  battery.updateTemp(cycle);
-  return;
+//TRIAGE 3: set a macro for fullCheck for readibility; FULL = true, PARTIAL = false
+/// @brief 
+/// @param fullCheck 
+bool SystemCheck(bool fullCheck = false){
+  acu.checkACU();
+  battery.checkBattery(fullCheck);
+  return acu.errs != 0;
 }
 /*
 

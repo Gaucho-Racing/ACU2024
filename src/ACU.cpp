@@ -12,7 +12,7 @@ float V2T(float voltage, float B = 4390){
   return T - 273.15;
 }
 
-void ACU::ACU_init(){
+void ACU::init_config(){
   this->ACU_ADC.begin();
 }
 
@@ -56,45 +56,75 @@ void ACU::updateAll(){
   updateFanRef();
 }
 
-//ACU can cause the following errors:
-//Precharge, Undervolt Error (Glv), 
-//TRIAGE 1: FINISH this, dcdc current, fan ref, shdn volt
+
 //TRAIGE 3: check if the values are correct
 void ACU::checkACU(){
-  this->errs &= ~(ERR_Prechrg|ERR_UndrVolt|ERR_OverCurr); //reset errors
-  this->warns &= ~(WARN_LowChrg|WARN_HighCurr); //reset warnings
-  //overcurrent checks
-  if(this->ts_current > MAX_HV_CURRENT){
-    #if DEBUG > 1
-        Serial.println("HV Overcurrent detected");
-    #endif
-    this->errs |= ERR_OverCurr;
-  }
-  else if(this->ts_current > MAX_HV_CURRENT*0.8){
-    this->warns |= WARN_HighCurr;
-  } 
+    this->warns &= ~(WARN_LowChrg|WARN_HighCurr); //reset warnings
+    //overcurrent checks
+    if(this->ts_current > MAX_HV_CURRENT){
+        #if DEBUG > 1
+            Serial.println("HV Overcurrent detected");
+        #endif
+        this->errs |= ERR_OverCurr;
+    }
+    else if(this->ts_current > MAX_HV_CURRENT*0.8){
+        this->warns |= WARN_HighCurr;
+    } 
 
-  //dcdc convertor temp regulation, slow down fan if temp is high, shut down if temp is too high
-  if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP){
-    #if DEBUG > 1
-        Serial.println("DCDC Overtemp detected");
-    #endif
-    digitalWrite(PIN_DCDC_EN, LOW);
-  }
-  else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
-    digitalWrite(PIN_DCDC_SLOW, HIGH);
-  } else {
-    digitalWrite(PIN_DCDC_EN, HIGH);
-    digitalWrite(PIN_DCDC_SLOW, LOW);
-  }
-//glv bat not charged
-  if(this->glv_voltage < MIN_GLV_VOLT){
-    #if DEBUG > 1
-        Serial.println("GLV Undervolt detected");
-    #endif
-    this->errs |= ERR_UndrVolt;
-  } 
+    //dcdc convertor temp regulation, slow down fan if temp is high, shut down if temp is too high
+    if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP){
+        #if DEBUG > 1
+            Serial.println("DCDC Overtemp detected");
+        #endif
+        digitalWrite(PIN_DCDC_EN, LOW);
+    }
+    else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
+        digitalWrite(PIN_DCDC_SLOW, HIGH);
+    } else {
+        digitalWrite(PIN_DCDC_EN, HIGH);
+        digitalWrite(PIN_DCDC_SLOW, LOW);
+    }
 
+    //dcdc current
+    if(this->dcdc_current > MAX_DCDC_CURRENT){
+        #if DEBUG > 1
+            Serial.println("DCDC Overcurrent detected");
+        #endif
+        this->errs |= ERR_OverCurr;
+    }
+
+    //glv bat not charged
+    if(this->glv_voltage < MIN_GLV_VOLT){
+        #if DEBUG > 1
+            Serial.println("GLV Undervolt detected");
+        #endif
+        this->errs |= ERR_UndrVolt;
+    } 
+
+    //fan ref voltage
+    if(this->fan_Ref < MIN_FAN_REF_VOLT){
+        #if DEBUG > 1
+            Serial.println("Fan Ref Low detected");
+        #endif
+        this->errs |= ERR_UndrVolt;
+    } else if(this->fan_Ref > MAX_FAN_REF_VOLT){
+        #if DEBUG > 1
+            Serial.println("Fan Ref High detected");
+        #endif
+        this->errs |= ERR_OverVolt;
+    }
+
+    //shdn voltage, should be within 0.2V of GLV
+    if(abs(this->shdn_volt - this->glv_voltage) > 0.2){
+        #if DEBUG > 1
+            Serial.println("Shdn voltage not within 0.2V of GLV");
+        #endif
+        if(this->shdn_volt < this->glv_voltage)
+            this->errs |= ERR_UndrVolt;
+        else if(this->shdn_volt > this->glv_voltage){
+            this->errs |= ERR_OverVolt;
+        }
+    }
 }
 
 

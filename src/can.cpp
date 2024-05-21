@@ -261,16 +261,22 @@ int readCANData(){
 
 }
 
+//TRIAGE 2: replace with interrupt/mailboxes
+static uint32_t prevmillis = 0;
+
 /// @brief Sends data to CANbus
 /// @param[in] battery
 /// @return None
 void dumpCANbus() {
-  for (uint8_t i = 0; i < 16; i++) {
+  if(millis() - prevmillis > 1){
+    prevmillis = millis();
+    for (uint8_t i = 0; i < 16; i++) {
     sendCANData(Condensed_Cell_Voltage_n0 + i);
     sendCANData(Condensed_Cell_Temp_n0 + i);
+    }
+    sendCANData(ACU_General);
+    sendCANData(ACU_General2);
+    sendCANData(Powertrain_Cooling);
+    sendCANData(Charging_Cart_Config);
   }
-  sendCANData(ACU_General);
-  sendCANData(ACU_General2);
-  sendCANData(Powertrain_Cooling);
-  sendCANData(Charging_Cart_Config);
 }
