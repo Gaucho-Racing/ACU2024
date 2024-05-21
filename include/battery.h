@@ -7,6 +7,7 @@
 #include "ACU.h"
 
 extern ACU acu;
+extern uint8_t cycle;
 class Battery{
     private:
         cell_asic IC[TOTAL_IC];
@@ -29,9 +30,9 @@ class Battery{
         // Battery();
         void init_config();
         void updateVoltage();
-        void checkVoltage(uint8_t &errs);
-        void updateTemp(uint8_t cycle);
-        void checkTemp(uint8_t &errs);
+        void checkVoltage();
+        void updateTemp();
+        void checkTemp();
         void updateAllTemps();
         void checkFuse();
         uint8_t calcCharge();

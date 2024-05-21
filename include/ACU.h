@@ -67,6 +67,7 @@ class ACU{
         void updateDcdcTemp1();
         void updateDcdcTemp2();
         void updateFanRef();
+        void updateRelayState();
         void updateAll();
 
         void checkACU();

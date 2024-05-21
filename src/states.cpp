@@ -82,6 +82,13 @@ void standByState(){
   return;
 }
 
+void fullSystemCheck(){
+  
+}
+void standardSyschecks(){
+  battery.updateTemp(cycle);
+  return;
+}
 /*
 
 /// @brief standby, send data --> VDM

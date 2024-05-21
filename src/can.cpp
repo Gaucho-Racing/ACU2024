@@ -238,6 +238,7 @@ void parseCANData(){
   }
 }
 
+//Triage 2: replace with mailboxes
 int readCANData(){
   int which_can = 0;
   int msgReads = 5;  //Max number of CAN message reads per function call

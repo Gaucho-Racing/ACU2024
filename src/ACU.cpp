@@ -16,20 +16,21 @@ void ACU::ACU_init(){
   this->ACU_ADC.begin();
 }
 
+//triage 3: owen check this
 void ACU::updateGlvVoltage(){
   glv_voltage = ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT) * 4;
 }
 void ACU::updateTsVoltage(){
-  ts_voltage = ACU_ADC.readVoltage(ADC_MUX_HV_VOLT);
+  ts_voltage = ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200;
 }
 void ACU::updateTsCurrent(){
-  ts_current = ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT);
+  ts_current = (ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - 1.235) /5 /0.0032;
 }
 void ACU::updateShdnVolt(){
   shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4;
 }
 void ACU::updateDcdcCurrent(){
-  dcdc_current = ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT);
+  dcdc_current = (ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - 2.5) / 0.09;
 }
 void ACU::updateDcdcTemp1(){
   DCDC_temp[0] = V2T(ACU_ADC.readVoltage(ADC_MUX_DCDC_TEMP1)); 
@@ -39,6 +40,9 @@ void ACU::updateDcdcTemp2(){
 }
 void ACU::updateFanRef(){
   fan_Ref = ACU_ADC.readVoltage(ADC_MUX_FAN_REF)*2;
+}
+void ACU::updateRelayState(){
+  relay_state = (digitalRead(PIN_AIR_NEG) << 7) + (digitalRead(PIN_AIR_POS) << 6) + (digitalRead(PIN_PRECHG) << 5);
 }
 
 void ACU::updateAll(){
@@ -54,9 +58,43 @@ void ACU::updateAll(){
 
 //ACU can cause the following errors:
 //Precharge, Undervolt Error (Glv), 
-//TRIAGE 1: FINISH this
+//TRIAGE 1: FINISH this, dcdc current, fan ref, shdn volt
+//TRAIGE 3: check if the values are correct
 void ACU::checkACU(){
-  this->errs &= ~(ERR_Prechrg|ERR_UndrVolt); //reset errors
+  this->errs &= ~(ERR_Prechrg|ERR_UndrVolt|ERR_OverCurr); //reset errors
+  this->warns &= ~(WARN_LowChrg|WARN_HighCurr); //reset warnings
+  //overcurrent checks
+  if(this->ts_current > MAX_HV_CURRENT){
+    #if DEBUG > 1
+        Serial.println("HV Overcurrent detected");
+    #endif
+    this->errs |= ERR_OverCurr;
+  }
+  else if(this->ts_current > MAX_HV_CURRENT*0.8){
+    this->warns |= WARN_HighCurr;
+  } 
+
+  //dcdc convertor temp regulation, slow down fan if temp is high, shut down if temp is too high
+  if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP){
+    #if DEBUG > 1
+        Serial.println("DCDC Overtemp detected");
+    #endif
+    digitalWrite(PIN_DCDC_EN, LOW);
+  }
+  else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
+    digitalWrite(PIN_DCDC_SLOW, HIGH);
+  } else {
+    digitalWrite(PIN_DCDC_EN, HIGH);
+    digitalWrite(PIN_DCDC_SLOW, LOW);
+  }
+//glv bat not charged
+  if(this->glv_voltage < MIN_GLV_VOLT){
+    #if DEBUG > 1
+        Serial.println("GLV Undervolt detected");
+    #endif
+    this->errs |= ERR_UndrVolt;
+  } 
+
 }
 
 

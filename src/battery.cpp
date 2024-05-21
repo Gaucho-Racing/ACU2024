@@ -16,9 +16,8 @@ void Battery::updateVoltage(){
   }
 }
 /// @brief check Voltage and update min/max values; update errs 
-/// @param battery 
-/// @param errs 
-void Battery::checkVoltage(uint8_t &errs){
+
+void Battery::checkVoltage(){
   //if first check, set extremes to first cell
   
   if(this->minVolt == -1) this->minVolt = this->cellVoltage[0];
@@ -28,10 +27,10 @@ void Battery::checkVoltage(uint8_t &errs){
   for (int i = 0 ; i < TOTAL_IC*16; i++){
     if (this->minVolt > this->cellVoltage[i]) this->minVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
-      errs |= ERR_OverVolt;
+      acu.errs |= ERR_OverVolt;
     }
     if (this->cellVoltage[i] < UV_THRESHOLD){
-      errs |= ERR_UndrVolt;
+      acu.errs |= ERR_UndrVolt;
     }
     this->batVoltage += this->cellVoltage[i];
   }
@@ -42,9 +41,9 @@ void Battery::checkVoltage(uint8_t &errs){
 /// @param[in] battery
 /// @param[in] cycle
 /// @return None
-void Battery::updateTemp(uint8_t cycle){
+void Battery::updateTemp(){
   if(cycle > 7){
-    Serial.println("Invalid cycle");
+    //Serial.println("Invalid cycle");
     return;
   }
   //write the mux to the gpio
@@ -75,9 +74,7 @@ void Battery::updateTemp(uint8_t cycle){
 }
 
 /// @brief 
-/// @param battery 
-/// @param errs 
-void Battery::checkTemp(uint8_t &errs){
+void Battery::checkTemp(){
   if(this->maxBalTemp == -1) this->maxBalTemp = this->balTemp[0];
   if(this->maxCellTemp == -1) this->maxCellTemp = this->cellTemp[0];
   for(int i = 0; i < TOTAL_IC*16; i++){
@@ -85,10 +82,10 @@ void Battery::checkTemp(uint8_t &errs){
     // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
     //check Bal Temp;
     if (this->balTemp[i] > MAX_BAL_TEMP){
-      errs |= ERR_OverTemp;
+      acu.errs |= ERR_OverTemp;
     }
     if (this->balTemp[i] < MIN_BAL_TEMP){
-      errs |= ERR_UndrTemp;
+      acu.errs |= ERR_UndrTemp;
     }
   }
   for(int i = 0; i < TOTAL_IC*2*16; i++){
@@ -96,10 +93,10 @@ void Battery::checkTemp(uint8_t &errs){
     // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
     //check Bal Temp;
     if (this->cellTemp[i] > MAX_BAL_TEMP){
-      errs |= ERR_OverTemp;
+      acu.errs |= ERR_OverTemp;
     }
     if (this->cellTemp[i] < MIN_BAL_TEMP){
-      errs |= ERR_UndrTemp;
+      acu.errs |= ERR_UndrTemp;
     }
   }
 }
@@ -167,7 +164,7 @@ void Battery::cell_Balancing(){
 
   //check new voltage to find min cell temp
     this->updateVoltage();
-    this->checkVoltage(acu.errs);
+    this->checkVoltage();
     
 
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){

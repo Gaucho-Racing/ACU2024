@@ -37,6 +37,11 @@
 #define MIN_BAL_TEMP -273.1 //TRIAGE 3: Modify later
 #define MAX_BAL_TEMP 80 
 
+//acu limits
+#define MAX_HV_CURRENT 135 //TRIAGE 3: Modify later
+#define MAX_DCDC_TEMP 70
+#define MIN_GLV_VOLT 10
+
 // ADC1283 connections
 #define ADC_MUX_GLV_VOLT 7
 #define ADC_MUX_HV_VOLT 6
