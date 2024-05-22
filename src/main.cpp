@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = PRECHARGE;
+test_case debug = VOLTAGE;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -95,19 +95,16 @@ void loop() {
   Vglv = acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4;
   Vsdp = acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4;
 
-  if (Vglv - Vsdp > 0.2) { // if shutdown circuit triggers, try precharge again
-    debug = PRECHARGE;
-  }
-
   switch (debug)
   {
   case VOLTAGE:
     Serial.println("Cell Voltages: --------------------------");
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+    Serial.println("stuff");
     //for some reason this doesn't work, why not?
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
 
-  Serial.println("TEMPS: --------------------------");
+    Serial.println("TEMPS: --------------------------");
 
     previousMillis = millis();
     for(int i = 0; i < 8; i++){
@@ -230,6 +227,9 @@ void loop() {
     Serial.printf("ADC DCDC Temp2: %.03f\n", V2T(acu_adc.readVoltage(ADC_MUX_DCDC_TEMP2)));
     Serial.printf("ADC Fan Ref: %0.3f\n", acu_adc.readVoltage(ADC_MUX_FAN_REF)*2);
     Serial.println();
+    if (Vglv - Vsdp > 0.2) { // if shutdown circuit triggers, try precharge again
+      debug = PRECHARGE;
+    }
     break;
   case PRECHARGE:{
   Serial.println("Precharge, AIR pins reset");
