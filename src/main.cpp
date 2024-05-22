@@ -17,10 +17,11 @@ float V2T(float voltage, float B = 4390);
 // Object declarations 
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
-enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = PRECHARGE;
+enum test_case {ADBMS6830, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
+test_case debug = CAN;
 
-CANLine can;
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> prim_can;
+
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
 
@@ -43,6 +44,8 @@ ADC1283 acu_adc(CS_ADC, 4.096, 800000);
 
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,0};
 
+bool state = false;
+
 uint8_t Wrpwm1[2] = { 0x00, 0x20 };
 uint8_t Wrpwm2[2] = { 0x00, 0x21 };
 uint8_t Wrcfgb[2] = { 0x00, 0x24 };
@@ -61,6 +64,13 @@ float getAccumulatorVoltage() {
     accumulatorVoltage += cellVoltage[cell];
   }
   return accumulatorVoltage;
+}
+
+void shutdown(const CAN_message_t &msg) {
+  if (msg.id == 0x95) {
+    state = msg.buf[0];
+  }
+  Serial.println("recieved ACU control");
 }
 
 void setup() {
@@ -83,7 +93,14 @@ void setup() {
   digitalWrite(PIN_AIR_RESET, LOW);
   pinMode(PIN_PRECHG, OUTPUT);
   digitalWrite(PIN_PRECHG, LOW);
-  
+
+  prim_can.begin();
+  prim_can.setBaudRate(1000000);
+  // prim_can.setMaxMB(1);
+  // prim_can.setMBFilter(REJECT_ALL);
+  // prim_can.onReceive(MB0, shutdown);
+  // prim_can.setMBUserFilter(MB0, 0x66, 0xFF);
+  // prim_can.mailboxStatus();
 }
 
 void loop() {
@@ -159,9 +176,7 @@ void loop() {
 
   case CAN:  
       //sends Precharge stuff to VDM, expects a response back of some kind
-      can.send(97, message);
-      can.recieve_one();
-      pong = can.recieve(97);
+      // prim_can.events();
       break;
 
   case FAN:
@@ -304,4 +319,4 @@ float V2T(float voltage, float B = 4390){
   float R = voltage / ((5.0 - voltage) / 47e3) / 100e3;
   float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
   return T - 273.15;
-}
+  }
