@@ -8,6 +8,9 @@ void shutdownState(){
   //errors can only be reset when shutdown
   acu.errs = 0;
   // Open AIRS and Precharge if already not open, close Discharge
+  digitalWrite(PIN_AIR_RESET, HIGH);
+  delayMicroseconds(1);
+  digitalWrite(PIN_AIR_RESET, LOW);
   digitalWrite(PIN_PRECHG, LOW);
   digitalWrite(PIN_AIR_NEG, LOW);
   digitalWrite(PIN_AIR_POS, LOW);
@@ -17,7 +20,11 @@ void shutdownState(){
   SystemCheck(true);
   if (acu.getRelayState() != 0) {
     acu.errs |= ERR_Teensy; // Teensy error, output not working
+    //TRIAGE 2: lockable loop, might be an issue
     while(acu.errs & ERR_Teensy){
+      digitalWrite(PIN_AIR_RESET, HIGH);
+      delayMicroseconds(1);
+      digitalWrite(PIN_AIR_RESET, LOW);
       digitalWrite(PIN_PRECHG, LOW);
       digitalWrite(PIN_AIR_NEG, LOW);
       digitalWrite(PIN_AIR_POS, LOW);
@@ -37,7 +44,6 @@ void normalState(){
     state = SHUTDOWN;
     return;
   };
-  // TRIAGE 1: CAN?
   //cycle maxes out at 8
   cycle++;
   cycle = cycle % 9;

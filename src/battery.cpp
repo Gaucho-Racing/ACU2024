@@ -139,7 +139,23 @@ void Battery::checkTemp(){
 ///TRIAGE 2: FINSH this
 /// @brief 
 void Battery::checkFuse(){
-  Serial.println("Fuse check not implemented");
+  for(int ic = 0; ic < TOTAL_IC; ic++){
+    this->IC[ic].tx_cfgb.dcc = 0;
+    this->IC[ic].tx_cfgb.dcc |=  1<<cycle;
+  }
+  this->updateVoltage();
+  this->checkVoltage();
+}
+
+void Battery::checkAllFuse(){
+  for(int i = 0; i < 8; i++){
+    for(int ic = 0; ic < TOTAL_IC; ic++){
+      this->IC[ic].tx_cfgb.dcc = 0;
+      this->IC[ic].tx_cfgb.dcc |=  1<<i;
+    }
+    this->updateVoltage();
+    this->checkVoltage();
+  }
 }
 
 //TRAIGE 2: Implement this
@@ -206,16 +222,17 @@ float Battery::getTotalVoltage(){
 }
 
 void Battery::checkBattery(bool fullCheck = false){
-  if(fullCheck || cycle == 8) this->checkFuse();
-  this->updateVoltage();
-  this->checkVoltage();
   if(fullCheck){
     this->updateAllTemps();
+    this->checkAllFuse();
   } else{
     this->updateTemp();
+    this->checkFuse();
   }
-  this->checkTemp();
-
+  this->checkFuse();
+  this->updateVoltage();
+  this->checkVoltage();
+  
 }
 
 /// @brief converts uint16_t voltage --> uint8_t voltage

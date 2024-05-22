@@ -44,6 +44,11 @@ void pinSetup(){
   analogWriteFrequency(PIN_BSPD_CLK, 50000);
   analogWrite(PIN_BSPD_CLK, 127);
 }
+
+//
+void mailboxSetup(){
+
+}
 // void chargerSendWrapper(){
 //   sendCANData(battery, Charger_Control);
 // }
@@ -86,6 +91,7 @@ void setup() {
 
 void loop() {
   // ACU STATES
+  can_prim.events();
   switch (state)
   {
     case STANDBY:

@@ -46,6 +46,13 @@ class ACU{
         float DCDC_temp[2]; // DC-DC converter, given in volts, need to call V2T to convert to temp
         float fan_Ref;
         
+        float max_output_current = MAX_HV_CURRENT;
+        float max_temp = MAX_DCDC_TEMP;
+        //TRIAGE 1.5 set default values for these
+        float max_chrg_voltage; 
+        float max_chrg_current; 
+
+        
     public:
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
         uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen
@@ -71,6 +78,11 @@ class ACU{
         void updateAll();
 
         void checkACU();
+
+        void setMaxChrgVoltage(float voltage);
+        void setMaxChrgCurrent(float current);
+        void setMaxOutputCurrent(float current);
+        void setMaxTemp(float temp);
 
         uint8_t getRelayState();
         float getGlvVoltage();

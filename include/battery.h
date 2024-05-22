@@ -35,6 +35,7 @@ class Battery{
         void checkVoltage();
         void checkTemp();
         void checkFuse();
+        void checkAllFuse();
         uint8_t calcCharge();
         void cell_Balancing();
         void disable_Mux();

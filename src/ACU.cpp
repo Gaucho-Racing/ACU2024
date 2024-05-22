@@ -128,6 +128,19 @@ void ACU::checkACU(){
 }
 
 
+void ACU::setMaxChrgVoltage(float voltage){
+  this->max_chrg_voltage = voltage;
+}
+void ACU::setMaxChrgCurrent(float current){
+  this->max_chrg_current = current;
+}
+void ACU::setMaxOutputCurrent(float current){
+  this->max_output_current = current;
+}
+void ACU::setMaxTemp(float temp){
+  this->max_temp = temp;
+}
+
 uint8_t ACU::getRelayState(){
   return relay_state;
 }
