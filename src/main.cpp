@@ -20,7 +20,7 @@ float V2T(float voltage, float B = 4390);
 enum test_case {ADBMS6830, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
 test_case debug = CAN;
 
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> prim_can;
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> prim_can;
 
 short message[8] = {60000,4,0,0,0,0,0,0};
 std::vector<byte> pong;
@@ -67,10 +67,11 @@ float getAccumulatorVoltage() {
 }
 
 void shutdown(const CAN_message_t &msg) {
-  if (msg.id == 0x95) {
+  if (msg.id == 0x66) {
     state = msg.buf[0];
   }
   Serial.println("recieved ACU control");
+  Serial.println(state);
 }
 
 void setup() {
@@ -96,11 +97,13 @@ void setup() {
 
   prim_can.begin();
   prim_can.setBaudRate(1000000);
-  // prim_can.setMaxMB(1);
-  // prim_can.setMBFilter(REJECT_ALL);
-  // prim_can.onReceive(MB0, shutdown);
-  // prim_can.setMBUserFilter(MB0, 0x66, 0xFF);
-  // prim_can.mailboxStatus();
+  prim_can.setMaxMB(1);
+  prim_can.setMB(MB0, RX, EXT);
+  prim_can.setMBFilter(REJECT_ALL);
+  prim_can.enableMBInterrupts();
+  prim_can.onReceive(MB0, shutdown);
+  prim_can.setMBUserFilter(MB0, 0x66, 0xFF);
+  prim_can.mailboxStatus();
 }
 
 void loop() {
@@ -176,7 +179,11 @@ void loop() {
 
   case CAN:  
       //sends Precharge stuff to VDM, expects a response back of some kind
-      // prim_can.events();
+      // Serial.println("pain");
+      delay(1000);
+      for(int i = 0; i< 8; i++){
+        prim_can.events();
+      }
       break;
 
   case FAN:
