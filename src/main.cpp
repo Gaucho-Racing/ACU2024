@@ -120,8 +120,8 @@ void loop() {
       adBms6830_start_aux_voltage_measurment(TOTAL_IC, IC);
       adBms6830_read_aux_voltages(TOTAL_IC, IC);
 
-      baltemp[i] = getVoltage(IC[0].aux.a_codes[0]);
-      baltemp[i+8] = getVoltage(IC[0].aux.a_codes[5]);
+      baltemp[i+8] = getVoltage(IC[0].aux.a_codes[0]);
+      baltemp[i  ] = getVoltage(IC[0].aux.a_codes[5]);
       celltemp[(7-i)] = getVoltage(IC[0].aux.a_codes[3]);
       celltemp[(7-i)+8] = getVoltage(IC[0].aux.a_codes[4]);
       celltemp[(7-i)+16] = getVoltage(IC[0].aux.a_codes[1]);
