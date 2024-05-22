@@ -46,9 +46,7 @@ void pinSetup(){
 }
 
 //
-void mailboxSetup(){
 
-}
 // void chargerSendWrapper(){
 //   sendCANData(battery, Charger_Control);
 // }

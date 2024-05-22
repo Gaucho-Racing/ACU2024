@@ -1,4 +1,25 @@
 #include "can.h"
+
+void acuControl(const CAN_message_t &msg){
+   if (msg.id == 0x66) {
+    if(state == STANDBY && msg.buf[0])
+      state = PRECHARGE;
+    else if(msg.buf[0]==0){
+      state = SHUTDOWN;
+    }
+  }
+}
+
+void mailboxSetup(){
+  can_prim.setMaxMB(1);
+  can_prim.setMB(MB0, RX, EXT);
+  can_prim.setMBFilter(REJECT_ALL);
+  can_prim.enableMBInterrupts();
+  can_prim.onReceive(MB0, acuControl);
+  prim_can.setMBUserFilter(MB0, 0x66, 0xFF);
+  can_prim.mailboxStatus();
+}
+
 void sendCANData(uint32_t ID){
   //moved CAN id set to bottom for temp config cell data fix, see line 134
   msg.flags.extended = true;
