@@ -34,4 +34,4 @@
 #define PIN_IMD_OK 17 // Isolation monitoring device
 #define PIN_BSPD_CLK 14 // PWM_CLK, 50k
 
-#define PRECHARGE_THRESHOLD 0.95
+#define PRECHARGE_THRESHOLD 0.9

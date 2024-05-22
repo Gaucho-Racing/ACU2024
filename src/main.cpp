@@ -86,12 +86,22 @@ void setup() {
   
 }
 
+
+float Vglv, Vsdp;
+
 void loop() {
   Serial.printf("millis: %ld\n", millis());
 
+  Vglv = acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4;
+  Vsdp = acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4;
+
+  if (Vglv - Vsdp > 0.2) { // if shutdown circuit triggers, try precharge again
+    debug = PRECHARGE;
+  }
+
   switch (debug)
   {
-  case ADBMS6830:
+  case VOLTAGE:
     Serial.println("Cell Voltages: --------------------------");
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     //for some reason this doesn't work, why not?
@@ -227,16 +237,22 @@ void loop() {
   digitalWrite(PIN_AIR_NEG, LOW);
   digitalWrite(PIN_PRECHG, LOW);
 
-  float Vglv, Vsdp;
   Vglv = acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4;
   Vsdp = acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4;
+
+  while (Vglv > 16.37) { // 12V is not powered
+    Serial.println("GLV not powered");
+    Vglv = acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4;
+    delay(1000);
+  }
+
   Serial.println("Precharge Start");
   while (Vglv - Vsdp > 0.2) {
     Serial.println("Latch not closed");
     digitalWrite(PIN_AIR_RESET, HIGH); // close latch
     delay(50); // wait for the relay to switch
     digitalWrite(PIN_AIR_RESET, LOW);
-    delay(950);
+    delay(1950);
     Vglv = acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4;
     Vsdp = acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4;
   }
