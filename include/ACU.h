@@ -94,17 +94,18 @@ class ACU{
         float getDcdcTemp1();
         float getDcdcTemp2();
         float getFanRef();
+
         void printIso();
         // uint16_t getIsoResistor();
         // uint16_t getIsoPos(); // retrieves positive resistance value
         // uint16_t getIsoNeg(); //^ neg
         void setIMDHV(float voltage);
-        void setRIsoCorrected();
-        void setRIsoStatus();
-        void setIsoMeasCount();
-        void setStatusWarningsAlarms();
-        void setStatusDeviceActivity();
-        void setHvSystemVoltage();
+        void setRIsoCorrected(uint16_t resistance);
+        void setRIsoStatus(uint8_t mesurement);
+        void setIsoMeasCount(uint8_t count);
+        void setStatusWarningsAlarms(uint16_t status);
+        void setStatusDeviceActivity(uint8_t activity);
+
         IMD_Monitor* getIMD();
 
         friend class Battery;

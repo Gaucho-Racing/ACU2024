@@ -57,8 +57,8 @@
 // #define IMD_Isolation_Detail 0x38              // Index 126
 #define IMD_Voltage 0x39                       // Index 127
 // #define IMD_IT_System 0x3A                     // Index 128
-#define IMD_Request 0x22                       // Index 129
+#define IMD_Request 0x22                       // Index 129, pretty much only used for HV
 #define IMD_Response 0x23                      // Index 130
-# define IMD_HV 0x5E                           // Index 94
+#define IMD_HV 0x5E                           // Index 94
 
 #define IMD_HV_OFFSET 1606.4

@@ -180,6 +180,11 @@ void sendCANData(uint32_t ID){
       msg.buf[7] = 0b0000000; 
       can_chgr.write(msg);
       break;
+    case IMD_Request:
+      msg.buf[0] =0x5E;
+
+      can_prim.write(msg);
+      break;
     default:
       Serial.println("FUCK U U IDIOT"); // language, sheesh
   }
@@ -254,48 +259,19 @@ void parseCANData(){
       Serial.println("Charger Data Read, yaya we won't die");
       break;
     case IMD_General:
-      acu.getIMD()->imd_gen[0] = msg.buf[0];
-      acu.getIMD()->imd_gen[1] = msg.buf[1];
-      acu.getIMD()->imd_gen[2] = msg.buf[2];
-      acu.getIMD()->imd_gen[3] = msg.buf[3];
-      acu.getIMD()->imd_gen[4] = msg.buf[4];
-      acu.getIMD()->imd_gen[5] = msg.buf[5];
-      acu.getIMD()->imd_gen[6] = msg.buf[6];
-      acu.getIMD()->imd_gen[7] = msg.buf[7];
+      acu.setRIsoCorrected((msg.buf[0] << 8) | (msg.buf[1]));
+      acu.setRIsoStatus(msg.buf[2]);
+      acu.setIsoMeasCount(msg.buf[3]);
+      acu.setStatusDeviceActivity((msg.buf[4] << 8) | (msg.buf[5]));
+      acu.setStatusDeviceActivity(msg.buf[6]);
+      //last byte is don't care
       break;
-    // case IMD_Isolation_Detail:
-    //   acu.getIMD()->imd_iso[0] = msg.buf[0];
-    //   acu.getIMD()->imd_iso[1] = msg.buf[1];
-    //   acu.getIMD()->imd_iso[2] = msg.buf[2];
-    //   acu.getIMD()->imd_iso[3] = msg.buf[3];
-    //   acu.getIMD()->imd_iso[4] = msg.buf[4];
-    //   acu.getIMD()->imd_iso[5] = msg.buf[5];
-    //   acu.getIMD()->imd_iso[6] = msg.buf[6];
-    //   acu.getIMD()->imd_iso[7] = msg.buf[7];
-    //   break;
-    // case IMD_Voltage:
-    //   acu.getIMD()->imd_volt[0] = msg.buf[0];
-    //   acu.getIMD()->imd_volt[1] = msg.buf[1];
-    //   acu.getIMD()->imd_volt[2] = msg.buf[2];
-    //   acu.getIMD()->imd_volt[3] = msg.buf[3];
-    //   acu.getIMD()->imd_volt[4] = msg.buf[4];
-    //   acu.getIMD()->imd_volt[5] = msg.buf[5];
-    //   acu.getIMD()->imd_volt[6] = msg.buf[6];
-    //   acu.getIMD()->imd_volt[7] = msg.buf[7];
-    //   break;
-    // case IMD_IT_System:
-    //   acu.getIMD()->imd_it[0] = msg.buf[0];
-    //   acu.getIMD()->imd_it[1] = msg.buf[1];
-    //   acu.getIMD()->imd_it[2] = msg.buf[2];
-    //   acu.getIMD()->imd_it[3] = msg.buf[3];
-    //   acu.getIMD()->imd_it[4] = msg.buf[4];
-    //   acu.getIMD()->imd_it[5] = msg.buf[5];
-    //   acu.getIMD()->imd_it[6] = msg.buf[6];
-    //   acu.getIMD()->imd_it[7] = msg.buf[7];
-    //   break;
-    case IMD_HV:
-      uint16_t temp = (msg.buf[0] << 8) | (msg.buf[1]);
-      acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
+    
+    case IMD_RESPONSE:
+      if(msg.buf[0] == IMD_HV){
+        uint16_t temp = (msg.buf[1] << 8) | (msg.buf[2]);
+        acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
+      }
     break;
     default:
       Serial.println("lol no message here for ya\t\t\t\t\t\t\t\t\tFucker");

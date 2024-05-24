@@ -181,8 +181,27 @@ void ACU::printIso(){
   Serial.println("-------IMD--------");
   uint8_t R_iso_status = IMD.imd_gen[2];
   uint16_t hv_voltage = IMD.hv_system_voltage;
-  Serial.printf("IMD R_ISO STUFF: R_iso_corrected %u, R_iso_status, Iso meas count");
+  Serial.printf("IMD GENERAL: R_ISO STUFF: R_iso_corrected %u, R_iso_status, Iso meas count");
   Serial.printf("IMD HV_System: %d\n", hv_voltage);
   Serial.printf("IMD GENERAL: \n");
   Serial.printf("IMD GENERAL: \n");
+}
+
+void ACU::setIMDHV(float voltage){
+  IMD.hv_system_voltage = voltage;
+}
+void ACU::setRIsoCorrected(uint16_t resistance){
+  IMD.R_iso_corrected = resistance;
+}
+void ACU::setRIsoStatus(uint8_t mesurement){
+  IMD.R_iso_status = mesurement;
+}
+void ACU::setIsoMeasCount(uint8_t count){
+  IMD.iso_meas_count = count;
+}
+void ACU::setStatusWarningsAlarms(uint16_t status){
+  IMD.status_warnings_alarms = status;
+}
+void ACU::setStatusDeviceActivity(uint8_t activity){
+  IMD.status_device_activity = activity;
 }

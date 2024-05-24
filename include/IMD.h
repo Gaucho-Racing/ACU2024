@@ -14,7 +14,7 @@ struct IMD_Monitor {
 
     uint8_t imd_gen[8];    // 0x37; R_iso_corrected,R_iso_status, Iso meas count, Status: warnings & alarms, Status: dev act	N/A or 0xFF
     uint16_t R_iso_corrected;
-    uint16_t R_iso_status;
+    uint8_t R_iso_status;
     uint8_t iso_meas_count; 
     uint16_t status_warnings_alarms; // 11 bits long
     uint8_t status_device_activity; //0 - initialization, 1 - Normal Operation, 2 - Self Test 
