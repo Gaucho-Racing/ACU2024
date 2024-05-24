@@ -1,10 +1,10 @@
 #ifndef _ACU_H
 #define _ACU_H
 
-#include <Arduino.h>
 #include "FanController.h"
 #include "ADC1283.h"
 #include "ACU_data.h"
+#include "IMD.h"
 
 //error/warning masks defined in ACU_data
 
@@ -32,6 +32,7 @@ struct chargerDataStatus {
     bool communicationState;
 };
 
+
 class ACU{ 
     // chargerDataStatus chargerDataStatus;
     private:
@@ -51,7 +52,7 @@ class ACU{
         //TRIAGE 1.5 set default values for these
         float max_chrg_voltage; 
         float max_chrg_current; 
-
+        IMD_Monitor IMD;   // IMD MONITOR
         
     public:
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
@@ -93,6 +94,18 @@ class ACU{
         float getDcdcTemp1();
         float getDcdcTemp2();
         float getFanRef();
+        void printIso();
+        // uint16_t getIsoResistor();
+        // uint16_t getIsoPos(); // retrieves positive resistance value
+        // uint16_t getIsoNeg(); //^ neg
+        void setIMDHV(float voltage);
+        void setRIsoCorrected();
+        void setRIsoStatus();
+        void setIsoMeasCount();
+        void setStatusWarningsAlarms();
+        void setStatusDeviceActivity();
+        void setHvSystemVoltage();
+        IMD_Monitor* getIMD();
 
         friend class Battery;
         friend void debug();

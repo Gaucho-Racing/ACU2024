@@ -117,6 +117,18 @@
 #define WARN_Humidity 0b00000010
 #define WARN_Hydrogen 0b00000001
 
+/*  Bit 0: true = Device error active
+    Bit 1: true = HV_pos connection failure
+    Bit 2: true = HV_neg connection failure
+    Bit 3: true = Earth connection failure
+    Bit 4: true = Iso Alarm (iso value below threshold error)
+    Bit 5: true = Iso Warning (iso value below threshold warning)
+    Bit 6: true = Iso Outdated (value, Time elapsed since lst measurement“ > = „measurement timeout“)
+    Bit 7: true = Unbalance Alarm (unbalance value below threshold)
+    Bit 8: true = Undervoltage Alarm
+    Bit 9: true = Unsafe to Start
+    Bit 10: true = Earthlift open */
+#define IMD_Failure_Bits 0b000000000000;
 
 
 #endif

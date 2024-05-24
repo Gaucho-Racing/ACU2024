@@ -1,4 +1,5 @@
 #include "can.h"
+#include "IMD.h"
 
 void acuControl(const CAN_message_t &msg){
    if (msg.id == 0x66) {
@@ -16,7 +17,7 @@ void mailboxSetup(){
   can_prim.setMBFilter(REJECT_ALL);
   can_prim.enableMBInterrupts();
   can_prim.onReceive(MB0, acuControl);
-  prim_can.setMBUserFilter(MB0, 0x66, 0xFF);
+  can_prim.setMBUserFilter(MB0, 0x66, 0xFF);
   can_prim.mailboxStatus();
 }
 
@@ -179,7 +180,6 @@ void sendCANData(uint32_t ID){
       msg.buf[7] = 0b0000000; 
       can_chgr.write(msg);
       break;
-      
     default:
       Serial.println("FUCK U U IDIOT"); // language, sheesh
   }
@@ -253,7 +253,50 @@ void parseCANData(){
       // battery.chargerDataStatus.communicationState = msg.buf[4] & ERR_Comm;
       Serial.println("Charger Data Read, yaya we won't die");
       break;
-
+    case IMD_General:
+      acu.getIMD()->imd_gen[0] = msg.buf[0];
+      acu.getIMD()->imd_gen[1] = msg.buf[1];
+      acu.getIMD()->imd_gen[2] = msg.buf[2];
+      acu.getIMD()->imd_gen[3] = msg.buf[3];
+      acu.getIMD()->imd_gen[4] = msg.buf[4];
+      acu.getIMD()->imd_gen[5] = msg.buf[5];
+      acu.getIMD()->imd_gen[6] = msg.buf[6];
+      acu.getIMD()->imd_gen[7] = msg.buf[7];
+      break;
+    // case IMD_Isolation_Detail:
+    //   acu.getIMD()->imd_iso[0] = msg.buf[0];
+    //   acu.getIMD()->imd_iso[1] = msg.buf[1];
+    //   acu.getIMD()->imd_iso[2] = msg.buf[2];
+    //   acu.getIMD()->imd_iso[3] = msg.buf[3];
+    //   acu.getIMD()->imd_iso[4] = msg.buf[4];
+    //   acu.getIMD()->imd_iso[5] = msg.buf[5];
+    //   acu.getIMD()->imd_iso[6] = msg.buf[6];
+    //   acu.getIMD()->imd_iso[7] = msg.buf[7];
+    //   break;
+    // case IMD_Voltage:
+    //   acu.getIMD()->imd_volt[0] = msg.buf[0];
+    //   acu.getIMD()->imd_volt[1] = msg.buf[1];
+    //   acu.getIMD()->imd_volt[2] = msg.buf[2];
+    //   acu.getIMD()->imd_volt[3] = msg.buf[3];
+    //   acu.getIMD()->imd_volt[4] = msg.buf[4];
+    //   acu.getIMD()->imd_volt[5] = msg.buf[5];
+    //   acu.getIMD()->imd_volt[6] = msg.buf[6];
+    //   acu.getIMD()->imd_volt[7] = msg.buf[7];
+    //   break;
+    // case IMD_IT_System:
+    //   acu.getIMD()->imd_it[0] = msg.buf[0];
+    //   acu.getIMD()->imd_it[1] = msg.buf[1];
+    //   acu.getIMD()->imd_it[2] = msg.buf[2];
+    //   acu.getIMD()->imd_it[3] = msg.buf[3];
+    //   acu.getIMD()->imd_it[4] = msg.buf[4];
+    //   acu.getIMD()->imd_it[5] = msg.buf[5];
+    //   acu.getIMD()->imd_it[6] = msg.buf[6];
+    //   acu.getIMD()->imd_it[7] = msg.buf[7];
+    //   break;
+    case IMD_HV:
+      uint16_t temp = (msg.buf[0] << 8) | (msg.buf[1]);
+      acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
+    break;
     default:
       Serial.println("lol no message here for ya\t\t\t\t\t\t\t\t\tFucker");
   }
@@ -299,5 +342,9 @@ void dumpCANbus() {
     sendCANData(ACU_General2);
     sendCANData(Powertrain_Cooling);
     sendCANData(Charging_Cart_Config);
+    sendCANData(IMD_General);
+    // sendCANData(IMD_Isolation_Detail);
+    sendCANData(IMD_Voltage);
+    // sendCANData(IMD_IT_System);
   }
 }
