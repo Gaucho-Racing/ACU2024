@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = VOLTAGE;
+test_case debug = FAN;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -83,11 +83,12 @@ void setup() {
   digitalWrite(PIN_AIR_RESET, LOW);
   pinMode(PIN_PRECHG, OUTPUT);
   digitalWrite(PIN_PRECHG, LOW);
-  
+  fans.writeRegister(FAN_MODE_addr, 0b00000011);
 }
 
 
 float Vglv, Vsdp;
+uint8_t fanSpeed = 0;
 
 void loop() {
   Serial.printf("millis: %ld\n", millis());
@@ -172,7 +173,10 @@ void loop() {
       break;
 
   case FAN:
-    //dunno yet
+    fans.writeRegister(FAN_SPD4_addr, fanSpeed);
+    Serial.printf("%u: %u\n", fanSpeed, (uint16_t)fans.readRegister(FAN_RPM4_addr)*50);
+    fanSpeed++;
+    delay(100);
     break;
 
   case GPIO:
@@ -294,7 +298,7 @@ void loop() {
     break;
   }
 
-  delay(1000);
+  //delay(1000);
   
 }
 

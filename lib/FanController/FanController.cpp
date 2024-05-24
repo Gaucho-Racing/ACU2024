@@ -10,17 +10,18 @@ fanController::fanController(HardwareSerial *mySerial) {
 }
 
 void fanController::begin() {
-    _mySerial -> begin(1000000); 
+    _mySerial -> begin(1000000);
 }
 
-uint8_t fanController::readRegister(uint8_t addr) {
+// If return value > 255, read error
+uint16_t fanController::readRegister(uint8_t addr) {
     while (_mySerial -> available()) { // clear buffer
         _mySerial -> read();
     }
     _mySerial -> write(addr & 0b01111111); // set R/W flag bit to 0 (read)
     uint32_t startTime = micros();
     while (!(_mySerial -> available())) {
-        if (micros() - startTime > 1000) return 0xff; // error
+        if (micros() - startTime > 1000) return 0xffff; // error
     }
     return _mySerial -> read();
 }
