@@ -8,7 +8,7 @@
 float V2T(float voltage, float B = 4390){
   float actualVoltage = (voltage+10000)* 0.000150;
   float R = actualVoltage / ((5.0 - actualVoltage) / 47e3) / 100e3;
-  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
+  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15)); 
   return T - 273.15;
 }
 
@@ -167,4 +167,14 @@ float ACU::getDcdcTemp2(){
 }
 float ACU::getFanRef(){
   return fan_Ref;
+}
+
+void ACU::printIso(){
+  Serial.println("-------IMD--------");
+  uint8_t R_iso_status = IMD.imd_gen[2];
+  uint16_t hv_voltage = IMD.hv_system_voltage;
+  Serial.printf("IMD R_ISO STUFF: R_iso_corrected %u, R_iso_status, Iso meas count");
+  Serial.printf("IMD HV_System: %d\n", hv_voltage);
+  Serial.printf("IMD GENERAL: \n");
+  Serial.printf("IMD GENERAL: \n");
 }
