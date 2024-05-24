@@ -720,7 +720,7 @@ uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
       Serial.println("adBmsPollAdc timeout!");
       break;
     }
-  }while(!(read_data == SDO_Line));
+  }while(!(read_data == SDO_Line)); //TRIAGE 3:, this is likely what causes the long delay
   adBmsCsHigh();
   conv_count = getTimCount();
   stopTimer();

@@ -68,7 +68,7 @@ void Delay_ms(uint32_t time)
 void adBmsSpiInit()
 {
 	isoSPI1.begin();
-	isoSPI2.begin();
+	// isoSPI2.begin(); will burn the Teensy
 }
 
 /**

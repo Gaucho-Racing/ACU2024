@@ -3,6 +3,7 @@
 uint16_t mux_temp_codes[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001}; 
 
 void Battery::init_config(){
+  adBmsSpiInit();
   adBms6830_init_config(TOTAL_IC, this->IC);
 }
 
@@ -229,7 +230,7 @@ void Battery::checkBattery(bool fullCheck = false){
     this->updateTemp();
     this->checkFuse();
   }
-  this->checkFuse();
+  this->checkTemp();
   this->updateVoltage();
   this->checkVoltage();
   
