@@ -183,7 +183,7 @@ void sendCANData(uint32_t ID){
     case IMD_Request:
       msg.buf[0] =0x5E;
 
-      can_prim.write(msg);
+      can_chgr.write(msg);
       break;
     default:
       Serial.println("FUCK U U IDIOT"); // language, sheesh
