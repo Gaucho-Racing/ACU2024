@@ -13,6 +13,7 @@ float V2T(float voltage, float B = 4390){
 }
 
 void ACU::init_config(){
+  //TRIAGE 1.5: add Fan controller init
   pinMode(PIN_IMD_OK, INPUT_PULLUP);  
   pinMode(PIN_AMS_OK, OUTPUT);
   pinMode(PIN_DCDC_EN, OUTPUT);
@@ -86,9 +87,7 @@ void ACU::checkACU(){
     this->warns &= ~(WARN_LowChrg|WARN_HighCurr); //reset warnings
     //overcurrent checks
     if(this->ts_current > MAX_HV_CURRENT){
-        #if DEBUG > 1
-            Serial.println("HV Overcurrent detected");
-        #endif
+        D_L1("Overcurrent detected");
         this->errs |= ERR_OverCurr;
     }
     else if(this->ts_current > MAX_HV_CURRENT*0.8){
@@ -97,9 +96,7 @@ void ACU::checkACU(){
 
     //dcdc convertor temp regulation, slow down fan if temp is high, shut down if temp is too high
     if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP){
-        #if DEBUG > 1
-            Serial.println("DCDC Overtemp detected");
-        #endif
+        D_L1("DCDC Overtemp detected");
         digitalWrite(PIN_DCDC_EN, LOW);
     }
     else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
@@ -111,38 +108,28 @@ void ACU::checkACU(){
 
     //dcdc current
     if(this->dcdc_current > MAX_DCDC_CURRENT){
-        #if DEBUG > 1
-            Serial.println("DCDC Overcurrent detected");
-        #endif
+        D_L1("DCDC Overcurrent detected");
         this->errs |= ERR_OverCurr;
     }
 
     //glv bat not charged
     if(this->glv_voltage < MIN_GLV_VOLT){
-        #if DEBUG > 1
-            Serial.println("GLV Undervolt detected");
-        #endif
+        D_L1("GLV Undervolt detected");
         this->errs |= ERR_UndrVolt;
     } 
 
     //fan ref voltage
     if(this->fan_Ref < MIN_FAN_REF_VOLT){
-        #if DEBUG > 1
-            Serial.println("Fan Ref Low detected");
-        #endif
+        D_L1("Fan Ref Low detected");
         this->errs |= ERR_UndrVolt;
     } else if(this->fan_Ref > MAX_FAN_REF_VOLT){
-        #if DEBUG > 1
-            Serial.println("Fan Ref High detected");
-        #endif
+        D_L1("Fan Ref High detected");
         this->errs |= ERR_OverVolt;
     }
 
     //shdn voltage, should be within 0.2V of GLV
     if(abs(this->shdn_volt - this->glv_voltage) > 0.2){
-        #if DEBUG > 1
-            Serial.println("Shdn voltage not within 0.2V of GLV");
-        #endif
+        D_L1("Shdn voltage not within 0.2V of GLV");
         if(this->shdn_volt < this->glv_voltage)
             this->errs |= ERR_UndrVolt;
         else if(this->shdn_volt > this->glv_voltage){
@@ -166,6 +153,7 @@ void ACU::setMaxTemp(float temp){
 }
 
 uint8_t ACU::getRelayState(){
+  updateRelayState();
   return relay_state;
 }
 float ACU::getGlvVoltage(){

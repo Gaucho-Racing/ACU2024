@@ -12,7 +12,6 @@ class Battery{
     private:
         cell_asic IC[TOTAL_IC];
         //in 0.1mV
-        
 
         float maxCellTemp, maxBalTemp = -1;
         uint16_t minVolt = -1;

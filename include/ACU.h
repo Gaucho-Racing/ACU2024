@@ -5,6 +5,7 @@
 #include "ADC1283.h"
 #include "ACU_data.h"
 #include "IMD.h"
+#include "debug.h"
 
 //error/warning masks defined in ACU_data
 

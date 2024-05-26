@@ -1,4 +1,5 @@
 #include "debug.h"
+#include "battery.h"
 
 #define printErrs false
 #define printRelayState false
@@ -21,13 +22,13 @@
 #define printACUTemp false
 #define printCellVoltage false
 #define printCellTemp false
-#define printBalTemp true
+#define printBalTemp false
 
 extern ACU acu;
 extern Battery battery;
 extern uint8_t cycle;
 
-void debug(Battery &battery){
+void debug(){
     if(printErrs);
     if(printRelayState);
     if(printWarns);
@@ -55,7 +56,7 @@ void debug(Battery &battery){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 16; j++){
-                Serial.printf("[%3u]%5.01f; ", j, battery.cellVoltage[i*16 + j]);
+                Serial.printf("[%3u]%5.01f; ", j, battery.getCellVoltage(i*16 + j));
             }
             Serial.println();
         }
@@ -65,7 +66,7 @@ void debug(Battery &battery){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 32; j++){
-                Serial.printf("[%3u]%5.01f; ", j, battery.cellTemp[i*16 + j]);
+                Serial.printf("[%3u]%5.01f; ", j, battery.getCellTemp(i*16 + j));
             }
             Serial.println();
         }
@@ -76,7 +77,7 @@ void debug(Battery &battery){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 16; j++){
-                Serial.printf("[%3u]%5.01f; ", j, battery.balTemp[i*16 + j]);
+                Serial.printf("[%3u]%5.01f; ", j, battery.getBalTemp(i*16 + j));
             }
             Serial.println();
         }

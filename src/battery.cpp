@@ -7,6 +7,7 @@ void Battery::init_config(){
   adBms6830_init_config(TOTAL_IC, this->IC);
 }
 
+/// @brief updates the voltage of the battery
 void Battery::updateVoltage(){
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
   adBms6830_read_cell_voltages(TOTAL_IC, this->IC);
@@ -16,8 +17,9 @@ void Battery::updateVoltage(){
     }
   }
 }
-/// @brief check Voltage and update min/max values; update errs 
 
+
+///Triage 2: optimize this
 /// @brief updates the temperature of the battery, one mux code at a time, based on the cycle
 /// @param[in] battery
 /// @param[in] cycle
@@ -97,9 +99,11 @@ void Battery::checkVoltage(){
   for (int i = 0 ; i < TOTAL_IC*16; i++){
     if (this->minVolt > this->cellVoltage[i]) this->minVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
+      D_L1("Battery OverVolt Err");
       acu.errs |= ERR_OverVolt;
     }
     if (this->cellVoltage[i] < UV_THRESHOLD){
+      D_L1("Battery UnderVolt Err");
       acu.errs |= ERR_UndrVolt;
     }
     this->batVoltage += this->cellVoltage[i];
@@ -107,7 +111,8 @@ void Battery::checkVoltage(){
 }
 
 //TRIAGE 2: Add warnings
-/// @brief 
+/// @brief compares bal and cell temps to max/min values, updates errs
+/// NAN values are discarded, they are likely due to a disconnection
 void Battery::checkTemp(){
   if(this->maxBalTemp == -1) this->maxBalTemp = this->balTemp[0];
   if(this->maxCellTemp == -1) this->maxCellTemp = this->cellTemp[0];
@@ -115,11 +120,18 @@ void Battery::checkTemp(){
     if (this->maxBalTemp < this->balTemp[i]) this->maxBalTemp = this->balTemp[i];
     // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
     //check Bal Temp;
-    if (this->balTemp[i] > MAX_BAL_TEMP){
-      acu.errs |= ERR_OverTemp;
+    if(this->balTemp[i] == NAN || this->cellTemp[i] == NAN){
+      D_L1("Nan temp");
     }
-    if (this->balTemp[i] < MIN_BAL_TEMP){
-      acu.errs |= ERR_UndrTemp;
+    else{
+      if (this->balTemp[i] > MAX_BAL_TEMP){
+      D_L1("Battery bal OverTemp Err");
+      acu.errs |= ERR_OverTemp;
+      }
+      if (this->balTemp[i] < MIN_BAL_TEMP){
+        D_L1("Battery bal UnderTemp Err");
+        acu.errs |= ERR_UndrTemp;
+      }
     }
   }
   for(int i = 0; i < TOTAL_IC*2*16; i++){
@@ -127,27 +139,30 @@ void Battery::checkTemp(){
     // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
     //check Bal Temp;
     if (this->cellTemp[i] > MAX_BAL_TEMP){
+      D_L1("Battery cell OverTemp Err");
       acu.errs |= ERR_OverTemp;
     }
     if (this->cellTemp[i] < MIN_BAL_TEMP){
+      D_L1("Battery cell UnderTemp Err");
       acu.errs |= ERR_UndrTemp;
     }
   }
 }
 
-
-
-///TRIAGE 2: FINSH this
-/// @brief 
+/// @brief checks fuses by turning on discharge for a cell based on cycle 
+/// then examining if the voltage changes drastically
 void Battery::checkFuse(){
+  D_L1("------------Checking fuses------------- \n");
   for(int ic = 0; ic < TOTAL_IC; ic++){
     this->IC[ic].tx_cfgb.dcc = 0;
     this->IC[ic].tx_cfgb.dcc |=  1<<cycle;
   }
   this->updateVoltage();
   this->checkVoltage();
+  D_L1("------------Fuse Checked------------- \n");
 }
 
+/// @brief does the same as checkFuse but immediately
 void Battery::checkAllFuse(){
   for(int i = 0; i < 8; i++){
     for(int ic = 0; ic < TOTAL_IC; ic++){
@@ -167,7 +182,7 @@ uint8_t Battery::calcCharge(){
     return 0;
 }
 
-/// @brief
+/// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
 void Battery::cell_Balancing(){
   uint16_t toDischarge = 0;
 
@@ -194,6 +209,7 @@ void Battery::cell_Balancing(){
   
 }
 
+/// @brief disables the mux, used in Standby
 void Battery::disable_Mux(){
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
     this->IC[ic].tx_cfga.gpo = 0b1000000000;
@@ -214,7 +230,7 @@ float Battery::getBalTemp(uint8_t index){
   this->balTemp[index];
 }
 
-/// @brief
+/// @brief sums all cell voltages, each cell voltage might be off by +- 10mV
 float Battery::getTotalVoltage(){
   float totVoltage = 0;
   for(int i = 0; i < TOTAL_IC*16; i++){
