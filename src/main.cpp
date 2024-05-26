@@ -96,6 +96,8 @@ void setup() {
   digitalWrite(PIN_AIR_RESET, LOW);
   pinMode(PIN_PRECHG, OUTPUT);
   digitalWrite(PIN_PRECHG, LOW);
+  analogWriteFrequency(PIN_BSPD_CLK, 50000);
+  analogWrite(PIN_BSPD_CLK, 127);
 
   prim_can.begin();
   prim_can.setBaudRate(1000000);
