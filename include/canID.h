@@ -53,7 +53,7 @@
 #define Charger_Data 0x18FF50E5                 //Index 122
 #define Charger_Control 0x1806E5F4              //Index 123
  
-#define IMD_General 0x37                       // Index 125
+#define IMD_General 0x18FF01F4                      // Index 125
 // #define IMD_Isolation_Detail 0x38              // Index 126
 #define IMD_Voltage 0x39                       // Index 127
 // #define IMD_IT_System 0x3A                     // Index 128
