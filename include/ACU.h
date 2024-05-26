@@ -47,6 +47,8 @@ class ACU{
         //TRIAGE 4: consider if we want to do some sort of "sanity" checking for the temps
         float DCDC_temp[2]; // DC-DC converter, given in volts, need to call V2T to convert to temp
         float fan_Ref;
+
+        float cur_ref = 0;
         
         float max_output_current = MAX_HV_CURRENT;
         float max_temp = MAX_DCDC_TEMP;

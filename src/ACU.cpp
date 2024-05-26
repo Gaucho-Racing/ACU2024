@@ -23,6 +23,7 @@ void ACU::init_config(){
   analogWriteFrequency(PIN_BSPD_CLK, 50000);
   analogWrite(PIN_BSPD_CLK, 127);
   this->ACU_ADC.begin();
+  cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);
 }
 
 //triage 3: owen check this
@@ -33,7 +34,7 @@ void ACU::updateTsVoltage(){
   ts_voltage = ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200;
 }
 void ACU::updateTsCurrent(){
-  ts_current = (ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - 1.235) /5 /0.0032;
+  ts_current = (ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - cur_ref) /5 /0.0032;
 }
 void ACU::updateShdnVolt(){
   shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4;
