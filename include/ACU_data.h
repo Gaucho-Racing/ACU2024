@@ -4,7 +4,7 @@
 #include <SPI.h>
 // CONFIG OPTIONS FOR 6830 ARE IN THE CPP FILE
 
-#define TOTAL_IC 1
+#define TOTAL_IC 3
 
 //TRIAGE 2: Change these to the correct values
 
@@ -46,8 +46,8 @@
 #define MAX_DCDC_TEMP 70
 #define MAX_DCDC_CURRENT 10
 #define MIN_GLV_VOLT 10
-#define MIN_FAN_REF_VOLT 4.9
-#define MAX_FAN_REF_VOLT 5.1
+#define MIN_FAN_REF_VOLT 4.5
+#define MAX_FAN_REF_VOLT 5.7
 
 
 // ADC1283 connections

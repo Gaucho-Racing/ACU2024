@@ -10,7 +10,7 @@ void chargeState();
 void preChargeState();
 void standByState();
 
-bool SystemCheck(bool fullCheck = false); //reads all temp data
+bool SystemCheck(bool fullCheck = false, bool startup = false); //reads all temp data
 
 
 #endif

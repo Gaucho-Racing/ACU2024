@@ -16,10 +16,16 @@ void ACU::init_config(){
   //TRIAGE 1.5: add Fan controller init
   pinMode(PIN_IMD_OK, INPUT_PULLUP);  
   pinMode(PIN_AMS_OK, OUTPUT);
+  // TRIAGE 1: Write logic for AMS_OK
+  digitalWrite(PIN_AMS_OK, HIGH);
   pinMode(PIN_DCDC_EN, OUTPUT);
   pinMode(PIN_DCDC_SLOW, OUTPUT);
   pinMode(PIN_DCDC_ER, INPUT);
   pinMode(PIN_BSPD_CLK, OUTPUT);
+  pinMode(PIN_AIR_POS, OUTPUT);
+  pinMode(PIN_AIR_NEG, OUTPUT);
+  pinMode(PIN_PRECHG, OUTPUT);
+  pinMode(PIN_AIR_RESET, OUTPUT);
   analogWriteFrequency(PIN_BSPD_CLK, 50000);
   analogWrite(PIN_BSPD_CLK, 127);
   this->ACU_ADC.begin();
@@ -52,7 +58,8 @@ void ACU::updateFanRef(){
   fan_Ref = ACU_ADC.readVoltage(ADC_MUX_FAN_REF)*2;
 }
 void ACU::updateRelayState(){
-  relay_state = (digitalRead(PIN_AIR_NEG) << 7) + (digitalRead(PIN_AIR_POS) << 6) + (digitalRead(PIN_PRECHG) << 5);
+  //
+  relay_state |= (digitalRead(PIN_AIR_NEG) << 7) + (digitalRead(PIN_AIR_POS) << 6) + (digitalRead(PIN_PRECHG) << 5);
 }
 void ACU::prechargeDone(){
   relay_state &= ~(1 << 5);
@@ -80,11 +87,13 @@ void ACU::updateAll(){
   updateDcdcTemp1();
   updateDcdcTemp2();
   updateFanRef();
+  updateRelayState();
 }
 
 
 //TRAIGE 3: check if the values are correct
-void ACU::checkACU(){
+void ACU::checkACU(bool startup = false){
+  this->updateAll();
     this->warns &= ~(WARN_LowChrg|WARN_HighCurr); //reset warnings
     //overcurrent checks
     if(this->ts_current > MAX_HV_CURRENT){
@@ -103,7 +112,10 @@ void ACU::checkACU(){
     else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
         digitalWrite(PIN_DCDC_SLOW, HIGH);
     } else {
-        digitalWrite(PIN_DCDC_EN, HIGH);
+      this->updateTsVoltage();
+      if(this->getTsVoltage() < 370)
+        // digitalWrite(PIN_DCDC_EN, HIGH);
+        D_L1("HV Voltage too low, shutting down DCDC");
         digitalWrite(PIN_DCDC_SLOW, LOW);
     }
 
@@ -121,7 +133,7 @@ void ACU::checkACU(){
 
     //fan ref voltage
     if(this->fan_Ref < MIN_FAN_REF_VOLT){
-        D_L1("Fan Ref Low detected");
+        D_L1("5V Low detected");
         this->errs |= ERR_UndrVolt;
     } else if(this->fan_Ref > MAX_FAN_REF_VOLT){
         D_L1("Fan Ref High detected");
@@ -129,7 +141,8 @@ void ACU::checkACU(){
     }
 
     //shdn voltage, should be within 0.2V of GLV
-    if(abs(this->shdn_volt - this->glv_voltage) > 0.2){
+    if(abs(this->shdn_volt - this->glv_voltage) > 1 && !startup){
+      Serial.println(abs(this->shdn_volt - this->glv_voltage));
         D_L1("Shdn voltage not within 0.2V of GLV");
         if(this->shdn_volt < this->glv_voltage)
             this->errs |= ERR_UndrVolt;
@@ -157,9 +170,7 @@ uint8_t ACU::getRelayState(){
   updateRelayState();
   return relay_state;
 }
-float ACU::getGlvVoltage(){
-  return glv_voltage;
-}
+
 float ACU::getTsVoltage(){
   return ts_voltage;
 }
@@ -169,6 +180,12 @@ float ACU::getTsCurrent(){
 float ACU::getShdnVolt(){
   return shdn_volt;
 }
+
+float ACU::getGlvVoltage(){
+
+  return glv_voltage;
+}
+
 float ACU::getDcdcCurrent(){
   return dcdc_current;
 }

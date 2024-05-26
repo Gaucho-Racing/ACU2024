@@ -37,7 +37,6 @@ struct chargerDataStatus {
 class ACU{ 
     // chargerDataStatus chargerDataStatus;
     private:
-        ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 3200000);
         uint8_t relay_state; // first 5 bits D/C | AIR- | AIR+ | Pre_charge
         float glv_voltage; 
         float ts_voltage; 
@@ -58,6 +57,7 @@ class ACU{
         IMD_Monitor IMD;   // IMD MONITOR
         
     public:
+        ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 800000);
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
         uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen
 
@@ -84,7 +84,7 @@ class ACU{
         void setShutdown(bool H_L);
         void updateAll();
 
-        void checkACU();
+        void checkACU(bool startup = false);
 
         void setMaxChrgVoltage(float voltage);
         void setMaxChrgCurrent(float current);

@@ -48,8 +48,8 @@ ERR     INJECT_ERR_SPI_READ = WITHOUT_ERR;
 
 /* Set Under Voltage and Over Voltage Thresholds */
 /* Set Under Voltage and Over Voltage Thresholds */
-const float OV_THRESHOLD = 42000;                 /* Volt in 0.1 mV*/
-const float UV_THRESHOLD = 30000;                 /* Volt in 0.1 mV*/
+const float OV_THRESHOLD = 4.2;                 /* Volt in 0.1 mV*/
+const float UV_THRESHOLD = 3;                 /* Volt in 0.1 mV*/
 //Discharge
 const float MIN_DIS_TEMP = -40; //TODO: Modify later
 const float MAX_DIS_TEMP = 60; 
@@ -92,6 +92,7 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
     ic[cic].tx_cfgb.vuv = SetUnderVoltageThreshold(UV_THRESHOLD);
     //SetConfigB_DischargeTimeOutValue(tIC, &ic[cic], RANG_0_TO_63_MIN, TIME_1MIN_OR_0_26HR); // seems that this thing makes daisy chain not work???
   }
+  adBmsWakeupIc(tIC);
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
   adBmsWriteData(tIC, &ic[0], WRCFGB, Config, BB);
 }
@@ -176,6 +177,7 @@ void adBms6830_read_cell_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDCVD, Cell, D);
   adBmsReadData(tIC, &ic[0], RDCVE, Cell, E);
   adBmsReadData(tIC, &ic[0], RDCVF, Cell, F);
+
 }
 
 /**
@@ -304,7 +306,6 @@ void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDAUXB, Aux, BB);
   adBmsReadData(tIC, &ic[0], RDAUXC, Aux, CC);
   adBmsReadData(tIC, &ic[0], RDAUXD, Aux, D);
-  //printVoltages(tIC, &ic[0], Aux);
 }
 
 /**

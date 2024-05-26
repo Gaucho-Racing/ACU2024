@@ -1,10 +1,19 @@
 #include "battery.h"
 
-uint16_t mux_temp_codes[8] = {0b0011100001, 0b0000100001, 0b0001100001, 0b0010100001, 0b0100100001, 0b0110100001, 0b0111100001, 0b0101100001}; 
+uint16_t mux_temp_codes[8] = {0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111};
+; 
 
 void Battery::init_config(){
   adBmsSpiInit();
   adBms6830_init_config(TOTAL_IC, this->IC);
+  for(int i = 0; i < 4; i++){
+    adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+    adBms6830_read_cell_voltages(TOTAL_IC, this->IC); 
+    if((this->IC[0].cell.c_codes[0] + 10000) * 0.000150 > 1.75) break;
+    delay(100); 
+  }
+  this->updateVoltage();
+  this->updateAllTemps();
 }
 
 /// @brief updates the voltage of the battery
@@ -71,6 +80,7 @@ void Battery::updateAllTemps(){
     for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
       //all values are subtracted by one to account for indexing from 0
       //gpio 3: mux1, temp 0
+
       this->cellTemp[ic*32 + (7-i)] = V2T(this->IC[ic].aux.a_codes[3]);
       //gpio 4: mux 2, temp 8
       this->cellTemp[ic*32 + (7-i) + 8] = V2T(this->IC[ic].aux.a_codes[4]);
@@ -178,7 +188,7 @@ void Battery::checkAllFuse(){
 /// @brief 
 /// @return 
 uint8_t Battery::calcCharge(){
-    Serial.println("Charge calculation not implemented");
+    // Serial.println("Charge calculation not implemented");
     return 0;
 }
 
@@ -220,14 +230,15 @@ void Battery::disable_Mux(){
 }
 
 float Battery::getCellVoltage(uint8_t index){
-  this->cellVoltage[index];
+  
+  return this->cellVoltage[index];
 }
 float Battery::getCellTemp(uint8_t index){
-  this->cellTemp[index];
+  return this->cellTemp[index];
 
 }
 float Battery::getBalTemp(uint8_t index){
-  this->balTemp[index];
+  return this->balTemp[index];
 }
 
 /// @brief sums all cell voltages, each cell voltage might be off by +- 10mV
@@ -236,6 +247,7 @@ float Battery::getTotalVoltage(){
   for(int i = 0; i < TOTAL_IC*16; i++){
     totVoltage += this->cellVoltage[i];
   }
+  return totVoltage;
 }
 
 void Battery::checkBattery(bool fullCheck = false){

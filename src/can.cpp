@@ -3,22 +3,25 @@
 
 void acuControl(const CAN_message_t &msg){
    if (msg.id == 0x66) {
-    if(state == STANDBY && msg.buf[0])
+    if(state == STANDBY && msg.buf[0]){
       state = PRECHARGE;
+    }
     else if(msg.buf[0]==0){
       state = SHUTDOWN;
     }
   }
 }
 
+//TRIAGE 2: figure out
 void mailboxSetup(){
-  can_prim.setMaxMB(1);
-  can_prim.setMB(MB0, RX, EXT);
-  can_prim.setMBFilter(REJECT_ALL);
-  can_prim.enableMBInterrupts();
-  can_prim.onReceive(MB0, acuControl);
-  can_prim.setMBUserFilter(MB0, 0x66, 0xFF);
-  can_prim.mailboxStatus();
+  // can_prim.setMaxMB(1);
+  // can_prim.setMB(MB0, RX, EXT);
+  // can_prim.setMBFilter(REJECT_ALL);
+  // can_prim.enableMBInterrupts();
+  // can_prim.onReceive(MB0, acuControl);
+  // can_prim.setMBUserFilter(MB0, 0x66, 0xFF);
+  // can_prim.setMBFilter(ACCEPT_ALL);
+  // can_prim.mailboxStatus();
 }
 
 void sendCANData(uint32_t ID){
@@ -41,15 +44,15 @@ void sendCANData(uint32_t ID){
     }break;
 
     case ACU_General2:{
-      uint16_t tsVoltage = acu.getTsVoltage() * 1000;
+      uint16_t tsVoltage = uint16_t(acu.getTsVoltage() *100);
       msg.buf[0] = tsVoltage >> 8;
       msg.buf[1] = tsVoltage;
       msg.buf[2] = acu.getRelayState();
       int16_t tempCodeSend = (int16_t)(battery.maxBalTemp * 100);
-      msg.buf[3] = tempCodeSend >> 8;
+      msg.buf[3] = tempCodeSend>>8;
       msg.buf[4] = tempCodeSend;
-      msg.buf[5] = acu.getShdnVolt(); //
-      msg.buf[6] = acu.getGlvVoltage();
+      msg.buf[5] = acu.ACU_ADC.readRaw(ADC_MUX_SHDN_POW)>>4;
+      msg.buf[6] = acu.ACU_ADC.readRaw(ADC_MUX_GLV_VOLT)>>4;
       msg.buf[7] = battery.calcCharge(); // calcCharge needs 2B implemented
       can_prim.write(msg); 
     }break;
@@ -167,6 +170,7 @@ void sendCANData(uint32_t ID){
       
     case ACU_Ping_Response:
       can_prim.write(msg);
+      
       break;
       
     case Charger_Control:
@@ -209,22 +213,25 @@ void parseCANData(){
       break;
 
     case ACU_Control:
-      if(msg.buf[0] & 0b00000001){
-        if(state == STANDBY)
-          state = PRECHARGE;
-          digitalWrite(PIN_AIR_RESET, HIGH);
-          delayMicroseconds(1);
-          digitalWrite(PIN_AIR_RESET, LOW);
-
-      } else {
+      Serial.println("why god");
+      if(state == STANDBY && msg.buf[0]){
+      state = PRECHARGE;
+      Serial.println("entering precharge");
       }
+      //TRIAGE 1: FIX conditio
+      else {
+        state = SHUTDOWN;
+      }
+
       break;
+
 
     case Battery_Limits:
       battery.max_chrg_voltage =    (msg.buf[0] << 8) | msg.buf[1];
       battery.max_output_current =  (msg.buf[2] << 8) | msg.buf[3];
       battery.maxCellTemp =         ((msg.buf[4] << 8) | msg.buf[5])*0.01;
       battery.max_chrg_current =    (msg.buf[6] << 8) | msg.buf[7];
+
       break;
 
     case ACU_Ping_Request:
@@ -233,6 +240,8 @@ void parseCANData(){
 
     case Charging_SDC_Ping_Response:
       sendCANData(Charging_SDC_Ping_Request);
+
+
       break;
 
     case Charging_SDC_States:
@@ -245,6 +254,8 @@ void parseCANData(){
       msg.buf[5] = 0b0000000;
       msg.buf[6] = 0b0000000;
       msg.buf[7] = 0b0000000;
+      Serial.println("PAIN");
+
       break;
       
     case Charger_Data:
@@ -264,6 +275,7 @@ void parseCANData(){
       acu.setIsoMeasCount(msg.buf[3]);
       acu.setStatusDeviceActivity((msg.buf[4] << 8) | (msg.buf[5]));
       acu.setStatusDeviceActivity(msg.buf[6]);
+      // Serial.println("IMD General");
       //last byte is don't care
       break;
     
@@ -272,32 +284,34 @@ void parseCANData(){
         uint16_t temp = (msg.buf[1] << 8) | (msg.buf[2]);
         acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
       }
+      Serial.println("PAIN");
     break;
     default:
-      Serial.println("lol no message here for ya\t\t\t\t\t\t\t\t\tFucker");
+      // Serial.println("lol no message here for ya\t\t\t\t\t\t\t\t\tFucker");
+      break;
   }
 }
 
 //Triage 2: replace with mailboxes
 int readCANData(){
-  int which_can = 0;
-  int msgReads = 5;  //Max number of CAN message reads per function call
 
-  for(; msgReads >= 0; msgReads--){
-    if(!can_prim.read(msg))
+  int which_can = 0;  //Max number of CAN message reads per function call
+  for(int i = 0; i < 256; i++){
+    if(!can_prim.read(msg)){
       break;
+    }
     which_can = 1;
     parseCANData();
   }
 
-  for(; msgReads >= 0; msgReads--){
+  for(int i = 0; i < 256; i++){
     if(!can_chgr.read(msg))
       break;
     if(msg.id == Charger_Data)
       which_can = 2;
     parseCANData();
   }
-  return which_can;
+  return true;
 
 }
 

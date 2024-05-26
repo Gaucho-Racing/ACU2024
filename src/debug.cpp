@@ -4,19 +4,18 @@
 #define printErrs false
 #define printRelayState false
 #define printWarns false
-#define printTSVoltage false
-#define printSDCVoltage false
-#define printGLVVoltage false
+#define printTSVoltage true
+#define printSDCVoltage true
+#define printGLVVoltage true
 #define printMaxChrgVoltage false
 #define printMaxChrgCurrent false
 #define printMaxOutputCurrent false
 #define printState false
+#define printFanRef true
 #define printMaxCellTemp false
 #define printMaxBalTemp false
 #define printMinVolt false
 #define printCycle false
-#define printChargeCycle false
-#define printTempCycle false
 #define printAccumCurrent false
 #define printAccumCurrentZero false
 #define printACUTemp false
@@ -29,22 +28,28 @@ extern Battery battery;
 extern uint8_t cycle;
 
 void debug(){
+    #if 1
+    Serial.println("-----------------------Debug-----------------------");
     if(printErrs);
     if(printRelayState);
     if(printWarns);
-    if(printTSVoltage);
+    if(printTSVoltage){
+        Serial.printf("TS Voltage: %5.03f\n", acu.getTsVoltage());
+    }
     if(printSDCVoltage);
-    if(printGLVVoltage);
+        Serial.printf("SDC Voltage: %5.03f\n", acu.getShdnVolt());
+    if(printGLVVoltage){
+        Serial.printf("GLV Voltage: %5.03f\n", acu.getGlvVoltage());
+    }
     if(printMaxChrgVoltage);
     if(printMaxChrgCurrent);
     if(printMaxOutputCurrent);
-    if(printState);
+    if(printFanRef){
+        Serial.printf("Fan Ref: %5.03f\n", acu.getFanRef());
+    }
     if(printMaxCellTemp);
     if(printMaxBalTemp);
     if(printMinVolt);
-    if(printCycle);
-    if(printChargeCycle);
-    if(printTempCycle);
     if(printAccumCurrent);
     if(printAccumCurrentZero);
     if(printACUTemp);
@@ -55,8 +60,12 @@ void debug(){
         Serial.println("Cell Voltage: --------------------------");
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
-            for(int j = 0; j < 16; j++){
-                Serial.printf("[%3u]%5.01f; ", j, battery.getCellVoltage(i*16 + j));
+            for(int j = 0; j < 8; j++){
+                Serial.printf("[%3u]%5.03f; ", j, battery.getCellVoltage(i*16 + j));
+            }
+            Serial.println();
+            for(int j = 8; j < 16; j++){
+                Serial.printf("[%3u]%5.03f; ", j, battery.getCellVoltage(i*16 + j));
             }
             Serial.println();
         }
@@ -66,7 +75,7 @@ void debug(){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 32; j++){
-                Serial.printf("[%3u]%5.01f; ", j, battery.getCellTemp(i*16 + j));
+                Serial.printf("[%3u]%5.03f; ", j, battery.getCellTemp(i*16 + j));
             }
             Serial.println();
         }
@@ -77,10 +86,12 @@ void debug(){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 16; j++){
-                Serial.printf("[%3u]%5.01f; ", j, battery.getBalTemp(i*16 + j));
+                Serial.printf("[%3u]%5.03f; ", j, battery.getBalTemp(i*16 + j));
             }
             Serial.println();
         }
     }
+    Serial.printf("Total Voltage: %5.01f\n", battery.getTotalVoltage());
     Serial.println("-----------------------End-----------------------");
+    #endif
 }

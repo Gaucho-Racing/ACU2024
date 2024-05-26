@@ -16,7 +16,6 @@ class Battery{
         float maxCellTemp, maxBalTemp = -1;
         uint16_t minVolt = -1;
 
-        float cellVoltage[16 * TOTAL_IC]; // 16 * 8
         float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
         float balTemp[16 * TOTAL_IC];
         
@@ -27,6 +26,8 @@ class Battery{
         uint16_t max_output_current; // 10mA/LSB
     public:
         // Battery();
+        float cellVoltage[16 * TOTAL_IC]; // 16 * 8
+
         void init_config();
         void updateVoltage();
         void updateTemp();
