@@ -32,7 +32,7 @@
 #define MAX_CHR_TEMP 60 
 
 //Bat limits
-#define SAFE_V_TO_TURN_OFF 50
+#define SAFE_V_TO_TURN_OFF 60
 //Balance Resistor Temp
 #define MIN_BAL_TEMP -273.1 //TRIAGE 3: Modify later
 #define MAX_BAL_TEMP 80 

@@ -1,5 +1,7 @@
 #include "states.h"
 void shutdownState(){
+  acu.clearPrecharge();
+  acu.setShutdown(true);
   dumpCANbus();
   #if DEBUG
     Serial.println("State: Shutdown");
@@ -34,6 +36,7 @@ void shutdownState(){
 
   if (acu.getGlvVoltage() < SAFE_V_TO_TURN_OFF) { // safe to turn off if TS voltage < 50V
     state = STANDBY;
+    acu.setShutdown(false);
   }
   return;
 }
@@ -137,6 +140,9 @@ void preChargeState(){
     Serial.println("Precharge Done. Ready to drive. ");
   #endif
   cycle = 0;
+  acu.updateRelayState();
+  acu.prechargeDone();
+  sendCANData(ACU_General2);
   state = NORMAL;
 
   return;

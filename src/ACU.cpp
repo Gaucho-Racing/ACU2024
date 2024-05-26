@@ -52,6 +52,22 @@ void ACU::updateFanRef(){
 void ACU::updateRelayState(){
   relay_state = (digitalRead(PIN_AIR_NEG) << 7) + (digitalRead(PIN_AIR_POS) << 6) + (digitalRead(PIN_PRECHG) << 5);
 }
+void ACU::prechargeDone(){
+  relay_state &= ~(1 << 5);
+  relay_state |= 1<<4;
+}
+
+void ACU::clearPrecharge(){
+  relay_state &= ~(1 << 4);
+}
+
+//TRIAGE 4: add macros for readbility
+void ACU::setShutdown(bool H_L){
+  if(H_L)
+    relay_state |= 1 << 3;
+  else
+    relay_state &= ~(1 << 3);
+}
 
 void ACU::updateAll(){
   updateGlvVoltage();

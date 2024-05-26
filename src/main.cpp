@@ -38,6 +38,7 @@ void setup() {
   can_prim.setBaudRate(1000000);
   can_chgr.begin();
   can_chgr.setBaudRate(500000);
+  mailboxSetup();
 
   // needs to wait a bit before good values
   SystemCheck();
