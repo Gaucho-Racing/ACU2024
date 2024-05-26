@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {ADBMS6830, CAN, FAN, GPIO, TEENSY, CELLBAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = CAN;
+test_case debug = ADC;
 
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> prim_can;
 
@@ -50,6 +50,8 @@ uint8_t Wrpwm1[2] = { 0x00, 0x20 };
 uint8_t Wrpwm2[2] = { 0x00, 0x21 };
 uint8_t Wrcfgb[2] = { 0x00, 0x24 };
 uint8_t Wrcfga[2] = { 0x00, 0x01 };
+
+float isnsVos = 1.235;
 
 float getAccumulatorVoltage() {
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
@@ -104,6 +106,8 @@ void setup() {
   prim_can.onReceive(MB0, shutdown);
   prim_can.setMBUserFilter(MB0, 0x66, 0xFF);
   prim_can.mailboxStatus();
+
+  isnsVos = acu_adc.readVoltageTot(ADC_MUX_HV_CURRENT, 256);
 }
 
 void loop() {
@@ -235,7 +239,7 @@ void loop() {
   case ADC:
     Serial.printf("ADC GLV Voltage: %.03f\n", acu_adc.readVoltage(ADC_MUX_GLV_VOLT)*4);
     Serial.printf("ADC HV Voltage: %.03f\n", acu_adc.readVoltage(ADC_MUX_HV_VOLT)*200);
-    Serial.printf("ADC HV Current: %.03f\n", (acu_adc.readVoltage(ADC_MUX_HV_CURRENT) - 1.235) / 5 /0.0032);
+    Serial.printf("ADC HV Current: %.03f\n", (acu_adc.readVoltage(ADC_MUX_HV_CURRENT) - isnsVos) / 5 /0.0032);
     Serial.printf("ADC Shutdown Power: %.03f\n", acu_adc.readVoltage(ADC_MUX_SHDN_POW)*4);
     Serial.printf("ADC DCDC Current: %.03f\n", (acu_adc.readVoltage(ADC_MUX_DCDC_CURRENT) - 2.5) / 0.09);
     Serial.printf("ADC DCDC Temp1: %.03f\n", V2T(acu_adc.readVoltage(ADC_MUX_DCDC_TEMP1)));
