@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = FAN;
+test_case debug = ADC;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -39,7 +39,7 @@ cell_asic IC[TOTAL_IC];
 
 fanController fans(&Serial8);
 
-ADC1283 acu_adc(CS_ADC, 4.096, 800000);
+ADC1283 acu_adc(CS_ADC, 4.096, 1000000);
 
 bool test_bool[10] = {0,0,0,0,0,0,0,0,0,0};
 
@@ -176,6 +176,7 @@ void loop() {
     fans.writeRegister(FAN_SPD4_addr, fanSpeed);
     Serial.printf("%u: %u\n", fanSpeed, (uint16_t)fans.readRegister(FAN_RPM4_addr)*50);
     fanSpeed++;
+    fans.writeRegister(FAN_SPD3_addr, 127);
     delay(100);
     break;
 
@@ -231,9 +232,10 @@ void loop() {
     Serial.printf("ADC DCDC Temp2: %.03f\n", V2T(acu_adc.readVoltage(ADC_MUX_DCDC_TEMP2)));
     Serial.printf("ADC Fan Ref: %0.3f\n", acu_adc.readVoltage(ADC_MUX_FAN_REF)*2);
     Serial.println();
-    if (Vglv - Vsdp > 0.2) { // if shutdown circuit triggers, try precharge again
-      debug = PRECHARGE;
-    }
+    delay(500);
+    // if (Vglv - Vsdp > 0.2) { // if shutdown circuit triggers, try precharge again
+    //   debug = PRECHARGE;
+    // }
     break;
   case PRECHARGE:{
   Serial.println("Precharge, AIR pins reset");
