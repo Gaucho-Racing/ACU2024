@@ -330,9 +330,9 @@ static uint32_t prevmillis = 0;
 /// @param[in] battery
 /// @return None
 void dumpCANbus() {
-  if(millis() - prevmillis > 1){
+  if(millis() - prevmillis > 10){
     prevmillis = millis();
-    for (uint8_t i = 0; i < 16; i++) {
+    for (uint8_t i = 0; i < TOTAL_IC << 1; i++) {
     sendCANData(Condensed_Cell_Voltage_n0 + i);
     sendCANData(Condensed_Cell_Temp_n0 + i);
     }

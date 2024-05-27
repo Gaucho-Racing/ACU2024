@@ -21,27 +21,15 @@ void shutdownState(){
   return;
 }
 
-//may newed more??
 void normalState(){
-  // Serial.print("Normal State        ");
-  // Serial.print(acu.getTsVoltage());
-  // Serial.print("    ");
-  // Serial.print(battery.getCellTemp(7));
-  // Serial.print("    ");
-  // Serial.print(battery.getCellTemp(20));
-  // Serial.print("    ");
-  // Serial.print(battery.getCellTemp(69));
-  // Serial.print("    ");
-  // Serial.println(battery.getCellTemp(100));
   if(SystemCheck()){
     state = SHUTDOWN;
-    Serial.println("DIFUSILFUGLSUIGLIF");
     return;
   }
   //cycle maxes out at 8
   cycle++;
   cycle = cycle % 9;
-  //dumpCANbus();////////////////////////////////////////FIX
+  dumpCANbus();////////////////////////////////////////FIX
   return;
 }
 

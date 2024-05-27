@@ -110,5 +110,6 @@ class ACU{
         };
 
 float V2T(float voltage, float B = 4390);
+float V2T(int16_t voltage, float B = 4390);
 
 #endif

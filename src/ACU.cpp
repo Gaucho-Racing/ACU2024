@@ -7,8 +7,14 @@ extern States state;
 /// @param[in] B
 /// @return temperature in deg C
 float V2T(float voltage, float B){
-  float actualVoltage = (voltage+10000) * 0.000150;
   float R = voltage / ((5.0 - voltage) / 47e3) / 100e3;
+  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15)); 
+  return T - 273.15;
+}
+
+float V2T(int16_t voltage, float B){ // voltage in ADI format
+  float actualVoltage = (voltage + 10000) * 0.000150;
+  float R = actualVoltage / ((5.0 - actualVoltage) / 47e3) / 100e3;
   float T = 1.0 / ((log(R) / B) + (1.0 / 298.15)); 
   return T - 273.15;
 }
