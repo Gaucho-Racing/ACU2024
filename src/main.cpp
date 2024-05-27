@@ -8,10 +8,10 @@
 
 Battery battery;
 ACU acu;
-States state;
-uint8_t cycle = 0;
+States state = STANDBY;
+uint8_t cycle = 0;  //Counter for ADI temp readings
 
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_prim;
+FlexCAN_T4<CAN3, RX_SIZE_1024, TX_SIZE_256> can_prim;
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> can_chgr;
 CAN_message_t msg;
 uint64_t prev_mill = 0;
@@ -41,9 +41,9 @@ void setup() {
 
   // TRIAGE 1: create a syscheck function
   if(SystemCheck(true, true)){
-    // state = SHUTDOWN;
+    state = SHUTDOWN;
     debug();
-    D_L1("System check failed, shutting down");
+    D_L1("System check failed, shutting down (But not rly cuz its commented out)");
   }
   else{
     state = STANDBY;
@@ -53,68 +53,43 @@ void setup() {
 }
 
 void loop() {
-
-  // ACU STATES
-    // msg.id = 0x69420;
-    // msg.flags.extended = true;
-    // uint16_t tsVoltage = acu.getTsVoltage() * 1000;
-    // for(int i = 0; i < 8; i++)
-    //   msg.buf[i] = 0;
-    // can_prim.write(msg); 
-
-  
-  //Serial.println("here");
-  // can_prim.events();
-  // acu.prechargeDone();
-  // readCANData();
-  if(can_prim.read(msg)){
-    if(msg.id == 0x97){
-    if(state == STANDBY){
-      state = PRECHARGE;
-    } else {
-      state = SHUTDOWN;
-    
-    }
-    }
-  }
   // sendCANData(ACU_General2);
-  
    
   switch (state)
   {
-    
     case STANDBY:
       standByState();
-
       break;
-    case PRECHARGE:{
+
+    case PRECHARGE:
       preChargeState();
-
       break;
-      }
-//     case CHARGE:
-//       chargeState();
-//       break;
-//     case NORMAL:
-//       normalState();
-//       break;
+
+    case CHARGE:
+      chargeState();  //TODO
+      break;
+
+    case NORMAL:
+      normalState();
+      break;
+
     case SHUTDOWN:
       shutdownState();
-      Serial.println("Shutting down");
       break;
+
     default:
       state = SHUTDOWN;
-      Serial.println("Uh oh u dummy, u've entered a non-existent state");
+      D_L1("Uh oh u dummy, u've entered a non-existent state");
       // delay(10000);
       break;
   }
 //   // dumpCANbus(battery); //uncomment if interrupt don't work
 
   #if DEBUG
-    if(millis() - prev_mill > 1000){
+    if(millis() - prev_mill > 100){
       prev_mill = millis();
       debug();
-      Serial.println(state);
+      //Serial.println(state);
     }
     // delay(1000);
   #endif

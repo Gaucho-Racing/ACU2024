@@ -10,7 +10,7 @@ void Battery::init_config(){
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     adBms6830_read_cell_voltages(TOTAL_IC, this->IC); 
     if((this->IC[0].cell.c_codes[0] + 10000) * 0.000150 > 1.75) break;
-    delay(100); 
+    delay(100);
   }
   this->updateVoltage();
   this->updateAllTemps();
@@ -103,7 +103,7 @@ void Battery::checkVoltage(){
   //if first check, set extremes to first cell
   
   if(this->minVolt == -1) this->minVolt = this->cellVoltage[0];
-  bool isOK = true;
+  // bool isOK = true;
   //iterate though cellVoltage
   this->batVoltage = 0;
   for (int i = 0 ; i < TOTAL_IC*16; i++){
@@ -162,14 +162,14 @@ void Battery::checkTemp(){
 /// @brief checks fuses by turning on discharge for a cell based on cycle 
 /// then examining if the voltage changes drastically
 void Battery::checkFuse(){
-  D_L1("------------Checking fuses------------- \n");
+  //D_L1("------------Checking fuses------------- \n");
   for(int ic = 0; ic < TOTAL_IC; ic++){
     this->IC[ic].tx_cfgb.dcc = 0;
     this->IC[ic].tx_cfgb.dcc |=  1<<cycle;
   }
   this->updateVoltage();
   this->checkVoltage();
-  D_L1("------------Fuse Checked------------- \n");
+  //D_L1("------------Fuse Checked------------- \n");
 }
 
 /// @brief does the same as checkFuse but immediately
@@ -189,7 +189,8 @@ void Battery::checkAllFuse(){
 /// @return 
 uint8_t Battery::calcCharge(){
     // Serial.println("Charge calculation not implemented");
-    return 0;
+    float cellOpenVoltage = getTotalVoltage() + acu.getTsCurrent() * CELL_INT_RESISTANCE * TOTAL_IC * 16;
+    return map(cellOpenVoltage, TOTAL_IC * 16 * UV_THRESHOLD, TOTAL_IC * 16 * OV_THRESHOLD, 0, 255);
 }
 
 /// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
@@ -250,7 +251,7 @@ float Battery::getTotalVoltage(){
   return totVoltage;
 }
 
-void Battery::checkBattery(bool fullCheck = false){
+void Battery::checkBattery(bool fullCheck){
   if(fullCheck){
     this->updateAllTemps();
     this->checkAllFuse();

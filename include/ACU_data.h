@@ -4,7 +4,7 @@
 #include <SPI.h>
 // CONFIG OPTIONS FOR 6830 ARE IN THE CPP FILE
 
-#define TOTAL_IC 3
+#define TOTAL_IC 4
 
 //TRIAGE 2: Change these to the correct values
 
@@ -48,6 +48,10 @@
 #define MIN_GLV_VOLT 10
 #define MIN_FAN_REF_VOLT 4.5
 #define MAX_FAN_REF_VOLT 5.7
+
+
+// hardware constants
+#define CELL_INT_RESISTANCE 0.007
 
 
 // ADC1283 connections
@@ -94,7 +98,7 @@
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A
 
-#define PRECHARGE_THRESHOLD 500 // * 10mV
+#define PRECHARGE_THRESHOLD 0.95 // fraction of total cell voltage
 
 //masks
 //error 
@@ -117,6 +121,14 @@
 #define WARN_Humidity 0b00000010
 #define WARN_Hydrogen 0b00000001
 
+//bit masks of ACU_General_2
+#define MASK_CAN_AIR_NEG        0b10000000
+#define MASK_CAN_AIR_POS        0b01000000
+#define MASK_CAN_PRECHARGE      0b00100000
+#define MASK_CAN_PRECHARGE_DONE 0b00010000
+#define MASK_CAN_SHUTDOWN       0b00001000
+
+
 /*  Bit 0: true = Device error active
     Bit 1: true = HV_pos connection failure
     Bit 2: true = HV_neg connection failure
@@ -129,6 +141,16 @@
     Bit 9: true = Unsafe to Start
     Bit 10: true = Earthlift open */
 #define IMD_Failure_Bits 0b000000000000;
+
+
+// relay switching times
+#define DELAY_AIR_SW 30
+#define DELAY_PCHG_SW 5
+
+// error margins
+#define ERRMG_GLV_SDC 1.5
+#define ERRMG_ISNS_VREF 0.2
+#define ERRMG_5V 0.5
 
 
 #endif

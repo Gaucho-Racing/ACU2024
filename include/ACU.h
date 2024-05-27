@@ -7,14 +7,6 @@
 #include "IMD.h"
 #include "debug.h"
 
-//error/warning masks defined in ACU_data
-
-#define HV_Current_Ref 1.235
-#define AIR_NEG 0b10000000
-#define AIR_POS 0b01000000
-#define PRE_CHARGE 0b00100000
-#define Precharge_DONE 0b00010000
-#define SHUT_DOWN 0b00001000
 
 //included here because can and states have a circular dependency if States is defined in states.h
 enum States {
@@ -37,7 +29,18 @@ struct chargerDataStatus {
 class ACU{ 
     // chargerDataStatus chargerDataStatus;
     private:
-        uint8_t relay_state; // first 5 bits D/C | AIR- | AIR+ | Pre_charge
+        void updateGlvVoltage();
+        void updateTsVoltage();
+        void updateTsCurrent();
+        void updateShdnVolt();
+        void updateDcdcCurrent();
+        void updateDcdcTemp1();
+        void updateDcdcTemp2();
+        void updateFanRef();
+        void updateRelayState();
+        void updateAll();
+
+        uint8_t relay_state; // | Reserved | Reserved | Reserved | Reserved | Reserved | AIR- | AIR+ | Pre_charge
         float glv_voltage; 
         float ts_voltage; 
         float ts_current;
@@ -70,20 +73,6 @@ class ACU{
 
         void init_config();
 
-        void updateGlvVoltage();
-        void updateTsVoltage();
-        void updateTsCurrent();
-        void updateShdnVolt();
-        void updateDcdcCurrent();
-        void updateDcdcTemp1();
-        void updateDcdcTemp2();
-        void updateFanRef();
-        void updateRelayState();
-        void prechargeDone();
-        void clearPrecharge();
-        void setShutdown(bool H_L);
-        void updateAll();
-
         void checkACU(bool startup = false);
 
         void setMaxChrgVoltage(float voltage);
@@ -111,6 +100,8 @@ class ACU{
         void setIsoMeasCount(uint8_t count);
         void setStatusWarningsAlarms(uint16_t status);
         void setStatusDeviceActivity(uint8_t activity);
+        bool setRelayState(uint8_t relayState);
+        void resetLatch();
 
         IMD_Monitor* getIMD();
 

@@ -2,12 +2,13 @@
 #include "IMD.h"
 
 void acuControl(const CAN_message_t &msg){
-   if (msg.id == 0x66) {
+   if (msg.id == ACU_Control) {
     if(state == STANDBY && msg.buf[0]){
       state = PRECHARGE;
     }
     else if(msg.buf[0]==0){
       state = SHUTDOWN;
+      acu.errs = 0; // clear errors;
     }
   }
 }
@@ -44,15 +45,23 @@ void sendCANData(uint32_t ID){
     }break;
 
     case ACU_General2:{
-      uint16_t tsVoltage = uint16_t(acu.getTsVoltage() *100);
+      uint16_t tsVoltage = uint16_t(acu.getTsVoltage() * 100);
       msg.buf[0] = tsVoltage >> 8;
       msg.buf[1] = tsVoltage;
-      msg.buf[2] = acu.getRelayState();
+      uint8_t relayState = acu.getRelayState();
+      msg.buf[2] = 0;
+      if (relayState & 0b100) msg.buf[2] |= MASK_CAN_AIR_POS;
+      if (relayState & 0b010) msg.buf[2] |= MASK_CAN_AIR_NEG;
+      if (state == PRECHARGE) {
+        msg.buf[2] |= MASK_CAN_PRECHARGE;
+        if (relayState & 0b100) msg.buf[2] |= MASK_CAN_PRECHARGE_DONE;
+      }
+      if (state == SHUTDOWN ) msg.buf[2] |= MASK_CAN_SHUTDOWN;
       int16_t tempCodeSend = (int16_t)(battery.maxBalTemp * 100);
       msg.buf[3] = tempCodeSend>>8;
       msg.buf[4] = tempCodeSend;
-      msg.buf[5] = acu.ACU_ADC.readRaw(ADC_MUX_SHDN_POW)>>4;
-      msg.buf[6] = acu.ACU_ADC.readRaw(ADC_MUX_GLV_VOLT)>>4;
+      msg.buf[5] = acu.ACU_ADC.readRaw(ADC_MUX_SHDN_POW) >> 4;
+      msg.buf[6] = acu.ACU_ADC.readRaw(ADC_MUX_GLV_VOLT) >> 4;
       msg.buf[7] = battery.calcCharge(); // calcCharge needs 2B implemented
       can_prim.write(msg); 
     }break;
@@ -190,7 +199,8 @@ void sendCANData(uint32_t ID){
       can_chgr.write(msg);
       break;
     default:
-      Serial.println("FUCK U U IDIOT"); // language, sheesh
+      Serial.printf("Unknown CAN ID: %lu\n", msg.id);
+      can_chgr.write(msg);
   }
   msg.id = ID;
 }
@@ -213,16 +223,14 @@ void parseCANData(){
       break;
 
     case ACU_Control:
-      Serial.println("why god");
-      if(state == STANDBY && msg.buf[0]){
-      state = PRECHARGE;
-      Serial.println("entering precharge");
-      }
-      //TRIAGE 1: FIX conditio
-      else {
+      if(state == STANDBY && msg.buf[0] == 1){
+        state = PRECHARGE;
+        D_L2("Entering Precharge YAAAAYYYY");
+      } else if(msg.buf[0] != 1) {
         state = SHUTDOWN;
+        acu.errs = 0; // reset errors
+        D_L2("Entering SHUTDOWN BOOOOOOOOOOOOO LAAAME");
       }
-
       break;
 
 
@@ -240,12 +248,10 @@ void parseCANData(){
 
     case Charging_SDC_Ping_Response:
       sendCANData(Charging_SDC_Ping_Request);
-
-
       break;
 
     case Charging_SDC_States:
-      //FILLER
+      //FILLER TODO
       msg.buf[0] = 0b0000000;
       msg.buf[1] = 0b0000000;
       msg.buf[2] = 0b0000000;
@@ -255,7 +261,6 @@ void parseCANData(){
       msg.buf[6] = 0b0000000;
       msg.buf[7] = 0b0000000;
       Serial.println("PAIN");
-
       break;
       
     case Charger_Data:
@@ -269,6 +274,7 @@ void parseCANData(){
       // battery.chargerDataStatus.communicationState = msg.buf[4] & ERR_Comm;
       Serial.println("Charger Data Read, yaya we won't die");
       break;
+      
     case IMD_General:
       acu.setRIsoCorrected((msg.buf[0] << 8) | (msg.buf[1]));
       acu.setRIsoStatus(msg.buf[2]);
@@ -295,23 +301,25 @@ void parseCANData(){
 //Triage 2: replace with mailboxes
 int readCANData(){
 
-  int which_can = 0;  //Max number of CAN message reads per function call
-  for(int i = 0; i < 256; i++){
+  int maxReads = 16;  //Max number of CAN message reads per function call
+  bool primary = 0;    //Determine which CAN is connected 2nd bit
+  bool charger = 0;    //Determine which CAN is connected 1st bit (LSB)
+  for(int i = 0; i < maxReads; i++){
     if(!can_prim.read(msg)){
       break;
     }
-    which_can = 1;
+    primary = 1;
     parseCANData();
   }
 
-  for(int i = 0; i < 256; i++){
-    if(!can_chgr.read(msg))
-      break;
-    if(msg.id == Charger_Data)
-      which_can = 2;
-    parseCANData();
-  }
-  return true;
+  // for(int i = 0; i < maxReads; i++){
+  //   if(!can_chgr.read(msg)){
+  //     break;
+  //   }
+  //   charger = 2;
+  //   parseCANData();
+  // }
+  return (primary << 1) + charger;
 
 }
 
