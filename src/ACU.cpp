@@ -125,6 +125,11 @@ void ACU::checkACU(bool startup){
         D_L1("GLV Undervolt detected");
         this->errs |= ERR_UndrVolt;
     } 
+    
+    if(this->glv_voltage > OPEN_GLV_VOLT){
+        D_L1("GLV Not connected detected");
+        this->errs |= ERR_UndrVolt;
+    } 
 
     //fan ref voltage
     if(this->fan_Ref < MIN_FAN_REF_VOLT){

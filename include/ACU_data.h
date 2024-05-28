@@ -46,6 +46,7 @@
 #define MAX_DCDC_TEMP 70
 #define MAX_DCDC_CURRENT 10
 #define MIN_GLV_VOLT 10
+#define OPEN_GLV_VOLT 16.37
 #define MIN_FAN_REF_VOLT 4.5
 #define MAX_FAN_REF_VOLT 5.7
 

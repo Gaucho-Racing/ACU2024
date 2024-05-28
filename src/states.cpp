@@ -51,7 +51,7 @@ void preChargeState(){
   Vglv = acu.getGlvVoltage();
   Vsdp = acu.getShdnVolt();
 
-  while (Vglv > 16.37) { // 12V is not powered (defaults to max)
+  while (Vglv > OPEN_GLV_VOLT) { // 12V is not powered (defaults to max)
     D_L1("GLV not powered");
     Vglv = acu.getGlvVoltage();
     state = SHUTDOWN;
