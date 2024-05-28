@@ -51,9 +51,8 @@ void preChargeState(){
   Vglv = acu.getGlvVoltage();
   Vsdp = acu.getShdnVolt();
 
-  while (Vglv > 16.37) { // 12V is not powered (defaults to max)
+  if (Vglv > 16.37) { // 12V is not powered (defaults to max)
     D_L1("GLV not powered");
-    Vglv = acu.getGlvVoltage();
     state = SHUTDOWN;
     return;
   }
@@ -61,11 +60,10 @@ void preChargeState(){
   D_L1("Precharge Start");
   acu.resetLatch();
   delay(100);
-  while (abs(Vglv - Vsdp) > ERRMG_GLV_SDC) {
+  Vglv = acu.getGlvVoltage();
+  Vsdp = acu.getShdnVolt();
+  if (abs(Vglv - Vsdp) > ERRMG_GLV_SDC) {
     D_L1("Latch not closed");
-    acu.resetLatch();
-    Vglv = acu.getGlvVoltage();
-    Vsdp = acu.getShdnVolt();
     state = SHUTDOWN;
     return;
   }
