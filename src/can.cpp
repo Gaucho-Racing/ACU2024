@@ -32,10 +32,11 @@ void sendCANData(uint32_t ID){
   switch(ID){
     case ACU_General:{
       uint16_t accVolt = battery.getTotalVoltage();
+      int16_t accCurr = acu.getTsCurrent(false) * 100;
       msg.buf[0] = accVolt >> 8;
       msg.buf[1] = accVolt;
-      msg.buf[2] = uint16_t(acu.getTsCurrent(false) * 100) >> 8;
-      msg.buf[3] = acu.getTsCurrent(false) * 100;
+      msg.buf[2] = accCurr >> 8;
+      msg.buf[3] = accCurr;
       int16_t tempCodeSend = (int16_t)(battery.maxCellTemp * 100);
       msg.buf[4] = tempCodeSend >> 8;
       msg.buf[5] = tempCodeSend;

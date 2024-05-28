@@ -49,8 +49,6 @@ class ACU{
         //TRIAGE 4: consider if we want to do some sort of "sanity" checking for the temps
         float DCDC_temp[2]; // DC-DC converter, given in volts, need to call V2T to convert to temp
         float fan_Ref;
-
-        float cur_ref = 0;
         
         float max_output_current = MAX_HV_CURRENT;
         float max_temp = MAX_DCDC_TEMP;
@@ -62,6 +60,8 @@ class ACU{
         
     public:
         ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 1000000);
+        float cur_ref = 0;
+        uint32_t cur_LastHighTime = 0;
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
         uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen
 

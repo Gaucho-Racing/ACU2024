@@ -273,6 +273,6 @@ uint8_t condenseTemperature(float temperature) {
 /// @brief calculates state of charge and applies filter
 float Battery::updateSOC() {
   float cellOpenVoltage = getTotalVoltage() + acu.getTsCurrent(false) * CELL_INT_RESISTANCE * TOTAL_IC * 16;
-  batSOC += (map(cellOpenVoltage, TOTAL_IC * 16 * UV_THRESHOLD, TOTAL_IC * 16 * OV_THRESHOLD, 0, 255) - batSOC) * 0.01;
+  batSOC += (map(cellOpenVoltage, TOTAL_IC * 16 * UV_THRESHOLD, TOTAL_IC * 16 * OV_THRESHOLD, 0, 255) - batSOC) * 0.1;
   return batSOC;
 }

@@ -1,7 +1,6 @@
 #include "states.h"
 void shutdownState(){
   // Open AIRS and Precharge if already not open, close Discharge
-  acu.resetLatch();
   acu.setRelayState(0);
 
   //dumpCANbus();////////////////////////////////////////FIX
@@ -25,6 +24,10 @@ void normalState(){
   //cycle maxes out at 8
   cycle++;
   cycle = cycle % 8;
+
+  if (acu.getTsCurrent(false) > 0.5) acu.cur_LastHighTime = millis();
+  if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT, 256) - acu.cur_ref) * 0.01;
+
   return;
 }
 
@@ -124,6 +127,7 @@ void standByState(){
   SystemCheck();
   cycle++;
   cycle = cycle % 8;
+  acu.cur_ref += (acu.ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT, 256) - acu.cur_ref) * 0.01;
 }
 
 //TRIAGE 3: set a macro for fullCheck for readibility; FULL = true, PARTIAL = false

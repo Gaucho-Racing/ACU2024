@@ -52,7 +52,7 @@ void ACU::updateTsVoltage(){
   ts_voltage = ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200;
 }
 void ACU::updateTsCurrent(){
-  ts_current = (ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - cur_ref) /5 /0.0032;
+  ts_current += ((ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - cur_ref) /5 /0.0032 - ts_current) * 0.2;
 }
 void ACU::updateShdnVolt(){
   shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4;
