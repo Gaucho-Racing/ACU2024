@@ -32,7 +32,7 @@ and its licensor.
 void adBms6830_init_config(uint8_t tIC, cell_asic *ic);
 void adBms6830_write_read_config(uint8_t tIC, cell_asic *ic);
 void adBms6830_read_config(uint8_t tIC, cell_asic *ic);
-void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC);
+void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC, int(*func_ptr)() = nullptr);
 void adBms6830_read_cell_voltages(uint8_t tIC, cell_asic *ic);
 void adBms6830_start_adc_s_voltage_measurment(uint8_t tIC);
 void adBms6830_read_s_voltages(uint8_t tIC, cell_asic *ic);
@@ -40,7 +40,7 @@ void adBms6830_start_avgcell_voltage_measurment(uint8_t tIC);
 void adBms6830_read_avgcell_voltages(uint8_t tIC, cell_asic *ic);
 void adBms6830_start_fcell_voltage_measurment(uint8_t tIC);
 void adBms6830_read_fcell_voltages(uint8_t tIC, cell_asic *ic);
-void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic);
+void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic, int(*func_ptr)() = nullptr);
 void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic);
 void adBms6830_start_raux_voltage_measurment(uint8_t tIC, cell_asic *ic);
 void adBms6830_read_raux_voltages(uint8_t tIC, cell_asic *ic);

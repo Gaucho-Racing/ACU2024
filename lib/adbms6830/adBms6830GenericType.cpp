@@ -698,7 +698,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, G
 *
 *******************************************************************************
 */
-uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
+uint32_t adBmsPollAdc(uint8_t tx_cmd[2], int(*func_ptr)() = nullptr)
 {
   uint32_t conv_count = 0;
   uint8_t cmd[4];
@@ -714,13 +714,16 @@ uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
   adBmsCsLow();
   spiWriteBytes(4, &cmd[0]);
   uint32_t startTime = millis();
-  do{ // for some reason when TOTAL_IC > 1 this gets stuck by always receiving 0s instead of 0xFF
+  do{
     spiReadBytes(1, &read_data);
     if (millis() - startTime > 100){
       Serial.println("adBmsPollAdc timeout!");
       break;
     }
-  }while(!(read_data == SDO_Line)); //TRIAGE 3:, this is likely what causes the long delay
+    if(func_ptr != nullptr){
+      (*func_ptr)();
+    }
+  }while(!(read_data == SDO_Line));
   adBmsCsHigh();
   conv_count = getTimCount();
   stopTimer();

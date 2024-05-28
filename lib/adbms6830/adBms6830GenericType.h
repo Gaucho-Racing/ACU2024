@@ -49,7 +49,7 @@ void spiWriteData
 );
 void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, GRP group);
 void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type, GRP group);
-uint32_t adBmsPollAdc(uint8_t tx_cmd[2]);
+uint32_t adBmsPollAdc(uint8_t tx_cmd[2], int(*func_ptr)() = nullptr);
 void adBms6830_Adcv
 (
   RD rd,

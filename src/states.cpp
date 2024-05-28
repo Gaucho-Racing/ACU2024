@@ -11,10 +11,6 @@ void shutdownState(){
   acu.errs = 0;
   if (temp) acu.errs |= ERR_Prechrg;
   bool checkPass = !SystemCheck(true);
-  Serial.print("CheckPass= ");
-  Serial.println(checkPass);
-  Serial.print("acu.errs= ");
-  Serial.println(acu.errs, BIN);
   if (acu.getTsVoltage() < SAFE_V_TO_TURN_OFF && checkPass) { // safe to turn off if TS voltage < 60V
     state = STANDBY;
   }
@@ -28,8 +24,7 @@ void normalState(){
   }
   //cycle maxes out at 8
   cycle++;
-  cycle = cycle % 9;
-  dumpCANbus();////////////////////////////////////////FIX
+  cycle = cycle % 8;
   return;
 }
 
@@ -38,16 +33,6 @@ void chargeState(){
   acu.warns = 0;
   return;
 }
-
-void preChargeReset(){
-  acu.resetLatch();
-  if (!acu.setRelayState(0)) {
-    D_L1("Teensy is cooked");
-    state = SHUTDOWN;
-  }
-}
-
-//REVIEW BEFORE USE
 
 float Vglv, Vsdp;
 
@@ -90,10 +75,8 @@ void preChargeState(){
     return;
   }
     
-  // TODO: send message to VDM to indicate Precharge
-  // check voltage, if difference > 5V after 2 seconds throw error
+  // check voltage, if difference > threshold after 2 seconds throw error
   uint32_t startTime = millis();
-  uint32_t printTimer = millis();
   while (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
     Serial.println(acu.getTsVoltage());
     Vglv = acu.getGlvVoltage();
@@ -117,14 +100,9 @@ void preChargeState(){
     readCANData();
     sendCANData(ACU_General);
     sendCANData(ACU_General2);
-
-    if(millis() - printTimer > 100){
-      printTimer = millis();
-      D_L1(acu.getTsVoltage());
-    }
+    D_L1(acu.getTsVoltage(false));
   }
   acu.setRelayState(0b111); // close all relays
-  acu.getRelayState();
   sendCANData(ACU_General2);
 
   D_L1("Precharge Done. Ready to drive. State Normal");
@@ -136,8 +114,10 @@ void preChargeState(){
 /// @brief do nothing, in initial state wait for VDM to send start command, might need to poll CAN
 void standByState(){
   acu.warns = 0;
-  battery.disable_Mux();
-  readCANData();
+  //battery.disable_Mux();
+  SystemCheck();
+  cycle++;
+  cycle = cycle % 8;
 }
 
 //TRIAGE 3: set a macro for fullCheck for readibility; FULL = true, PARTIAL = false

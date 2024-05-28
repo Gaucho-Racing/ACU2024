@@ -57,10 +57,11 @@ class ACU{
         //TRIAGE 1.5 set default values for these
         float max_chrg_voltage; 
         float max_chrg_current; 
+
         IMD_Monitor IMD;   // IMD MONITOR
         
     public:
-        ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 800000);
+        ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 1000000);
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
         uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen
 
@@ -81,14 +82,14 @@ class ACU{
         void setMaxTemp(float temp);
 
         uint8_t getRelayState();
-        float getGlvVoltage();
-        float getTsVoltage();
-        float getTsCurrent();
-        float getShdnVolt();
-        float getDcdcCurrent();
-        float getDcdcTemp1();
-        float getDcdcTemp2();
-        float getFanRef();
+        float getGlvVoltage(bool update = true);
+        float getTsVoltage(bool update = true);
+        float getTsCurrent(bool update = true);
+        float getShdnVolt(bool update = true);
+        float getDcdcCurrent(bool update = true);
+        float getDcdcTemp1(bool update = true);
+        float getDcdcTemp2(bool update = true);
+        float getFanRef(bool update = true);
 
         void printIso();
         // uint16_t getIsoResistor();

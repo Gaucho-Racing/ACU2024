@@ -51,7 +51,7 @@
 
 
 // hardware constants
-#define CELL_INT_RESISTANCE 0.007
+#define CELL_INT_RESISTANCE 0.005
 
 
 // ADC1283 connections
@@ -98,7 +98,7 @@
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A
 
-#define PRECHARGE_THRESHOLD 0.95 // fraction of total cell voltage
+#define PRECHARGE_THRESHOLD 0.98 // fraction of total cell voltage
 
 //masks
 //error 

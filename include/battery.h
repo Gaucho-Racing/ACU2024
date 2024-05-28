@@ -19,7 +19,7 @@ class Battery{
         float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
         float balTemp[16 * TOTAL_IC];
         
-        float batVoltage;
+        float batVoltage, batSOC;
 
         uint16_t max_chrg_voltage; // 10mV/LSB
         uint16_t max_chrg_current; // 10mA/LSB
@@ -36,14 +36,13 @@ class Battery{
         void checkTemp();
         void checkFuse();
         void checkAllFuse();
-        uint8_t calcCharge();
         void cell_Balancing();
         void disable_Mux();
         float getCellVoltage(uint8_t index);
         float getCellTemp(uint8_t index);
         float getBalTemp(uint8_t index);
         float getTotalVoltage();
-
+        float updateSOC();
         void checkBattery(bool fullCheck = false);
 
     friend void parseCANData();
@@ -53,7 +52,7 @@ class Battery{
 
 };
 
-uint8_t condenseVoltage(uint16_t voltage); // calculate condensed cell voltage value
+uint8_t condenseVoltage(float voltage); // calculate condensed cell voltage value
 uint8_t condenseTemperature(float temperature); // calculate condensed cell temperature value
 
 

@@ -34,8 +34,8 @@ void sendCANData(uint32_t ID){
       uint16_t accVolt = battery.getTotalVoltage();
       msg.buf[0] = accVolt >> 8;
       msg.buf[1] = accVolt;
-      msg.buf[2] = (int)acu.getTsCurrent() >> 8;
-      msg.buf[3] = (int) acu.getTsCurrent();
+      msg.buf[2] = uint16_t(acu.getTsCurrent(false) * 100) >> 8;
+      msg.buf[3] = acu.getTsCurrent(false) * 100;
       int16_t tempCodeSend = (int16_t)(battery.maxCellTemp * 100);
       msg.buf[4] = tempCodeSend >> 8;
       msg.buf[5] = tempCodeSend;
@@ -45,7 +45,7 @@ void sendCANData(uint32_t ID){
     }break;
 
     case ACU_General2:{
-      uint16_t tsVoltage = uint16_t(acu.getTsVoltage() * 100);
+      uint16_t tsVoltage = uint16_t(acu.getTsVoltage(false) * 100);
       msg.buf[0] = tsVoltage >> 8;
       msg.buf[1] = tsVoltage;
       uint8_t relayState = acu.getRelayState();
@@ -62,19 +62,20 @@ void sendCANData(uint32_t ID){
       msg.buf[4] = tempCodeSend;
       msg.buf[5] = acu.ACU_ADC.readRaw(ADC_MUX_SHDN_POW) >> 4;
       msg.buf[6] = acu.ACU_ADC.readRaw(ADC_MUX_GLV_VOLT) >> 4;
-      msg.buf[7] = battery.calcCharge(); // calcCharge needs 2B implemented
+      msg.buf[7] = battery.updateSOC();
       can_prim.write(msg); 
     }break;
 
     case Powertrain_Cooling:{
-      msg.buf[0] = (int)(acu.fanRpm[0] / 50);
-      msg.buf[1] = (int)(acu.fanRpm[1] / 50);
-      msg.buf[2] = (int)(acu.fanRpm[2] / 50);
+      // TODO: fix
+      msg.buf[0] = (acu.fanRpm[0] / 50);
+      msg.buf[1] = (acu.fanRpm[1] / 50);
+      msg.buf[2] = (acu.fanRpm[2] / 50);
       msg.buf[3] = 0; // --> PUMP SPEED TBD
-      msg.buf[4] = (int)(acu.getDcdcTemp1() / 2);
-      msg.buf[5] = (int)(acu.getDcdcTemp2() / 2);
-      // msg.buf[6] = (int)(acu.acuTemp[2] / 2);  This actually doesn't exist
-      msg.buf[7] = (int)(acu.fans.readRegister(0x00)); // fan status --> to be implemented
+      msg.buf[4] = (acu.getDcdcTemp1(false) / 2);
+      msg.buf[5] = (acu.getDcdcTemp2(false) / 2);
+      msg.buf[6] = 0;
+      msg.buf[7] = (acu.fans.readRegister(FAN_ERRS_addr));
       can_prim.write(msg); 
     }break;
 
@@ -85,7 +86,7 @@ void sendCANData(uint32_t ID){
       msg.buf[1] = max_charge_current;
       msg.buf[2] = max_charge_volt >> 8;
       msg.buf[3] = max_charge_volt;
-      msg.buf[4] = state == CHARGE ? 1: 0; // not sure abt this one
+      msg.buf[4] = state == CHARGE ? 1 : 0; // not sure abt this one
       msg.buf[5] = 0b0000000;
       msg.buf[6] = 0b0000000;
       msg.buf[7] = 0b0000000;
@@ -179,7 +180,7 @@ void sendCANData(uint32_t ID){
       
     case ACU_Ping_Response:
       can_prim.write(msg);
-      
+      // Serial.println("ping");
       break;
       
     case Charger_Control:
@@ -297,19 +298,21 @@ void parseCANData(){
       break;
   }
 }
-
+uint64_t prev_millis = 0;
 //Triage 2: replace with mailboxes
 int readCANData(){
-
-  int maxReads = 16;  //Max number of CAN message reads per function call
+  // Serial.println(millis()-prev_millis);
+  // prev_millis = millis();
+  int maxReads = 8;  //Max number of CAN message reads per function call
   bool primary = 0;    //Determine which CAN is connected 2nd bit
   bool charger = 0;    //Determine which CAN is connected 1st bit (LSB)
   for(int i = 0; i < maxReads; i++){
-    if(!can_prim.read(msg)){
-      break;
+    if(can_prim.read(msg)){
+      parseCANData();
+    }
+    else {
     }
     primary = 1;
-    parseCANData();
   }
 
   // for(int i = 0; i < maxReads; i++){
@@ -332,17 +335,17 @@ static uint32_t prevmillis = 0;
 void dumpCANbus() {
   if(millis() - prevmillis > 10){
     prevmillis = millis();
-    for (uint8_t i = 0; i < TOTAL_IC << 1; i++) {
-    sendCANData(Condensed_Cell_Voltage_n0 + i);
-    sendCANData(Condensed_Cell_Temp_n0 + i);
+    for (uint8_t i = 0; i < TOTAL_IC * 2; i++) {
+      sendCANData(Condensed_Cell_Voltage_n0 + i);
+      sendCANData(Condensed_Cell_Temp_n0 + i);
     }
     sendCANData(ACU_General);
     sendCANData(ACU_General2);
     sendCANData(Powertrain_Cooling);
-    sendCANData(Charging_Cart_Config);
-    sendCANData(IMD_General);
+    // sendCANData(Charging_Cart_Config);
+    // sendCANData(IMD_General);
     // sendCANData(IMD_Isolation_Detail);
-    sendCANData(IMD_Voltage);
+    // sendCANData(IMD_Voltage);
     // sendCANData(IMD_IT_System);
   }
 }

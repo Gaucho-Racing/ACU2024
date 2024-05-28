@@ -2,8 +2,8 @@
 #include "battery.h"
 
 #define printErrs true
-#define printRelayState false
-#define printWarns false
+#define printRelayState true
+#define printWarns true
 #define printTSVoltage true
 #define printSDCVoltage true
 #define printGLVVoltage true
@@ -12,16 +12,16 @@
 #define printMaxOutputCurrent false
 #define printState true
 #define printFanRef true
-#define printMaxCellTemp false
-#define printMaxBalTemp false
-#define printMinVolt false
+#define printMaxCellTemp true
+#define printMaxBalTemp true
+#define printMinVolt true
 #define printCycle false
 #define printAccumCurrent false
 #define printAccumCurrentZero false
 #define printACUTemp false
-#define printCellVoltage true
-#define printCellTemp true
-#define printBalTemp true
+#define printCellVoltage false
+#define printCellTemp false
+#define printBalTemp false
 
 extern ACU acu;
 extern Battery battery;

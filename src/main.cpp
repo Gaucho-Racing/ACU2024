@@ -11,7 +11,7 @@ ACU acu;
 States state = STANDBY;
 uint8_t cycle = 0;  //Counter for ADI temp readings
 
-FlexCAN_T4<CAN3, RX_SIZE_1024, TX_SIZE_256> can_prim;
+FlexCAN_T4<CAN3, RX_SIZE_1024, TX_SIZE_1024> can_prim;
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> can_chgr;
 CAN_message_t msg;
 uint64_t prev_mill = 0;
@@ -20,7 +20,7 @@ uint64_t prev_mill = 0;
 IntervalTimer dumpCAN; //consider using this in conjunction with mailbox
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(1000000);
   // //D_L1 and D_L2 are debug print statements
   D_L1("Init config");
   acu.init_config();
@@ -39,7 +39,6 @@ void setup() {
   acu.warns = 0;
   acu.errs = 0;
 
-  // TRIAGE 1: create a syscheck function
   if(SystemCheck(true, true)){
     state = SHUTDOWN;
     debug();
@@ -52,8 +51,12 @@ void setup() {
 
 }
 
+
+uint32_t lastTime = 0;
+uint32_t deltaTime = 0;
 void loop() {
-  // sendCANData(ACU_General2);
+  deltaTime = micros() - lastTime;
+  lastTime = micros();
    
   switch (state)
   {
@@ -83,13 +86,16 @@ void loop() {
       // delay(10000);
       break;
   }
-//   // dumpCANbus(battery); //uncomment if interrupt don't work
+
+  readCANData();
+  dumpCANbus(); //uncomment if interrupt don't work
 
   #if DEBUG
-    if(millis() - prev_mill > 100){
+    if(millis() - prev_mill > 500){
       prev_mill = millis();
       debug();
-      //Serial.println(state);
+      Serial.println(1e6 / deltaTime);
+      Serial.println(state);
     }
     // delay(1000);
   #endif

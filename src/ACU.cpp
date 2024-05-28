@@ -23,8 +23,6 @@ void ACU::init_config(){
   //TRIAGE 1.5: add Fan controller init
   pinMode(PIN_IMD_OK, INPUT_PULLUP);  
   pinMode(PIN_AMS_OK, OUTPUT);
-  // TRIAGE 1: Write logic for AMS_OK
-  digitalWrite(PIN_AMS_OK, HIGH);
   pinMode(PIN_DCDC_EN, OUTPUT);
   pinMode(PIN_DCDC_SLOW, OUTPUT);
   pinMode(PIN_DCDC_ER, INPUT);
@@ -35,17 +33,18 @@ void ACU::init_config(){
   pinMode(PIN_AIR_RESET, OUTPUT);
   analogWriteFrequency(PIN_BSPD_CLK, 50000);
   analogWrite(PIN_BSPD_CLK, 127);
+  fans.begin();
   this->ACU_ADC.begin();
   cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);   //Zero current sensor offset
   while (abs(cur_ref - 1.235) > ERRMG_ISNS_VREF) {
-    Serial.printf("Current sensor ref: %f", cur_ref);
+    Serial.printf("Current sensor ref: %f ", cur_ref);
     D_L1("HV current too far from zero. Check hardware. ");
     delay(500);
     cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);
   }
 }
 
-//triage 3: owen check this
+
 void ACU::updateGlvVoltage(){
   glv_voltage = ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT) * 4;
 }
@@ -109,7 +108,6 @@ void ACU::checkACU(bool startup){
     else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
         digitalWrite(PIN_DCDC_SLOW, HIGH);
     } else {
-      this->updateTsVoltage();
       if(this->getTsVoltage() < 370)
         // digitalWrite(PIN_DCDC_EN, HIGH);
         //D_L1("HV Voltage too low, shutting down DCDC");
@@ -168,38 +166,38 @@ uint8_t ACU::getRelayState(){
   return relay_state;
 }
 
-float ACU::getTsVoltage(){
-  updateTsVoltage();
+float ACU::getTsVoltage(bool update){
+  if (update) updateTsVoltage();
   return ts_voltage;
 }
-float ACU::getTsCurrent(){
-  updateTsCurrent();
+float ACU::getTsCurrent(bool update){
+  if (update) updateTsCurrent();
   return ts_current;
 }
-float ACU::getShdnVolt(){
-  updateShdnVolt();
+float ACU::getShdnVolt(bool update){
+  if (update) updateShdnVolt();
   return shdn_volt;
 }
 
-float ACU::getGlvVoltage(){
-  updateGlvVoltage();
+float ACU::getGlvVoltage(bool update){
+  if (update) updateGlvVoltage();
   return glv_voltage;
 }
 
-float ACU::getDcdcCurrent(){
-  updateDcdcCurrent();
+float ACU::getDcdcCurrent(bool update){
+  if (update) updateDcdcCurrent();
   return dcdc_current;
 }
-float ACU::getDcdcTemp1(){
-  updateDcdcTemp1();
+float ACU::getDcdcTemp1(bool update){
+  if (update) updateDcdcTemp1();
   return DCDC_temp[0];
 }
-float ACU::getDcdcTemp2(){
-  updateDcdcTemp2();
+float ACU::getDcdcTemp2(bool update){
+  if (update) updateDcdcTemp2();
   return DCDC_temp[1];
 }
-float ACU::getFanRef(){
-  updateFanRef();
+float ACU::getFanRef(bool update){
+  if (update) updateFanRef();
   return fan_Ref;
 }
 
@@ -252,11 +250,10 @@ bool ACU::setRelayState(uint8_t relayState) {
   }
 }
 
-// ========== Function: setRelayState ==========
+// ========== Function: resetLatch ==========
 // attemps to reset (close) the latch relay
 void ACU::resetLatch() {
   digitalWrite(PIN_AIR_RESET, HIGH);
   delay(10);
   digitalWrite(PIN_AIR_RESET, LOW);
-
 }

@@ -1,5 +1,5 @@
 #include "battery.h"
-
+#include "can.h"
 uint16_t mux_temp_codes[8] = {0b0011111111, 0b0000111111, 0b0001111111, 0b0010111111, 0b0100111111, 0b0110111111, 0b0111111111, 0b0101111111};
 ; 
 
@@ -18,7 +18,7 @@ void Battery::init_config(){
 
 /// @brief updates the voltage of the battery
 void Battery::updateVoltage(){
-  adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+  adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC, &readCANData);
   adBms6830_read_cell_voltages(TOTAL_IC, this->IC);
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
     for (uint8_t cell = 0; cell < CELL; cell++) {
@@ -43,7 +43,7 @@ void Battery::updateTemp(){
     this->IC[ic].tx_cfga.gpo = mux_temp_codes[cycle];
   }
 
-  adBms6830_start_aux_voltage_measurment(TOTAL_IC, this->IC);
+  adBms6830_start_aux_voltage_measurment(TOTAL_IC, this->IC, &readCANData);
   adBms6830_read_aux_voltages(TOTAL_IC, this->IC);
   
   //parse the data and store it in the battery struct
@@ -184,15 +184,6 @@ void Battery::checkAllFuse(){
   }
 }
 
-//TRAIGE 2: Implement this
-/// @brief 
-/// @return 
-uint8_t Battery::calcCharge(){
-    // Serial.println("Charge calculation not implemented");
-    float cellOpenVoltage = getTotalVoltage() + acu.getTsCurrent() * CELL_INT_RESISTANCE * TOTAL_IC * 16;
-    return map(cellOpenVoltage, TOTAL_IC * 16 * UV_THRESHOLD, TOTAL_IC * 16 * OV_THRESHOLD, 0, 255);
-}
-
 /// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
 void Battery::cell_Balancing(){
   uint16_t toDischarge = 0;
@@ -252,25 +243,23 @@ float Battery::getTotalVoltage(){
 }
 
 void Battery::checkBattery(bool fullCheck){
-  if(fullCheck){
+  if (fullCheck) {
     this->updateAllTemps();
     this->checkAllFuse();
-  } else{
+  } else {
     this->updateTemp();
     this->checkFuse();
   }
   this->checkTemp();
   this->updateVoltage();
   this->checkVoltage();
-  
 }
 
-/// @brief converts uint16_t voltage --> uint8_t voltage
-/// @param[in] voltage uint16_t
+/// @brief converts float voltage --> uint8_t voltage
+/// @param[in] voltage float
 /// @return uint8_t voltage converted
-uint8_t condenseVoltage(uint16_t voltage) {
-  //voltage = constrain(voltage, 20000, 45500);
-  return (voltage / 100 + (voltage % 100 > 49));// - 200; // uncomment these when connecting to cells
+uint8_t condenseVoltage(float voltage) {
+  return (voltage - 2) * 100;
 }
 
 /// @brief converts float temp --> uint8_t temp
@@ -280,3 +269,10 @@ uint8_t condenseTemperature(float temperature) {
   return (uint8_t)((temperature - 10) * 4); // 10C~73.75C --> 0~255
 }
 
+
+/// @brief calculates state of charge and applies filter
+float Battery::updateSOC() {
+  float cellOpenVoltage = getTotalVoltage() + acu.getTsCurrent(false) * CELL_INT_RESISTANCE * TOTAL_IC * 16;
+  batSOC += (map(cellOpenVoltage, TOTAL_IC * 16 * UV_THRESHOLD, TOTAL_IC * 16 * OV_THRESHOLD, 0, 255) - batSOC) * 0.01;
+  return batSOC;
+}

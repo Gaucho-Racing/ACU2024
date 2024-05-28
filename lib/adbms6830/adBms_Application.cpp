@@ -154,11 +154,11 @@ void adBms6830_read_config(uint8_t tIC, cell_asic *ic)
 * @brief Start ADC Cell Voltage Measurement
 *******************************************************************************
 */
-void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC)
+void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC, int(*func_ptr)() = nullptr)
 {
   adBmsWakeupIc(tIC);
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
-  pladc_count = adBmsPollAdc(PLADC);
+  pladc_count = adBmsPollAdc(PLADC, func_ptr);
   //Serial.printf("Cell conversion completed\n");
   //printPollAdcConvTime(pladc_count);
 }
@@ -278,7 +278,7 @@ void adBms6830_read_fcell_voltages(uint8_t tIC, cell_asic *ic)
 * @brief Start AUX, VMV, V+ Voltages Measurement
 *******************************************************************************
 */
-void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
+void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic, int(*func_ptr)() = nullptr)
 {
   for(uint8_t cic = 0; cic < tIC; cic++)
   {
@@ -289,7 +289,7 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, AA);
   
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
-  pladc_count = adBmsPollAdc(PLADC);
+  pladc_count = adBmsPollAdc(PLADC, func_ptr);
   // Serial.printf("Aux voltage conversion completed\n");
   // printPollAdcConvTime(pladc_count);
 }
