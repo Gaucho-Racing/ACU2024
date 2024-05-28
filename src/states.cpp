@@ -54,16 +54,20 @@ void preChargeState(){
   while (Vglv > 16.37) { // 12V is not powered (defaults to max)
     D_L1("GLV not powered");
     Vglv = acu.getGlvVoltage();
+    state = SHUTDOWN;
+    return;
   }
 
   D_L1("Precharge Start");
+  acu.resetLatch();
+  delay(100);
   while (abs(Vglv - Vsdp) > ERRMG_GLV_SDC) {
     D_L1("Latch not closed");
     acu.resetLatch();
     Vglv = acu.getGlvVoltage();
     Vsdp = acu.getShdnVolt();
-    readCANData();
-    parseCANData();
+    state = SHUTDOWN;
+    return;
   }
 
   acu.setRelayState(0b100); // close AIR-
@@ -100,6 +104,10 @@ void preChargeState(){
     readCANData();
     sendCANData(ACU_General);
     sendCANData(ACU_General2);
+    if (state != PRECHARGE) {
+      state = SHUTDOWN;
+      return;
+    }
     D_L1(acu.getTsVoltage(false));
   }
   acu.setRelayState(0b111); // close all relays
