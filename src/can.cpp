@@ -195,9 +195,15 @@ void sendCANData(uint32_t ID){
       msg.buf[7] = 0b0000000; 
       can_chgr.write(msg);
       break;
-    case IMD_Request:
-      msg.buf[0] =0x5E;
-
+    case IMD_Request: // weird thing happening: ID not part of buffer idx?
+      msg.buf[0] = 0x5E;
+      msg.buf[1] = 0xFF; // index for Voltage: HV system
+      msg.buf[2] = 0xFF;
+      msg.buf[3] = 0xFF;
+      msg.buf[4] = 0xFF;
+      msg.buf[5] = 0xFF;
+      msg.buf[6] = 0xFF;
+      msg.buf[7] = 0xFF;
       can_chgr.write(msg);
       break;
     default:
@@ -276,7 +282,7 @@ void parseCANData(){
       // battery.chargerDataStatus.communicationState = msg.buf[4] & ERR_Comm;
       Serial.println("Charger Data Read, yaya we won't die");
       break;
-      
+    
     case IMD_General:
       acu.setRIsoCorrected((msg.buf[0] << 8) | (msg.buf[1]));
       acu.setRIsoStatus(msg.buf[2]);
