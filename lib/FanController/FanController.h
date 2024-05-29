@@ -8,7 +8,7 @@
 
 #include <Arduino.h>
 
-#define SPD1_addr 0x10 //Speed for fan 1, data only take 8 bit, but later math uses 16 bit
+#define FAN_SPD1_addr 0x10 //Speed for fan 1, data only take 8 bit, but later math uses 16 bit
 // Voltage mode: 0 = off, 1~255 = 5.015625~12.1640625V
 // RPM mode: 50RPM / LSB, 0~12750RPM
 // PWM mode: 0 = off, 1~255 = 0~100% duty cycle

@@ -36,12 +36,16 @@ void ACU::init_config(){
   fans.begin();
   this->ACU_ADC.begin();
   cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);   //Zero current sensor offset
+  uint8_t count = 0;
   while (abs(cur_ref - 1.235) > ERRMG_ISNS_VREF) {
+    if (count > 10) break;
+    count++;
     Serial.printf("Current sensor ref: %f ", cur_ref);
     D_L1("HV current too far from zero. Check hardware. ");
     delay(500);
     cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);
   }
+  fans.writeRegister(FAN_SPD3_addr, 300);
 }
 
 
