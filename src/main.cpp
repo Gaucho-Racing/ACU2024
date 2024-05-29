@@ -18,7 +18,7 @@ float V2T(float voltage, float B = 4390);
 //isoSPI isoSPI1(&SPI, 10, 8, 7, 9, 5, 6, 4, 3, 2);
 //isoSPI isoSPI2(&SPI1, 0, 25, 24, 33, 29, 28, 30, 31, 32);
 enum test_case {VOLTAGE, CAN, FAN, GPIO, TEENSY, CELLBAL, THERMAL, EXTENDEDCELLBAL, EXTRA, PRECHARGE, ADC};
-test_case debug = ADC;
+test_case debug = VOLTAGE;
 
 CANLine can;
 short message[8] = {60000,4,0,0,0,0,0,0};
@@ -160,6 +160,7 @@ void loop() {
     }
     Serial.println();
     Serial.println("-------------END-------------");
+    delay(500);
   
   break;
 
