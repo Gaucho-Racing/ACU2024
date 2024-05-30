@@ -21,9 +21,12 @@ class Battery{
         
         float batVoltage, batSOC;
 
-        uint16_t max_chrg_voltage; // 10mV/LSB
-        uint16_t max_chrg_current; // 10mA/LSB
-        uint16_t max_output_current; // 10mA/LSB
+        float cell_OT_Threshold;
+        float cell_UT_Threshold = 0;
+        
+        float max_chrg_voltage; // 10mV/LSB
+        float max_chrg_current; // 10mA/LSB
+        float max_output_current; // 10mA/LSB
     public:
         // Battery();
         float cellVoltage[16 * TOTAL_IC]; // 16 * 8
@@ -48,7 +51,7 @@ class Battery{
     friend void parseCANData();
     friend int readCANData();
     friend void sendCANData(uint32_t ID);
-    friend void debug(Battery &battery);
+    friend void debug();
 
 };
 

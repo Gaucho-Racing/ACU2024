@@ -36,6 +36,8 @@
 //Balance Resistor Temp
 #define MIN_BAL_TEMP -273.1 //TRIAGE 3: Modify later
 #define MAX_BAL_TEMP 80 
+#define MIN_CELL_TEMP 0
+#define MAX_CELL_TEMP 60
 //Discharge
 #define MIN_DIS_TEMP -40 //TRIAGE 3: Modify later
 #define MAX_DIS_TEMP 60 

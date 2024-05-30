@@ -190,10 +190,10 @@ void sendCANData(uint32_t ID){
       break;
       
     case Charger_Control:
-      msg.buf[0] = battery.max_chrg_current >> 8;
-      msg.buf[1] = battery.max_chrg_current;
-      msg.buf[2] = battery.max_chrg_voltage >> 8;
-      msg.buf[3] = battery.max_chrg_voltage;
+      msg.buf[0] = u_int16_t(battery.max_chrg_current * 100) >> 8;
+      msg.buf[1] = u_int16_t(battery.max_chrg_current * 100);
+      msg.buf[2] = u_int16_t(battery.max_chrg_voltage * 100)>> 8;
+      msg.buf[3] = u_int16_t(battery.max_chrg_voltage * 100);
       msg.buf[4] = state == CHARGE ? 1:0; 
       msg.buf[5] = 0b0000000;
       msg.buf[6] = 0b0000000; 
@@ -248,10 +248,11 @@ void parseCANData(){
 
 
     case Battery_Limits:
-      battery.max_chrg_voltage =    (msg.buf[0] << 8) | msg.buf[1];
-      battery.max_output_current =  (msg.buf[2] << 8) | msg.buf[3];
-      battery.maxCellTemp =         ((msg.buf[4] << 8) | msg.buf[5])*0.01;
-      battery.max_chrg_current =    (msg.buf[6] << 8) | msg.buf[7];
+      battery.max_chrg_voltage = ((msg.buf[0] << 8) | msg.buf[1])*0.01;
+      battery.max_output_current = ((msg.buf[2] << 8) | msg.buf[3])*0.01;
+      // TRIAGE 1: Wrong 
+      battery.cell_OT_Threshold = ((msg.buf[4] << 8) | msg.buf[5])*0.01;
+      battery.max_chrg_current = ((msg.buf[6] << 8) | msg.buf[7])*0.01;
 
       break;
 

@@ -12,6 +12,8 @@ void Battery::init_config(){
     if((this->IC[0].cell.c_codes[0] + 10000) * 0.000150 > 1.75) break;
     delay(100);
   }
+  this->cell_OT_Threshold = MAX_CELL_TEMP; 
+  this->cell_UT_Threshold = MIN_CELL_TEMP;
   this->updateVoltage();
   this->updateAllTemps();
 }
@@ -102,7 +104,7 @@ void Battery::updateAllTemps(){
 void Battery::checkVoltage(){
   //if first check, set extremes to first cell
   
-  if(this->minVolt == -1) this->minVolt = this->cellVoltage[0];
+  this->minVolt = this->cellVoltage[0];
   // bool isOK = true;
   //iterate though cellVoltage
   this->batVoltage = 0;
@@ -124,8 +126,8 @@ void Battery::checkVoltage(){
 /// @brief compares bal and cell temps to max/min values, updates errs
 /// NAN values are discarded, they are likely due to a disconnection
 void Battery::checkTemp(){
-  if(this->maxBalTemp == -1) this->maxBalTemp = this->balTemp[0];
-  if(this->maxCellTemp == -1) this->maxCellTemp = this->cellTemp[0];
+  this->maxBalTemp = this->balTemp[0];
+  this->maxCellTemp = this->cellTemp[0];
   for(int i = 0; i < TOTAL_IC*16; i++){
     if (this->maxBalTemp < this->balTemp[i]) this->maxBalTemp = this->balTemp[i];
     // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
@@ -151,11 +153,11 @@ void Battery::checkTemp(){
       if (this->maxCellTemp < this->cellTemp[i]) this->maxCellTemp = this->cellTemp[i];
       // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
       //check Bal Temp;
-      if (this->cellTemp[i] > MAX_BAL_TEMP){
+      if (this->cellTemp[i] > this->cell_OT_Threshold){
         D_L1("Battery cell OverTemp Err");
         acu.errs |= ERR_OverTemp;
       }
-      if (this->cellTemp[i] < MIN_BAL_TEMP){
+      if (this->cellTemp[i] < this->cell_UT_Threshold){
         D_L1("Battery cell UnderTemp Err");
         acu.errs |= ERR_UndrTemp;
       }

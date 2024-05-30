@@ -1,7 +1,7 @@
 #include "debug.h"
 #include "battery.h"
 
-#define printErrs false
+#define printErrs true
 #define printRelayState false
 #define printWarns false
 #define printTSVoltage false
@@ -12,16 +12,16 @@
 #define printMaxOutputCurrent false
 #define printState false
 #define printFanRef false
-#define printMaxCellTemp false
+#define printMaxCellTemp true
 #define printMaxBalTemp false
 #define printMinVolt false
 #define printCycle false
 #define printAccumCurrent false
 #define printAccumCurrentZero false
 #define printACUTemp false
-#define printCellVoltage true
+#define printCellVoltage false
 #define printCellTemp true
-#define printBalTemp true
+#define printBalTemp false
 
 extern ACU acu;
 extern Battery battery;
@@ -88,6 +88,7 @@ void debug(){
         Serial.printf("5V: %5.03f\n", acu.getFanRef());
     }
     if(printMaxCellTemp);
+        Serial.printf("Max Cell Temp: %5.03f\n", battery.maxCellTemp);
     if(printMaxBalTemp);
     if(printMinVolt);
     if(printAccumCurrent);
