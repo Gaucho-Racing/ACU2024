@@ -32,8 +32,21 @@ void normalState(){
 }
 
 //TRIAGE 1.5: implement
+uint64_t lastChargeTime = 0;
+uint64_t lastDischargeTime = 0;
 void chargeState(){
   acu.warns = 0;
+  //every 2 seconds check if the system is still good
+  if(millis() - lastChargeTime > 2000){
+    //what needs to be reset
+    lastChargeTime = millis();
+    if(SystemCheck(true, false)){
+      D_L1("CHARGE: System check failed, shutting down");
+      state = SHUTDOWN;
+      return;
+    }
+  }
+
   return;
 }
 

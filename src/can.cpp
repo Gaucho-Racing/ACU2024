@@ -25,6 +25,11 @@ void mailboxSetup(){
   // can_prim.mailboxStatus();
 }
 
+void updateCAN(){
+  readCANData();
+  dumpCANbus();
+}
+
 void sendCANData(uint32_t ID){
   //moved CAN id set to bottom for temp config cell data fix, see line 134
   msg.flags.extended = true;

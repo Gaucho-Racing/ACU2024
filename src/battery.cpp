@@ -145,16 +145,20 @@ void Battery::checkTemp(){
     }
   }
   for(int i = 0; i < TOTAL_IC*2*16; i++){
-    if (this->maxCellTemp < this->cellTemp[i]) this->maxCellTemp = this->cellTemp[i];
-    // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
-    //check Bal Temp;
-    if (this->cellTemp[i] > MAX_BAL_TEMP){
-      D_L1("Battery cell OverTemp Err");
-      acu.errs |= ERR_OverTemp;
-    }
-    if (this->cellTemp[i] < MIN_BAL_TEMP){
-      D_L1("Battery cell UnderTemp Err");
-      acu.errs |= ERR_UndrTemp;
+    if(this->balTemp[i] == NAN || this->cellTemp[i] == NAN){
+      D_L1("Nan temp pt. 2");
+    } else {
+      if (this->maxCellTemp < this->cellTemp[i]) this->maxCellTemp = this->cellTemp[i];
+      // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
+      //check Bal Temp;
+      if (this->cellTemp[i] > MAX_BAL_TEMP){
+        D_L1("Battery cell OverTemp Err");
+        acu.errs |= ERR_OverTemp;
+      }
+      if (this->cellTemp[i] < MIN_BAL_TEMP){
+        D_L1("Battery cell UnderTemp Err");
+        acu.errs |= ERR_UndrTemp;
+      }
     }
   }
 }
@@ -186,6 +190,10 @@ void Battery::checkAllFuse(){
 
 /// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
 void Battery::cell_Balancing(){
+  //turn off balancing to prepare for cell voltage readings
+  for(int ic = 0; ic < TOTAL_IC; ic++){
+    this->IC[ic].tx_cfgb.dcc = 0;
+  }
   uint16_t toDischarge = 0;
 
   //check new voltage to find min cell temp
@@ -197,18 +205,20 @@ void Battery::cell_Balancing(){
     toDischarge = 0;
     
   }
+
   //figure out which cells to discharge
   for(int ic = 0; ic < TOTAL_IC; ic++){
     for(int cell = 0; cell < CELL; cell++){
       //diff between the minimum cell voltage and the current cell is 20mV discharge
-      if(this->cellVoltage[ic*CELL + cell]-this->minVolt > 200){
+      if(this->cellVoltage[ic*CELL + cell]-this->minVolt > 0.02){
         toDischarge |= 1 << cell;
       }
     }
     this->IC[ic].tx_cfgb.dcc = toDischarge;
   }
-  
-  
+  adBmsWakeupIc(TOTAL_IC);
+  adBmsWriteData(TOTAL_IC, this->IC, WRCFGA, Config, AA);
+  adBmsWriteData(TOTAL_IC, this->IC, WRCFGB, Config, BB);
 }
 
 /// @brief disables the mux, used in Standby

@@ -52,11 +52,8 @@ void setup() {
 }
 
 
-uint32_t lastTime = 0;
-uint32_t deltaTime = 0;
+
 void loop() {
-  deltaTime = micros() - lastTime;
-  lastTime = micros();
    
   switch (state)
   {
@@ -94,7 +91,6 @@ void loop() {
     if(millis() - prev_mill > 500){
       prev_mill = millis();
       debug();
-      Serial.println(1e6 / deltaTime);
       Serial.println(state);
     }
     // delay(1000);
