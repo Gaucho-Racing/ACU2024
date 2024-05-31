@@ -87,11 +87,10 @@ void loop() {
   readCANData();
   dumpCANbus(); //uncomment if interrupt don't work
 
-  #if DEBUG
+  #ifdef DEBUG
     if(millis() - prev_mill > 500){
       prev_mill = millis();
       debug();
-      Serial.println(state);
     }
     // delay(1000);
   #endif

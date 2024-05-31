@@ -13,6 +13,7 @@ void shutdownState(){
   if (acu.getTsVoltage() < SAFE_V_TO_TURN_OFF && checkPass) { // safe to turn off if TS voltage < 60V
     state = STANDBY;
   }
+  acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
   return;
 }
 
@@ -26,7 +27,7 @@ void normalState(){
   cycle = cycle % 8;
 
   if (acu.getTsCurrent(false) > 0.5) acu.cur_LastHighTime = millis();
-  if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT, 256) - acu.cur_ref) * 0.01;
+  if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
 
   return;
 }
@@ -140,7 +141,7 @@ void standByState(){
   SystemCheck();
   cycle++;
   cycle = cycle % 8;
-  acu.cur_ref += (acu.ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT, 256) - acu.cur_ref) * 0.01;
+  acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
 }
 
 //TRIAGE 3: set a macro for fullCheck for readibility; FULL = true, PARTIAL = false

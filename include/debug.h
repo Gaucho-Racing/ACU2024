@@ -2,7 +2,7 @@
 #define DEBUG_H
 
 
-#define DEBUG 1 //0, for off, 1 for normal print, 2 for verbose print
+#define DEBUG 0 //0, for off, 1 for normal print, 2 for verbose print
 #if DEBUG > 1
     #define D_L1(statement) do{Serial.println(statement);} while(0);
     #define D_L2(statement) do{Serial.println(statement);} while(0);

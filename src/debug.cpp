@@ -4,23 +4,23 @@
 #define printErrs true
 #define printRelayState false
 #define printWarns false
-#define printTSVoltage false
-#define printSDCVoltage false
-#define printGLVVoltage false
+#define printTSVoltage true
+#define printSDCVoltage true
+#define printGLVVoltage true
 #define printMaxChrgVoltage false
 #define printMaxChrgCurrent false
 #define printMaxOutputCurrent false
-#define printState false
-#define printFanRef false
+#define printState true
+#define printFanRef true
 #define printMaxCellTemp true
-#define printMaxBalTemp false
+#define printMaxBalTemp true
 #define printMinVolt false
 #define printCycle false
-#define printAccumCurrent false
-#define printAccumCurrentZero false
+#define printAccumCurrent true
+#define printAccumCurrentZero true
 #define printACUTemp false
 #define printCellVoltage false
-#define printCellTemp true
+#define printCellTemp false
 #define printBalTemp false
 
 extern ACU acu;
@@ -73,13 +73,13 @@ void debug(){
     if(printRelayState);
     if(printWarns);
     if(printTSVoltage){
-        Serial.printf("TS Voltage: %5.03f\n", acu.getTsVoltage());
+        Serial.printf("TS Voltage: %5.03f\n", acu.getTsVoltage(false));
     }
     if(printSDCVoltage){
-        Serial.printf("SDC Voltage: %5.03f\n", acu.getShdnVolt());
+        Serial.printf("SDC Voltage: %5.03f\n", acu.getShdnVolt(false));
     }
     if(printGLVVoltage){
-        Serial.printf("GLV Voltage: %5.03f\n", acu.getGlvVoltage());
+        Serial.printf("GLV Voltage: %5.03f\n", acu.getGlvVoltage(false));
     }
     if(printMaxChrgVoltage);
     if(printMaxChrgCurrent);
@@ -87,12 +87,17 @@ void debug(){
     if(printFanRef){
         Serial.printf("5V: %5.03f\n", acu.getFanRef());
     }
-    if(printMaxCellTemp);
+    if(printMaxCellTemp){
         Serial.printf("Max Cell Temp: %5.03f\n", battery.maxCellTemp);
+    }
     if(printMaxBalTemp);
     if(printMinVolt);
-    if(printAccumCurrent);
-    if(printAccumCurrentZero);
+    if(printAccumCurrent){
+        Serial.printf("TS current: %5.03f\n", acu.getTsCurrent(false));
+    }
+    if(printAccumCurrentZero){
+        Serial.printf("TS current ref: %5.05f\n", acu.cur_ref);
+    }
     if(printACUTemp);
     if(printCycle){
         Serial.printf("----------- Cycle: %d --------------\n", cycle);

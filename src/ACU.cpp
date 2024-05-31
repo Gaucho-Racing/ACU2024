@@ -38,7 +38,10 @@ void ACU::init_config(){
   cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);   //Zero current sensor offset
   uint8_t count = 0;
   while (abs(cur_ref - 1.235) > ERRMG_ISNS_VREF) {
-    if (count > 10) break;
+    if (count > 10) {
+      cur_ref = 1.235;
+      break;
+    }
     count++;
     Serial.printf("Current sensor ref: %f ", cur_ref);
     D_L1("HV current too far from zero. Check hardware. ");
@@ -124,11 +127,15 @@ void ACU::checkACU(bool startup){
         this->errs |= ERR_OverCurr;
     }
 
-    //glv bat not charged
+    //glv voltage
     if(this->glv_voltage < MIN_GLV_VOLT){
         D_L1("GLV Undervolt detected");
         this->errs |= ERR_UndrVolt;
-    } 
+    }
+    if(this->glv_voltage > MAX_GLV_VOLT){
+        D_L1("GLV Overvolt detected");
+        this->errs |= ERR_OverVolt;
+    }
     
     if(this->glv_voltage > OPEN_GLV_VOLT){
         D_L1("GLV Not connected detected");
@@ -136,11 +143,11 @@ void ACU::checkACU(bool startup){
     } 
 
     //fan ref voltage
-    if(this->fan_Ref < MIN_FAN_REF_VOLT){
+    if(5.0 - this->fan_Ref > ERRMG_5V){
         D_L1("5V Low detected");
         this->errs |= ERR_UndrVolt;
-    } else if(this->fan_Ref > MAX_FAN_REF_VOLT){
-        D_L1("Fan Ref High detected");
+    } else if(this->fan_Ref - 5.0 > ERRMG_5V){
+        D_L1("5V High detected");
         this->errs |= ERR_OverVolt;
     }
 

@@ -86,8 +86,8 @@ void sendCANData(uint32_t ID){
     }break;
 
     case Charging_Cart_Config:{
-      uint16_t max_charge_current = battery.max_chrg_current;
-      uint16_t max_charge_volt = battery.max_chrg_voltage;
+      uint16_t max_charge_current = battery.max_chrg_current * 100;
+      uint16_t max_charge_volt = battery.max_chrg_voltage * 100;
       msg.buf[0] = max_charge_current >> 8;
       msg.buf[1] = max_charge_current;
       msg.buf[2] = max_charge_volt >> 8;
@@ -279,8 +279,8 @@ void parseCANData(){
       
     case Charger_Data:
       // parse the max voltage, max current & chaging/not charging bool & get all failures
-      battery.max_chrg_voltage = (msg.buf[0] << 8) | msg.buf[1];
-      battery.max_chrg_current = (msg.buf[2] << 8) | msg.buf[3];
+      battery.max_chrg_voltage = ((msg.buf[0] << 8) | msg.buf[1]) * 0.1;
+      battery.max_chrg_current = ((msg.buf[2] << 8) | msg.buf[3]) * 0.1;
       // battery.chargerDataStatus.hardwareStatus = msg.buf[4] & ERR_Hardware;
       // battery.chargerDataStatus.temperatureStatus = msg.buf[4] & ERR_Temp;
       // battery.chargerDataStatus.inputVoltageStatus = msg.buf[4] & ERR_InputVolt;
@@ -355,7 +355,7 @@ void dumpCANbus() {
     sendCANData(ACU_General);
     sendCANData(ACU_General2);
     sendCANData(Powertrain_Cooling);
-    // sendCANData(Charging_Cart_Config);
+    sendCANData(Charging_Cart_Config);
     // sendCANData(IMD_General);
     // sendCANData(IMD_Isolation_Detail);
     // sendCANData(IMD_Voltage);

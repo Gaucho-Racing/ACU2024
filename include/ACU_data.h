@@ -48,6 +48,7 @@
 #define MAX_DCDC_TEMP 70
 #define MAX_DCDC_CURRENT 10
 #define MIN_GLV_VOLT 10
+#define MAX_GLV_VOLT 14.4
 #define OPEN_GLV_VOLT 16.37
 #define MIN_FAN_REF_VOLT 4.5
 #define MAX_FAN_REF_VOLT 5.7
@@ -153,7 +154,7 @@
 // error margins
 #define ERRMG_GLV_SDC 1.5
 #define ERRMG_ISNS_VREF 0.2
-#define ERRMG_5V 0.5
+#define ERRMG_5V 0.2
 
 
 #endif
