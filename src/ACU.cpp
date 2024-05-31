@@ -112,12 +112,11 @@ void ACU::checkACU(bool startup){
         digitalWrite(PIN_DCDC_EN, LOW);
     }
     else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
+        digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) < 370);
         digitalWrite(PIN_DCDC_SLOW, HIGH);
-    } else {
-      if(this->getTsVoltage() < 370)
-        // digitalWrite(PIN_DCDC_EN, HIGH);
-        //D_L1("HV Voltage too low, shutting down DCDC");
-        digitalWrite(PIN_DCDC_SLOW, LOW);
+    }
+    else {
+        digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) < 370);
     }
 
     //dcdc current
