@@ -4,7 +4,7 @@
 #include <SPI.h>
 // CONFIG OPTIONS FOR 6830 ARE IN THE CPP FILE
 
-#define TOTAL_IC 1
+#define TOTAL_IC 8
 
 //TRIAGE 2: Change these to the correct values
 
@@ -50,8 +50,6 @@
 #define MIN_GLV_VOLT 10
 #define MAX_GLV_VOLT 14.4
 #define OPEN_GLV_VOLT 16.37
-#define MIN_FAN_REF_VOLT 4.5
-#define MAX_FAN_REF_VOLT 5.7
 
 
 // hardware constants
@@ -102,7 +100,7 @@
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A
 
-#define PRECHARGE_THRESHOLD 0.98 // fraction of total cell voltage
+#define PRECHARGE_THRESHOLD 0.97 // fraction of total cell voltage
 
 //masks
 //error 

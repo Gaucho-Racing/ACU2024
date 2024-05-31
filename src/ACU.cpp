@@ -48,7 +48,6 @@ void ACU::init_config(){
     delay(500);
     cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);
   }
-  fans.writeRegister(FAN_SPD3_addr, 300);
 }
 
 

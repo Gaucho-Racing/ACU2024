@@ -274,7 +274,6 @@ void parseCANData(){
       msg.buf[5] = 0b0000000;
       msg.buf[6] = 0b0000000;
       msg.buf[7] = 0b0000000;
-      Serial.println("PAIN");
       break;
       
     case Charger_Data:
@@ -286,7 +285,6 @@ void parseCANData(){
       // battery.chargerDataStatus.inputVoltageStatus = msg.buf[4] & ERR_InputVolt;
       // battery.chargerDataStatus.startingState = msg.buf[4] & ERR_Start;
       // battery.chargerDataStatus.communicationState = msg.buf[4] & ERR_Comm;
-      Serial.println("Charger Data Read, yaya we won't die");
       break;
     
     case IMD_General:
@@ -304,7 +302,6 @@ void parseCANData(){
         uint16_t temp = (msg.buf[1] << 8) | (msg.buf[2]);
         acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
       }
-      Serial.println("PAIN");
     break;
     default:
       // Serial.println("lol no message here for ya\t\t\t\t\t\t\t\t\tFucker");
