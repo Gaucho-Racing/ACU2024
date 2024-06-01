@@ -5,9 +5,11 @@ void acuControl(const CAN_message_t &msg){
    if (msg.id == ACU_Control) {
     if(state == STANDBY && msg.buf[0]){
       state = PRECHARGE;
+      Serial.println("PRECHARGE!!!!!!!!!");
     }
     else if(msg.buf[0]==0){
       state = SHUTDOWN;
+      Serial.println("SHUTDOWN!!!!!!!!!");
       acu.errs = 0; // clear errors;
     }
   }
@@ -288,10 +290,10 @@ void parseCANData(){
       break;
     
     case IMD_General:
-      acu.setRIsoCorrected((msg.buf[0] << 8) | (msg.buf[1]));
+      acu.setRIsoCorrected((uint16_t(msg.buf[0]) << 8) | (msg.buf[1]));
       acu.setRIsoStatus(msg.buf[2]);
       acu.setIsoMeasCount(msg.buf[3]);
-      acu.setStatusDeviceActivity((msg.buf[4] << 8) | (msg.buf[5]));
+      //acu.setStatusDeviceActivity((uint16_t(msg.buf[4]) << 8) | (msg.buf[5]));
       acu.setStatusDeviceActivity(msg.buf[6]);
       // Serial.println("IMD General");
       //last byte is don't care
@@ -326,11 +328,9 @@ int readCANData(){
   }
 
   // for(int i = 0; i < maxReads; i++){
-  //   if(!can_chgr.read(msg)){
-  //     break;
+  //   if(can_chgr.read(msg)){
+  //     parseCANData();
   //   }
-  //   charger = 2;
-  //   parseCANData();
   // }
   return (primary << 1) + charger;
 

@@ -14,7 +14,7 @@ class Battery{
         //in 0.1mV
 
         float maxCellTemp, maxBalTemp = -1;
-        uint16_t minVolt = -1;
+        float minVolt = -1;
 
         float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
         float balTemp[16 * TOTAL_IC];

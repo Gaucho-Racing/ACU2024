@@ -49,7 +49,7 @@ ERR     INJECT_ERR_SPI_READ = WITHOUT_ERR;
 /* Set Under Voltage and Over Voltage Thresholds */
 /* Set Under Voltage and Over Voltage Thresholds */
 const float OV_THRESHOLD = 4.2;                 /* Volt in 0.1 mV*/
-const float UV_THRESHOLD = 3;                 /* Volt in 0.1 mV*/
+const float UV_THRESHOLD = 3.0;                 /* Volt in 0.1 mV*/
 //Discharge
 const float MIN_DIS_TEMP = -40; //TODO: Modify later
 const float MAX_DIS_TEMP = 60; 

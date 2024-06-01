@@ -107,17 +107,26 @@ void ACU::checkACU(bool startup){
     }
 
     //dcdc convertor temp regulation, slow down fan if temp is high, shut down if temp is too high
-    if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP){
-        D_L1("DCDC Overtemp detected");
-        digitalWrite(PIN_DCDC_EN, LOW);
-    }
-    else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
-        digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) < 370);
-        digitalWrite(PIN_DCDC_SLOW, HIGH);
+    Serial.println(analogRead(PIN_DCDC_ER) / 1024.0 * 3.3);
+    if(!digitalRead(PIN_DCDC_ER) && state == NORMAL){
+      // if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP){
+      //   D_L1("DCDC Overtemp detected");
+      //   digitalWrite(PIN_DCDC_EN, LOW);
+      // }
+      // else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
+      //   digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) > 370);
+      //   digitalWrite(PIN_DCDC_SLOW, HIGH);
+      // }
+      // else {
+      //   digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) > 370);
+      // }
+      digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) > 370);
+      digitalWrite(PIN_DCDC_SLOW, HIGH);
     }
     else {
-        digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) < 370);
+      digitalWrite(PIN_DCDC_EN, LOW);
     }
+    
 
     //dcdc current
     if(this->dcdc_current > MAX_DCDC_CURRENT){
@@ -152,7 +161,7 @@ void ACU::checkACU(bool startup){
     //shdn voltage, should be close to GLV
     if(abs(this->shdn_volt - this->glv_voltage) > ERRMG_GLV_SDC && !startup && state == NORMAL){
       Serial.println(abs(this->shdn_volt - this->glv_voltage));
-        D_L1("Shdn voltage not close enough of GLV");
+        Serial.println("Shdn voltage not close enough of GLV");
         if(this->shdn_volt < this->glv_voltage)
             this->errs |= ERR_UndrVolt;
         else if(this->shdn_volt > this->glv_voltage){

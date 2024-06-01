@@ -19,6 +19,7 @@ void shutdownState(){
 
 void normalState(){
   if(SystemCheck()){
+    Serial.println("SystemCheck failed in NORMAL state");
     state = SHUTDOWN;
     return;
   }
@@ -97,12 +98,16 @@ void preChargeState(){
   // check voltage, if difference > threshold after 2 seconds throw error
   uint32_t startTime = millis();
   while (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
+    if (SystemCheck()) {
+      state = SHUTDOWN;
+      return;
+    }
     Serial.println(acu.getTsVoltage());
     Vglv = acu.getGlvVoltage();
     Vsdp = acu.getShdnVolt();
     if(abs(Vglv - Vsdp) > ERRMG_GLV_SDC){
       Serial.printf("Vglv: %f, Vsdp: %f\n", Vglv, Vsdp);
-      D_L1("SDC voltage dropped while precharging!! Check connections");
+      Serial.println("SDC voltage dropped while precharging!! Check connections");
       acu.errs |= ERR_Prechrg;
       sendCANData(ACU_General);
       state = SHUTDOWN;
@@ -125,6 +130,17 @@ void preChargeState(){
     }
     D_L1(acu.getTsVoltage(false));
   }
+
+  // delay 3 seconds, for safety
+  startTime = millis();
+  while (millis() - startTime < 3000) {
+    if (SystemCheck()) {
+      state = SHUTDOWN;
+      return;
+    }
+    dumpCANbus();
+  }
+
   acu.setRelayState(0b111); // close all relays
   sendCANData(ACU_General2);
 

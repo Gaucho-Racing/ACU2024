@@ -115,7 +115,11 @@ void Battery::checkVoltage(){
       acu.errs |= ERR_OverVolt;
     }
     if (this->cellVoltage[i] < UV_THRESHOLD){
-      D_L1("Battery UnderVolt Err");
+      if (this->cellVoltage[i] > 1.6) {
+        D_L1("Battery UnderVolt Err");
+        D_L1(i);
+        D_L1(this->cellVoltage[i]);
+      }
       acu.errs |= ERR_UndrVolt;
     }
     this->batVoltage += this->cellVoltage[i];

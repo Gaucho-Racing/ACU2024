@@ -18,7 +18,7 @@
 // #define PIN_AIR_POS_AUX -1 // auxilary contacts
 // #define PIN_AIR_NEG_AUX -1 // auxilary contacts
 #define PIN_AMS_OK 39
-#define PIN_DCDC_ER 18 //in the words of owen: "if it's high it's fucked", Buck Bad pin
+#define PIN_DCDC_ER 18 // if high, buck mosfet likely fried or buck regulator error
 #define PIN_DCDC_EN 15 // enable DC/DC converter
 #define PIN_DCDC_SLOW 16 // DC/DC low power mode
 #define PIN_IMD_OK 17 // Isolation monitoring device
@@ -150,7 +150,7 @@
 #define DELAY_PCHG_SW 5
 
 // error margins
-#define ERRMG_GLV_SDC 1.5
+#define ERRMG_GLV_SDC 3
 #define ERRMG_ISNS_VREF 0.2
 #define ERRMG_5V 0.2
 
