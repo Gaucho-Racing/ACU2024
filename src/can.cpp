@@ -80,8 +80,8 @@ void sendCANData(uint32_t ID){
       msg.buf[1] = (acu.fanRpm[1] / 50);
       msg.buf[2] = (acu.fanRpm[2] / 50);
       msg.buf[3] = 0; // --> PUMP SPEED TBD
-      msg.buf[4] = (acu.getDcdcTemp1(false) / 2);
-      msg.buf[5] = (acu.getDcdcTemp2(false) / 2);
+      msg.buf[4] = (acu.getTemp1(false) / 2);
+      msg.buf[5] = (acu.getTemp2(false) / 2);
       msg.buf[6] = 0;
       msg.buf[7] = (acu.fans.readRegister(FAN_ERRS_addr));
       can_prim.write(msg); 
@@ -191,17 +191,19 @@ void sendCANData(uint32_t ID){
       // Serial.println("ping");
       break;
       
-    case Charger_Control:
-      msg.buf[0] = u_int16_t(battery.max_chrg_current * 100) >> 8;
-      msg.buf[1] = u_int16_t(battery.max_chrg_current * 100);
-      msg.buf[2] = u_int16_t(battery.max_chrg_voltage * 100)>> 8;
-      msg.buf[3] = u_int16_t(battery.max_chrg_voltage * 100);
+    case Charger_Control: {
+      uint16_t code = battery.max_chrg_current * 100;
+      msg.buf[0] = code >> 8;
+      msg.buf[1] = code & 0xFF;
+      code = battery.max_chrg_voltage * 100;
+      msg.buf[2] = code >> 8;
+      msg.buf[3] = code & 0xFF;
       msg.buf[4] = state == CHARGE ? 1:0; 
       msg.buf[5] = 0b0000000;
       msg.buf[6] = 0b0000000; 
       msg.buf[7] = 0b0000000; 
       can_chgr.write(msg);
-      break;
+    }break;
     case IMD_Request: // weird thing happening: ID not part of buffer idx?
       msg.buf[0] = 0x5E;
       msg.buf[1] = 0xFF; // index for Voltage: HV system

@@ -8,14 +8,20 @@ extern States state;
 /// @return temperature in deg C
 float V2T(float voltage, float B){
   float R = voltage / ((5.0 - voltage) / 47e3) / 100e3;
-  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15)); 
+  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
   return T - 273.15;
 }
 
 float V2T(int16_t voltage, float B){ // voltage in ADI format
   float actualVoltage = (voltage + 10000) * 0.000150;
   float R = actualVoltage / ((5.0 - actualVoltage) / 47e3) / 100e3;
-  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15)); 
+  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
+  return T - 273.15;
+}
+
+float V2T(float vdd, float voltage, float B, float Rsns, float Rref){ // allows to set custom sensor and reference resistance, and supply voltage
+  float R = voltage / ((vdd - voltage) / Rsns) / Rref;
+  float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
   return T - 273.15;
 }
 
@@ -64,13 +70,13 @@ void ACU::updateShdnVolt(){
   shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4;
 }
 void ACU::updateDcdcCurrent(){
-  dcdc_current = (ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - 2.5) / 0.09;
+  dcdc_current = (ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - fan_Ref/2) / 0.09;
 }
-void ACU::updateDcdcTemp1(){
-  DCDC_temp[0] = V2T(ACU_ADC.readVoltage(ADC_MUX_DCDC_TEMP1)); 
+void ACU::updateTemp1(){
+  temps[0] = V2T(5, ACU_ADC.readVoltage(ADC_MUX_TEMP1), 3950, 10e3, 47e3);
 }
-void ACU::updateDcdcTemp2(){
-  DCDC_temp[1] = V2T(ACU_ADC.readVoltage(ADC_MUX_DCDC_TEMP2)); //given in volts
+void ACU::updateTemp2(){
+  temps[1] = V2T(5, ACU_ADC.readVoltage(ADC_MUX_TEMP2), 3950, 10e3, 47e3);
 }
 void ACU::updateFanRef(){
   fan_Ref = ACU_ADC.readVoltage(ADC_MUX_FAN_REF)*2;
@@ -86,8 +92,8 @@ void ACU::updateAll(){
   updateTsCurrent();
   updateShdnVolt();
   updateDcdcCurrent();
-  updateDcdcTemp1();
-  updateDcdcTemp2();
+  updateTemp1();
+  updateTemp2();
   updateFanRef();
   updateRelayState();
 }
@@ -106,27 +112,7 @@ void ACU::checkACU(bool startup){
         this->warns |= WARN_HighCurr;
     }
 
-    //dcdc convertor temp regulation, slow down fan if temp is high, shut down if temp is too high
     Serial.println(analogRead(PIN_DCDC_ER) / 1024.0 * 3.3);
-    if(!digitalRead(PIN_DCDC_ER) && state == NORMAL){
-      // if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP){
-      //   D_L1("DCDC Overtemp detected");
-      //   digitalWrite(PIN_DCDC_EN, LOW);
-      // }
-      // else if(max(DCDC_temp[0], DCDC_temp[1]) > MAX_DCDC_TEMP*0.9){
-      //   digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) > 370);
-      //   digitalWrite(PIN_DCDC_SLOW, HIGH);
-      // }
-      // else {
-      //   digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) > 370);
-      // }
-      digitalWrite(PIN_DCDC_EN, this->getTsVoltage(false) > 370);
-      digitalWrite(PIN_DCDC_SLOW, HIGH);
-    }
-    else {
-      digitalWrite(PIN_DCDC_EN, LOW);
-    }
-    
 
     //dcdc current
     if(this->dcdc_current > MAX_DCDC_CURRENT){
@@ -136,25 +122,25 @@ void ACU::checkACU(bool startup){
 
     //glv voltage
     if(this->glv_voltage < MIN_GLV_VOLT){
-        D_L1("GLV Undervolt detected");
+        //D_L1("GLV Undervolt detected");
         this->errs |= ERR_UndrVolt;
     }
     if(this->glv_voltage > MAX_GLV_VOLT){
-        D_L1("GLV Overvolt detected");
+        //D_L1("GLV Overvolt detected");
         this->errs |= ERR_OverVolt;
     }
     
     if(this->glv_voltage > OPEN_GLV_VOLT){
-        D_L1("GLV Not connected detected");
+        //D_L1("GLV Not connected detected");
         this->errs |= ERR_UndrVolt;
     } 
 
     //fan ref voltage
     if(5.0 - this->fan_Ref > ERRMG_5V){
-        D_L1("5V Low detected");
+        //D_L1("5V Low detected");
         this->errs |= ERR_UndrVolt;
     } else if(this->fan_Ref - 5.0 > ERRMG_5V){
-        D_L1("5V High detected");
+        //D_L1("5V High detected");
         this->errs |= ERR_OverVolt;
     }
 
@@ -211,13 +197,13 @@ float ACU::getDcdcCurrent(bool update){
   if (update) updateDcdcCurrent();
   return dcdc_current;
 }
-float ACU::getDcdcTemp1(bool update){
-  if (update) updateDcdcTemp1();
-  return DCDC_temp[0];
+float ACU::getTemp1(bool update){
+  if (update) updateTemp1();
+  return temps[0];
 }
-float ACU::getDcdcTemp2(bool update){
-  if (update) updateDcdcTemp2();
-  return DCDC_temp[1];
+float ACU::getTemp2(bool update){
+  if (update) updateTemp2();
+  return temps[1];
 }
 float ACU::getFanRef(bool update){
   if (update) updateFanRef();

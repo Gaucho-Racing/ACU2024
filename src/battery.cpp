@@ -158,7 +158,7 @@ void Battery::checkTemp(){
       // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
       //check Bal Temp;
       if (this->cellTemp[i] > this->cell_OT_Threshold){
-        D_L1("Battery cell OverTemp Err");
+        //D_L1("Battery cell OverTemp Err");
         acu.errs |= ERR_OverTemp;
       }
       if (this->cellTemp[i] < this->cell_UT_Threshold){

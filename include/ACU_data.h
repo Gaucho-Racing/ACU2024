@@ -62,8 +62,8 @@
 #define ADC_MUX_HV_CURRENT 0
 #define ADC_MUX_SHDN_POW 1
 #define ADC_MUX_DCDC_CURRENT 5
-#define ADC_MUX_DCDC_TEMP1 2
-#define ADC_MUX_DCDC_TEMP2 3
+#define ADC_MUX_TEMP1 2
+#define ADC_MUX_TEMP2 3
 #define ADC_MUX_FAN_REF 4
 
 
@@ -100,7 +100,7 @@
 #define CHARGER_VOLTAGE 540 //V
 #define CHARGER_CURRENT 5 //A
 
-#define PRECHARGE_THRESHOLD 0.97 // fraction of total cell voltage
+#define PRECHARGE_THRESHOLD 0.96 // fraction of total cell voltage
 
 //masks
 //error 

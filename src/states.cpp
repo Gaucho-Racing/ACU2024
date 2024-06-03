@@ -2,8 +2,8 @@
 void shutdownState(){
   // Open AIRS and Precharge if already not open, close Discharge
   acu.setRelayState(0);
+  digitalWrite(PIN_DCDC_EN, LOW);
 
-  //dumpCANbus();////////////////////////////////////////FIX
   acu.warns = 0;
   //errors can only be reset when shutdown
   bool temp = acu.errs & ERR_Prechrg;
@@ -30,6 +30,17 @@ void normalState(){
   if (acu.getTsCurrent(false) > 0.5) acu.cur_LastHighTime = millis();
   if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
 
+  if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
+    digitalWrite(PIN_DCDC_EN, LOW);
+  }
+  else if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP*0.9){
+    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+    digitalWrite(PIN_DCDC_SLOW, HIGH);
+  }
+  else {
+    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+  }
+
   return;
 }
 
@@ -49,12 +60,24 @@ void chargeState(){
     }
   }
 
+  if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
+    digitalWrite(PIN_DCDC_EN, LOW);
+  }
+  else if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP*0.9){
+    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+    digitalWrite(PIN_DCDC_SLOW, HIGH);
+  }
+  else {
+    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+  }
+
   return;
 }
 
 float Vglv, Vsdp;
 
 void preChargeState(){
+  digitalWrite(PIN_DCDC_EN, LOW);
   acu.warns = 0;
   acu.errs &= ~ERR_Prechrg;
   #if DEBUG
@@ -90,7 +113,7 @@ void preChargeState(){
   sendCANData(ACU_General2);
   acu.setRelayState(0b101); // close precharge relay
   sendCANData(ACU_General2);
-  if (acu.errs) {
+  if (SystemCheck()) {
     state = SHUTDOWN;
     return;
   }
@@ -102,7 +125,7 @@ void preChargeState(){
       state = SHUTDOWN;
       return;
     }
-    Serial.println(acu.getTsVoltage());
+    Serial.println(acu.getTsVoltage(false));
     Vglv = acu.getGlvVoltage();
     Vsdp = acu.getShdnVolt();
     if(abs(Vglv - Vsdp) > ERRMG_GLV_SDC){
@@ -122,8 +145,7 @@ void preChargeState(){
     }
 
     readCANData();
-    sendCANData(ACU_General);
-    sendCANData(ACU_General2);
+    dumpCANbus();
     if (state != PRECHARGE) {
       state = SHUTDOWN;
       return;
@@ -134,6 +156,11 @@ void preChargeState(){
   // delay 3 seconds, for safety
   startTime = millis();
   while (millis() - startTime < 3000) {
+    if (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
+      state = SHUTDOWN;
+      acu.errs |= ERR_Prechrg;
+      return;
+    }
     if (SystemCheck()) {
       state = SHUTDOWN;
       return;
@@ -152,8 +179,7 @@ void preChargeState(){
 //
 /// @brief do nothing, in initial state wait for VDM to send start command, might need to poll CAN
 void standByState(){
-  acu.warns = 0;
-  //battery.disable_Mux();
+  digitalWrite(PIN_DCDC_EN, LOW);
   SystemCheck();
   cycle++;
   cycle = cycle % 8;

@@ -7,6 +7,8 @@
 #define printTSVoltage true
 #define printSDCVoltage true
 #define printGLVVoltage true
+#define printDcdcCurrent true
+#define printTemps true
 #define printMaxChrgVoltage false
 #define printMaxChrgCurrent false
 #define printMaxOutputCurrent false
@@ -81,11 +83,17 @@ void debug(){
     if(printGLVVoltage){
         Serial.printf("GLV Voltage: %5.03f\n", acu.getGlvVoltage(false));
     }
+    if(printDcdcCurrent){
+        Serial.printf("DCDC Current: %5.03f\n", acu.getDcdcCurrent(false));
+    }
+    if(printTemps){
+        Serial.printf("ACU Temps: %5.03f, %5.03f\n", acu.getTemp1(false), acu.getTemp2(false));
+    }
     if(printMaxChrgVoltage);
     if(printMaxChrgCurrent);
     if(printMaxOutputCurrent);
     if(printFanRef){
-        Serial.printf("5V: %5.03f\n", acu.getFanRef());
+        Serial.printf("5V: %5.03f\n", acu.getFanRef(false));
     }
     if(printMaxCellTemp){
         Serial.printf("Max Cell Temp: %5.03f\n", battery.maxCellTemp);

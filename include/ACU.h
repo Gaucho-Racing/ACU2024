@@ -34,8 +34,8 @@ class ACU{
         void updateTsCurrent();
         void updateShdnVolt();
         void updateDcdcCurrent();
-        void updateDcdcTemp1();
-        void updateDcdcTemp2();
+        void updateTemp1();
+        void updateTemp2();
         void updateFanRef();
         void updateRelayState();
         void updateAll();
@@ -47,7 +47,7 @@ class ACU{
         float shdn_volt; 
         float dcdc_current; 
         //TRIAGE 4: consider if we want to do some sort of "sanity" checking for the temps
-        float DCDC_temp[2]; // DC-DC converter, given in volts, need to call V2T to convert to temp
+        float temps[2]; // thermistor readings
         float fan_Ref;
         
         float max_output_current = MAX_HV_CURRENT;
@@ -87,8 +87,8 @@ class ACU{
         float getTsCurrent(bool update = true);
         float getShdnVolt(bool update = true);
         float getDcdcCurrent(bool update = true);
-        float getDcdcTemp1(bool update = true);
-        float getDcdcTemp2(bool update = true);
+        float getTemp1(bool update = true);
+        float getTemp2(bool update = true);
         float getFanRef(bool update = true);
 
         void printIso();
@@ -112,5 +112,6 @@ class ACU{
 
 float V2T(float voltage, float B = 4390);
 float V2T(int16_t voltage, float B = 4390);
+float V2T(float vdd, float voltage, float B, float Rsns, float Rref);
 
 #endif
