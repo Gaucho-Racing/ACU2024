@@ -18,6 +18,8 @@ void shutdownState(){
 }
 
 void normalState(){
+  // Serial.print("Buck bad pin: ");
+  // Serial.println(analogRead(PIN_DCDC_ER) / 1024.0 * 3.3);
   if(SystemCheck()){
     Serial.println("SystemCheck failed in NORMAL state");
     state = SHUTDOWN;
@@ -30,16 +32,16 @@ void normalState(){
   if (acu.getTsCurrent(false) > 0.5) acu.cur_LastHighTime = millis();
   if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
 
-  if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
-    digitalWrite(PIN_DCDC_EN, LOW);
-  }
-  else if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP*0.9){
-    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
-    digitalWrite(PIN_DCDC_SLOW, HIGH);
-  }
-  else {
-    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
-  }
+  // if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
+  //   digitalWrite(PIN_DCDC_EN, LOW);
+  // }
+  // else if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP*0.9){
+  //   digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+  //   digitalWrite(PIN_DCDC_SLOW, HIGH);
+  // }
+  // else {
+  //   digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+  // }
 
   return;
 }
@@ -74,9 +76,8 @@ void chargeState(){
   return;
 }
 
-float Vglv, Vsdp;
-
 void preChargeState(){
+  float Vglv, Vsdp;
   digitalWrite(PIN_DCDC_EN, LOW);
   acu.warns = 0;
   acu.errs &= ~ERR_Prechrg;
@@ -89,8 +90,10 @@ void preChargeState(){
     state = SHUTDOWN;
   }
 
-  Vglv = acu.getGlvVoltage();
-  Vsdp = acu.getShdnVolt();
+  for (uint8_t i = 0; i < 16; i++) { // read multiple times to make sure filter stablize
+    Vglv = acu.getGlvVoltage();
+    Vsdp = acu.getShdnVolt();
+  }
 
   while (Vglv > OPEN_GLV_VOLT) { // 12V is not powered (defaults to max)
     D_L1("GLV not powered");
@@ -101,8 +104,10 @@ void preChargeState(){
   D_L1("Precharge Start");
   acu.resetLatch();
   delay(100);
-  Vglv = acu.getGlvVoltage();
-  Vsdp = acu.getShdnVolt();
+  for (uint8_t i = 0; i < 16; i++) {
+    Vglv = acu.getGlvVoltage();
+    Vsdp = acu.getShdnVolt();
+  }
   if (abs(Vglv - Vsdp) > ERRMG_GLV_SDC) {
     D_L1("Latch not closed");
     state = SHUTDOWN;
@@ -198,8 +203,9 @@ bool SystemCheck(bool fullCheck, bool startup){
   battery.checkBattery(fullCheck);
   //D_L1("System Check Done");
   //D_L1();
-  // return acu.errs != 0; true if there are errors, false if there are no errors
-  //TRIAGE 1: remove b4 production
   digitalWrite(PIN_AMS_OK, acu.errs == 0);
+  if (acu.errs) {
+    Serial.println(acu.errs, BIN);
+  }
   return acu.errs != 0;
 }

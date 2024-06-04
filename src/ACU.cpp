@@ -20,7 +20,7 @@ float V2T(int16_t voltage, float B){ // voltage in ADI format
 }
 
 float V2T(float vdd, float voltage, float B, float Rsns, float Rref){ // allows to set custom sensor and reference resistance, and supply voltage
-  float R = voltage / ((vdd - voltage) / Rsns) / Rref;
+  float R = voltage / ((vdd - voltage) / Rref) / Rsns;
   float T = 1.0 / ((log(R) / B) + (1.0 / 298.15));
   return T - 273.15;
 }
@@ -58,25 +58,25 @@ void ACU::init_config(){
 
 
 void ACU::updateGlvVoltage(){
-  glv_voltage = ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT) * 4;
+  glv_voltage += (ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT) * 4 - glv_voltage) * 0.2;
 }
 void ACU::updateTsVoltage(){
-  ts_voltage = ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200;
+  ts_voltage += (ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200 - ts_voltage) * 0.2;
 }
 void ACU::updateTsCurrent(){
   ts_current += ((ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - cur_ref) /5 /0.0032 - ts_current) * 0.2;
 }
 void ACU::updateShdnVolt(){
-  shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4;
+  shdn_volt += (ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4 - shdn_volt) * 0.2;
 }
 void ACU::updateDcdcCurrent(){
   dcdc_current = (ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - fan_Ref/2) / 0.09;
 }
 void ACU::updateTemp1(){
-  temps[0] = V2T(5, ACU_ADC.readVoltage(ADC_MUX_TEMP1), 3950, 10e3, 47e3);
+  temps[0] = V2T(fan_Ref, ACU_ADC.readVoltage(ADC_MUX_TEMP1), 3950, 10e3, 47e3);
 }
 void ACU::updateTemp2(){
-  temps[1] = V2T(5, ACU_ADC.readVoltage(ADC_MUX_TEMP2), 3950, 10e3, 47e3);
+  temps[1] = V2T(fan_Ref, ACU_ADC.readVoltage(ADC_MUX_TEMP2), 3950, 10e3, 47e3);
 }
 void ACU::updateFanRef(){
   fan_Ref = ACU_ADC.readVoltage(ADC_MUX_FAN_REF)*2;
@@ -112,8 +112,6 @@ void ACU::checkACU(bool startup){
         this->warns |= WARN_HighCurr;
     }
 
-    Serial.println(analogRead(PIN_DCDC_ER) / 1024.0 * 3.3);
-
     //dcdc current
     if(this->dcdc_current > MAX_DCDC_CURRENT){
         D_L1("DCDC Overcurrent detected");
@@ -123,7 +121,7 @@ void ACU::checkACU(bool startup){
     //glv voltage
     if(this->glv_voltage < MIN_GLV_VOLT){
         //D_L1("GLV Undervolt detected");
-        this->errs |= ERR_UndrVolt;
+        //this->errs |= ERR_UndrVolt;
     }
     if(this->glv_voltage > MAX_GLV_VOLT){
         //D_L1("GLV Overvolt detected");
@@ -132,13 +130,13 @@ void ACU::checkACU(bool startup){
     
     if(this->glv_voltage > OPEN_GLV_VOLT){
         //D_L1("GLV Not connected detected");
-        this->errs |= ERR_UndrVolt;
+        //this->errs |= ERR_UndrVolt;
     } 
 
     //fan ref voltage
     if(5.0 - this->fan_Ref > ERRMG_5V){
         //D_L1("5V Low detected");
-        this->errs |= ERR_UndrVolt;
+        //this->errs |= ERR_UndrVolt;
     } else if(this->fan_Ref - 5.0 > ERRMG_5V){
         //D_L1("5V High detected");
         this->errs |= ERR_OverVolt;
@@ -146,10 +144,11 @@ void ACU::checkACU(bool startup){
 
     //shdn voltage, should be close to GLV
     if(abs(this->shdn_volt - this->glv_voltage) > ERRMG_GLV_SDC && !startup && state == NORMAL){
-      Serial.println(abs(this->shdn_volt - this->glv_voltage));
-        Serial.println("Shdn voltage not close enough of GLV");
-        if(this->shdn_volt < this->glv_voltage)
+        Serial.print("Shdn voltage not close enough of GLV: ");
+        Serial.println(abs(this->shdn_volt - this->glv_voltage));
+        if(this->shdn_volt < this->glv_voltage) {
             this->errs |= ERR_UndrVolt;
+        }
         else if(this->shdn_volt > this->glv_voltage){
             this->errs |= ERR_OverVolt;
         }

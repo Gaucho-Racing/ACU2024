@@ -242,11 +242,11 @@ void parseCANData(){
     case ACU_Control:
       if(state == STANDBY && msg.buf[0] == 1){
         state = PRECHARGE;
-        D_L2("Entering Precharge YAAAAYYYY");
+        D_L1("Entering Precharge YAAAAYYYY");
       } else if(msg.buf[0] != 1) {
         state = SHUTDOWN;
         acu.errs = 0; // reset errors
-        D_L2("Entering SHUTDOWN BOOOOOOOOOOOOO LAAAME");
+        D_L1("Entering SHUTDOWN BOOOOOOOOOOOOO LAAAME");
       }
       break;
 
@@ -323,15 +323,17 @@ int readCANData(){
   for(int i = 0; i < maxReads; i++){
     if(can_prim.read(msg)){
       parseCANData();
+      primary = 1;
     }
     else {
     }
-    primary = 1;
   }
 
   // for(int i = 0; i < maxReads; i++){
   //   if(can_chgr.read(msg)){
   //     parseCANData();
+      // charger = 1;
+
   //   }
   // }
   return (primary << 1) + charger;

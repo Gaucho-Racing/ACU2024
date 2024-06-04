@@ -112,15 +112,25 @@ void Battery::checkVoltage(){
     if (this->minVolt > this->cellVoltage[i]) this->minVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
       D_L1("Battery OverVolt Err");
-      acu.errs |= ERR_OverVolt;
+      D_L1(i);
+      D_L1(this->cellVoltage[i]);
+      this->cellErr[i]++;
+      if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_OverVolt;
+    }
+    else {
+      this->cellErr[i] = 0;
     }
     if (this->cellVoltage[i] < UV_THRESHOLD){
+      this->cellErr[i]++;
       if (this->cellVoltage[i] > 1.6) {
         D_L1("Battery UnderVolt Err");
         D_L1(i);
         D_L1(this->cellVoltage[i]);
       }
-      acu.errs |= ERR_UndrVolt;
+      if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrVolt;
+    }
+    else {
+      this->cellErr[i] = 0;
     }
     this->batVoltage += this->cellVoltage[i];
   }
@@ -141,12 +151,17 @@ void Battery::checkTemp(){
     }
     else{
       if (this->balTemp[i] > MAX_BAL_TEMP){
-      D_L1("Battery bal OverTemp Err");
-      acu.errs |= ERR_OverTemp;
+        D_L1("Bal OverTemp Err");
+        this->cellErr[i]++;
+        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_OverTemp;
       }
-      if (this->balTemp[i] < MIN_BAL_TEMP){
-        D_L1("Battery bal UnderTemp Err");
-        acu.errs |= ERR_UndrTemp;
+      else if (this->balTemp[i] < MIN_BAL_TEMP){
+        D_L1("Bal UnderTemp Err");
+        this->cellErr[i]++;
+        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrTemp;
+      }
+      else {
+        this->cellErr[i] = 0;
       }
     }
   }
@@ -156,14 +171,23 @@ void Battery::checkTemp(){
     } else {
       if (this->maxCellTemp < this->cellTemp[i]) this->maxCellTemp = this->cellTemp[i];
       // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
-      //check Bal Temp;
+      //check Cell Temp;
       if (this->cellTemp[i] > this->cell_OT_Threshold){
-        //D_L1("Battery cell OverTemp Err");
-        acu.errs |= ERR_OverTemp;
+        D_L1("Cell OverTemp Err");
+        D_L1(i);
+        D_L1(this->cellTemp[i]);
+        this->cellErr[i]++;
+        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_OverTemp;
       }
-      if (this->cellTemp[i] < this->cell_UT_Threshold){
-        D_L1("Battery cell UnderTemp Err");
-        acu.errs |= ERR_UndrTemp;
+      else if (this->cellTemp[i] < this->cell_UT_Threshold){
+        D_L1("Cell UnderTemp Err");
+        D_L1(i);
+        D_L1(this->cellTemp[i]);
+        this->cellErr[i]++;
+        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrTemp;
+      }
+      else {
+        this->cellErr[i] = 0;
       }
     }
   }

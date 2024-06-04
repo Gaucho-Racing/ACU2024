@@ -18,6 +18,7 @@ class Battery{
 
         float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
         float balTemp[16 * TOTAL_IC];
+        uint8_t cellErr[16 * TOTAL_IC]; // number of consecutive error frames
         
         float batVoltage, batSOC;
 
