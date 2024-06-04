@@ -121,7 +121,7 @@ void ACU::checkACU(bool startup){
     //glv voltage
     if(this->glv_voltage < MIN_GLV_VOLT){
         //D_L1("GLV Undervolt detected");
-        //this->errs |= ERR_UndrVolt;
+        this->errs |= ERR_UndrVolt;
     }
     if(this->glv_voltage > MAX_GLV_VOLT){
         //D_L1("GLV Overvolt detected");
@@ -130,7 +130,7 @@ void ACU::checkACU(bool startup){
     
     if(this->glv_voltage > OPEN_GLV_VOLT){
         //D_L1("GLV Not connected detected");
-        //this->errs |= ERR_UndrVolt;
+        this->errs |= ERR_UndrVolt;
     } 
 
     //fan ref voltage

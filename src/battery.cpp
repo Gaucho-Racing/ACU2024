@@ -12,8 +12,9 @@ void Battery::init_config(){
     if((this->IC[0].cell.c_codes[0] + 10000) * 0.000150 > 1.75) break;
     delay(100);
   }
-  this->cell_OT_Threshold = MAX_CELL_TEMP; 
+  this->cell_OT_Threshold = MAX_CELL_TEMP;
   this->cell_UT_Threshold = MIN_CELL_TEMP;
+  Serial.printf("cell_OT_Threshold: %5.03f, cell_UT_Threshold: %5.03f\n", this->cell_OT_Threshold, this->cell_UT_Threshold);
   this->updateVoltage();
   this->updateAllTemps();
 }
@@ -165,29 +166,25 @@ void Battery::checkTemp(){
       }
     }
   }
-  for(int i = 0; i < TOTAL_IC*2*16; i++){
+  for(uint16_t i = 0; i < TOTAL_IC*2*16; i++){
     if(this->balTemp[i] == NAN || this->cellTemp[i] == NAN){
       D_L1("Nan temp pt. 2");
     } else {
       if (this->maxCellTemp < this->cellTemp[i]) this->maxCellTemp = this->cellTemp[i];
       // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
       //check Cell Temp;
-      if (this->cellTemp[i] > this->cell_OT_Threshold){
-        D_L1("Cell OverTemp Err");
-        D_L1(i);
-        D_L1(this->cellTemp[i]);
-        this->cellErr[i]++;
-        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_OverTemp;
+      if (this->cellTemp[i] > MAX_CELL_TEMP){
+        Serial.printf("Cell %d overtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
+        this->cellErr[i >> 1]++;
+        if (this->cellErr[i >> 1] > ERRMG_CELL_ERR) acu.errs |= ERR_OverTemp;
       }
-      else if (this->cellTemp[i] < this->cell_UT_Threshold){
-        D_L1("Cell UnderTemp Err");
-        D_L1(i);
-        D_L1(this->cellTemp[i]);
-        this->cellErr[i]++;
-        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrTemp;
+      else if (this->cellTemp[i] < MIN_CELL_TEMP){
+        Serial.printf("Cell %d undrtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
+        this->cellErr[i >> 1]++;
+        if (this->cellErr[i >> 1] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrTemp;
       }
       else {
-        this->cellErr[i] = 0;
+        this->cellErr[i >> 1] = 0;
       }
     }
   }

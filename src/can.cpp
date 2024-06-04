@@ -252,11 +252,10 @@ void parseCANData(){
 
 
     case Battery_Limits:
-      battery.max_chrg_voltage = ((msg.buf[0] << 8) | msg.buf[1])*0.01;
-      battery.max_output_current = ((msg.buf[2] << 8) | msg.buf[3])*0.01;
-      // TRIAGE 1: Wrong 
-      battery.cell_OT_Threshold = ((msg.buf[4] << 8) | msg.buf[5])*0.01;
-      battery.max_chrg_current = ((msg.buf[6] << 8) | msg.buf[7])*0.01;
+      battery.max_chrg_voltage = ((uint16_t(msg.buf[0]) << 8) | msg.buf[1])*0.01;
+      battery.max_output_current = ((uint16_t(msg.buf[2]) << 8) | msg.buf[3])*0.01;
+      battery.cell_OT_Threshold = ((uint16_t(msg.buf[4]) << 8) | msg.buf[5])*0.01;
+      battery.max_chrg_current = ((uint16_t(msg.buf[6]) << 8) | msg.buf[7])*0.01;
 
       break;
 

@@ -22,7 +22,7 @@ class Battery{
         
         float batVoltage, batSOC;
 
-        float cell_OT_Threshold;
+        float cell_OT_Threshold = 60;
         float cell_UT_Threshold = 0;
         
         float max_chrg_voltage; // 10mV/LSB

@@ -204,8 +204,5 @@ bool SystemCheck(bool fullCheck, bool startup){
   //D_L1("System Check Done");
   //D_L1();
   digitalWrite(PIN_AMS_OK, acu.errs == 0);
-  if (acu.errs) {
-    Serial.println(acu.errs, BIN);
-  }
   return acu.errs != 0;
 }
