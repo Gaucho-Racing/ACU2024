@@ -328,13 +328,16 @@ int readCANData(){
     else {
     }
   }
-
+  
   // for(int i = 0; i < maxReads; i++){
+  //   Serial.println("Testing can_chgr.read()");
   //   if(can_chgr.read(msg)){
+  //   Serial.println("Can_chgr.read() works");
   //     parseCANData();
       // charger = 1;
 
   //   }
+  //  else{ Serial.println("Can_chgr.read() DOESN'T works"); }
   // }
   return (primary << 1) + charger;
 
