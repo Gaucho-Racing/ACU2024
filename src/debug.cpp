@@ -24,6 +24,7 @@
 #define printCellVoltage false
 #define printCellTemp false
 #define printBalTemp false
+#define printIMDData true
 
 extern ACU acu;
 extern Battery battery;
@@ -147,7 +148,12 @@ void debug(){
             Serial.println();
         }
     }
-    Serial.printf("Total Voltage: %5.01f\n", battery.getTotalVoltage());
+    if(printIMDData){
+        Serial.println("IMD Data: --------------------------");
+        Serial.printf("HV System Voltage: %d\n", acu.IMD.hv_system_voltage);
+        Serial.printf("Isolation Quality: %d\n", acu.IMD.Isolation_quality);
+        Serial.printf("Isolation Original: %d\n", acu.IMD.R_iso_original);
+    }
     Serial.println("-----------------------End-----------------------");
     #endif
 }

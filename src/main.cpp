@@ -23,19 +23,17 @@ void setup() {
   Serial.begin(1000000);
   // //D_L1 and D_L2 are debug print statements
   D_L1("Init config");
-  acu.init_config();
-  battery.init_config();
-  D_L1("Setup done");
-
   
   can_prim.begin();
   can_prim.setBaudRate(1000000);
   can_chgr.begin();
   can_chgr.setBaudRate(500000); 
-  if (can_chgr.getBaudRate() != 500000) {
-    Serial.println("Failed to set baud rate for can_chgr");
-    while (1);
-  }
+
+  acu.init_config();
+  battery.init_config();
+  D_L1("Setup done");
+
+  
   Serial.println("CAN interfaces initialized successfully");
   //mailboxSetup();
   // https://github.com/tonton81/FlexCAN_T4/issues/22
