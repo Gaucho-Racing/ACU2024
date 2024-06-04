@@ -18,22 +18,24 @@ uint64_t prev_mill = 0;
 
 //changes ISR depending on whether discharging or charging
 IntervalTimer dumpCAN; //consider using this in conjunction with mailbox
-
+uint64_t lastTime = 0;
 void setup() {
   Serial.begin(1000000);
   // //D_L1 and D_L2 are debug print statements
   D_L1("Init config");
   
-  can_prim.begin();
-  can_prim.setBaudRate(1000000);
   can_chgr.begin();
   can_chgr.setBaudRate(500000); 
-
+  can_prim.begin();
+  can_prim.setBaudRate(1000000);
+  
+  delay(1000);
   acu.init_config();
   battery.init_config();
   D_L1("Setup done");
 
-  
+  delay(1000);
+
   Serial.println("CAN interfaces initialized successfully");
   //mailboxSetup();
   // https://github.com/tonton81/FlexCAN_T4/issues/22
@@ -56,58 +58,40 @@ void setup() {
 }
 
 
-
 void loop() {
-   
-  switch (state)
-  {
-    case STANDBY:
-      standByState();
-      break;
-
-    case PRECHARGE:
-      preChargeState();
-      break;
-
-    case CHARGE:
-      chargeState();  //TODO
-      break;
-
-    case NORMAL:
-      normalState();
-      break;
-
-    case SHUTDOWN:
-      shutdownState();
-      break;
-
-    default:
-      state = SHUTDOWN;
-      D_L1("Uh oh u dummy, u've entered a non-existent state");
-      // delay(10000);
-      break;
-  }
-
-  /* test charger read here
-  Serial.println("GOING TO can_chgr.read(msg)");
-  msg[0] = 127;
-  if(can_chgr.read(msg)){
-    Serial.println("Charger can read up to here!");
-    if(can_cgr.write(msg)){
-      Serial.println("Charger can write");
-    }
-    else{
-      Serial.println("Charger can't write");
-    }
-    Serial.println("no crash from write");
-  }
-  else{
-    Serial.println("Charger can't read");
-  }
-  Serial.println("no crash from read try");
-  */
-
+  sendCANData(IMD_Request);
   readCANData();
+  // switch (state)
+  // {
+  //   case STANDBY:
+  //     standByState();
+  //     break;
+
+  //   case PRECHARGE:
+  //     preChargeState();
+  //     break;
+
+  //   case CHARGE:
+  //     chargeState();  //TODO
+  //     break;
+
+  //   case NORMAL:
+  //     normalState();
+  //     break;
+
+  //   case SHUTDOWN:
+  //     shutdownState();
+  //     break;
+
+  //   default:
+  //     state = SHUTDOWN;
+  //     D_L1("Uh oh u dummy, u've entered a non-existent state");
+  //     // delay(10000);
+  //     break;
+  // }
+  // Serial.printf("Calling readCANData() in state: %d\n", state);
+  // readCANData();
+  delay(1000);
   dumpCANbus(); //uncomment if interrupt don't work
 
   #ifdef DEBUG
