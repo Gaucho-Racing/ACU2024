@@ -32,6 +32,11 @@ void setup() {
   can_prim.setBaudRate(1000000);
   can_chgr.begin();
   can_chgr.setBaudRate(500000); 
+  if (can_chgr.getBaudRate() != 500000) {
+    Serial.println("Failed to set baud rate for can_chgr");
+    while (1);
+  }
+  Serial.println("CAN interfaces initialized successfully");
   //mailboxSetup();
   // https://github.com/tonton81/FlexCAN_T4/issues/22
 
