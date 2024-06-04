@@ -31,8 +31,14 @@ void setup() {
   can_prim.begin();
   can_prim.setBaudRate(1000000);
   can_chgr.begin();
-  can_chgr.setBaudRate(500000);
+  can_chgr.setBaudRate(500000); 
+  if (can_chgr.getBaudRate() != 500000) {
+    Serial.println("Failed to set baud rate for can_chgr");
+    while (1);
+  }
+  Serial.println("CAN interfaces initialized successfully");
   //mailboxSetup();
+  // https://github.com/tonton81/FlexCAN_T4/issues/22
 
   // needs to wait a bit before good values
   
@@ -83,6 +89,25 @@ void loop() {
       // delay(10000);
       break;
   }
+
+  /* test charger read here
+  Serial.println("GOING TO can_chgr.read(msg)");
+  msg[0] = 127;
+  if(can_chgr.read(msg)){
+    Serial.println("Charger can read up to here!");
+    if(can_cgr.write(msg)){
+      Serial.println("Charger can write");
+    }
+    else{
+      Serial.println("Charger can't write");
+    }
+    Serial.println("no crash from write");
+  }
+  else{
+    Serial.println("Charger can't read");
+  }
+  Serial.println("no crash from read try");
+  */
 
   readCANData();
   dumpCANbus(); //uncomment if interrupt don't work
