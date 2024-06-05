@@ -41,7 +41,8 @@ void ACU::init_config(){
   analogWrite(PIN_BSPD_CLK, 127);
   fans.begin();
   this->ACU_ADC.begin();
-  cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256);   //Zero current sensor offset
+  cur_ref = ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT,256); //Zero current sensor offset
+  dcdc_ref = ACU_ADC.readVoltageTot(ADC_MUX_DCDC_CURRENT,256); //Zero current sensor offset
   uint8_t count = 0;
   while (abs(cur_ref - 1.235) > ERRMG_ISNS_VREF) {
     if (count > 10) {
@@ -58,7 +59,7 @@ void ACU::init_config(){
 
 
 void ACU::updateGlvVoltage(){
-  glv_voltage += (ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT) * 4 - glv_voltage) * 0.2;
+  glv_voltage = ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT) * 4;
 }
 void ACU::updateTsVoltage(){
   ts_voltage += (ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200 - ts_voltage) * 0.2;
@@ -67,10 +68,10 @@ void ACU::updateTsCurrent(){
   ts_current += ((ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - cur_ref) /5 /0.0032 - ts_current) * 0.2;
 }
 void ACU::updateShdnVolt(){
-  shdn_volt += (ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4 - shdn_volt) * 0.2;
+  shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4;
 }
 void ACU::updateDcdcCurrent(){
-  dcdc_current = (ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - fan_Ref/2) / 0.09;
+  dcdc_current = (ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - dcdc_ref) / 0.09;
 }
 void ACU::updateTemp1(){
   temps[0] = V2T(fan_Ref, ACU_ADC.readVoltage(ADC_MUX_TEMP1), 3950, 10e3, 47e3);
@@ -245,8 +246,11 @@ void ACU::setStatusDeviceActivity(uint8_t activity){
 // Returns: 1 if successful, 0 if not successful
 bool ACU::setRelayState(uint8_t relayState) {
   uint8_t diff = getRelayState() ^ relayState;
+  D_L1("digitalwrite 1");
   digitalWrite(PIN_AIR_NEG, relayState & 0b100);
+  D_L1("digitalwrite 2");
   digitalWrite(PIN_AIR_POS, relayState & 0b010);
+  D_L1("digitalwrite 3");
   digitalWrite(PIN_PRECHG,  relayState & 0b001);
   delay((diff & 0b110) ? DELAY_AIR_SW : DELAY_PCHG_SW); // wait for relay to switch
   if (getRelayState() == relayState) {

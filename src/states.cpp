@@ -14,6 +14,7 @@ void shutdownState(){
     state = STANDBY;
   }
   acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
+  acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
   return;
 }
 
@@ -32,6 +33,7 @@ void normalState(){
   if (acu.getTsCurrent(false) > 0.5) acu.cur_LastHighTime = millis();
   if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
 
+  if (!digitalRead(PIN_DCDC_EN)) acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
   // if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
   //   digitalWrite(PIN_DCDC_EN, LOW);
   // }
@@ -90,10 +92,8 @@ void preChargeState(){
     state = SHUTDOWN;
   }
 
-  for (uint8_t i = 0; i < 16; i++) { // read multiple times to make sure filter stablize
-    Vglv = acu.getGlvVoltage();
-    Vsdp = acu.getShdnVolt();
-  }
+  Vglv = acu.getGlvVoltage();
+  Vsdp = acu.getShdnVolt();
 
   while (Vglv > OPEN_GLV_VOLT) { // 12V is not powered (defaults to max)
     D_L1("GLV not powered");
@@ -104,33 +104,36 @@ void preChargeState(){
   D_L1("Precharge Start");
   acu.resetLatch();
   delay(100);
-  for (uint8_t i = 0; i < 16; i++) {
-    Vglv = acu.getGlvVoltage();
-    Vsdp = acu.getShdnVolt();
-  }
+  Vglv = acu.getGlvVoltage();
+  Vsdp = acu.getShdnVolt();
   if (abs(Vglv - Vsdp) > ERRMG_GLV_SDC) {
-    D_L1("Latch not closed");
+    D_L1("Latch not closed, skill issue");
+    delay(1000);
     state = SHUTDOWN;
     return;
   }
 
-  acu.setRelayState(0b100); // close AIR-
-  sendCANData(ACU_General2);
-  acu.setRelayState(0b101); // close precharge relay
-  sendCANData(ACU_General2);
-  if (SystemCheck()) {
+  D_L1("systemCheck");
+  if (SystemCheck(true, false)) {
     state = SHUTDOWN;
     return;
   }
+  D_L1("Close AIR-");
+  acu.setRelayState(0b100); // close AIR-
+  sendCANData(ACU_General2);
+  D_L1("Close precharge relay");
+  acu.setRelayState(0b101); // close precharge relay
+  D_L1("Huh");
+  sendCANData(ACU_General2);
     
   // check voltage, if difference > threshold after 2 seconds throw error
   uint32_t startTime = millis();
   while (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
+    Serial.println(acu.getTsVoltage(false));
     if (SystemCheck()) {
       state = SHUTDOWN;
       return;
     }
-    Serial.println(acu.getTsVoltage(false));
     Vglv = acu.getGlvVoltage();
     Vsdp = acu.getShdnVolt();
     if(abs(Vglv - Vsdp) > ERRMG_GLV_SDC){
@@ -170,6 +173,7 @@ void preChargeState(){
       state = SHUTDOWN;
       return;
     }
+    Serial.println(acu.getTsVoltage(false));
     dumpCANbus();
   }
 
@@ -189,6 +193,7 @@ void standByState(){
   cycle++;
   cycle = cycle % 8;
   acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
+  acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
 }
 
 //TRIAGE 3: set a macro for fullCheck for readibility; FULL = true, PARTIAL = false

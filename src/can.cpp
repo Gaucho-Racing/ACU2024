@@ -114,7 +114,7 @@ void sendCANData(uint32_t ID){
       }
       uint16_t cell_volt = condenseVoltage(cell_num);
       uint16_t open_cell_volt = 0b0000000; // what's this? No idea yet
-      uint16_t cell_temp = condenseTemperature(battery.cellTemp[cell_num]);
+      uint16_t cell_temp = condenseTemperature(battery.cellTemp[cell_num], 0);
       msg.buf[1] = cell_volt >> 8;
       msg.buf[2] = cell_volt;
       msg.buf[3] = open_cell_volt >> 8;
@@ -174,14 +174,14 @@ void sendCANData(uint32_t ID){
     case Condensed_Cell_Temp_n128:
     case Condensed_Cell_Temp_n136:{
       uint8_t i = ID - Condensed_Cell_Temp_n0;
-      msg.buf[0] = condenseTemperature((battery.cellTemp[i * 16 + 0] + battery.cellTemp[i * 16 + 1]) / 2);
-      msg.buf[1] = condenseTemperature((battery.cellTemp[i * 16 + 2] + battery.cellTemp[i * 16 + 3]) / 2);
-      msg.buf[2] = condenseTemperature((battery.cellTemp[i * 16 + 4] + battery.cellTemp[i * 16 + 5]) / 2);
-      msg.buf[3] = condenseTemperature((battery.cellTemp[i * 16 + 6] + battery.cellTemp[i * 16 + 7]) / 2);
-      msg.buf[4] = condenseTemperature((battery.cellTemp[i * 16 + 8] + battery.cellTemp[i * 16 + 9]) / 2);
-      msg.buf[5] = condenseTemperature((battery.cellTemp[i * 16 + 10] + battery.cellTemp[i * 16 + 11]) / 2);
-      msg.buf[6] = condenseTemperature((battery.cellTemp[i * 16 + 12] + battery.cellTemp[i * 16 + 13]) / 2);
-      msg.buf[7] = condenseTemperature((battery.cellTemp[i * 16 + 14] + battery.cellTemp[i * 16 + 15]) / 2);
+      msg.buf[0] = condenseTemperature(battery.cellTemp[i * 16 + 0], battery.cellTemp[i * 16 + 1]);
+      msg.buf[1] = condenseTemperature(battery.cellTemp[i * 16 + 2], battery.cellTemp[i * 16 + 3]);
+      msg.buf[2] = condenseTemperature(battery.cellTemp[i * 16 + 4], battery.cellTemp[i * 16 + 5]);
+      msg.buf[3] = condenseTemperature(battery.cellTemp[i * 16 + 6], battery.cellTemp[i * 16 + 7]);
+      msg.buf[4] = condenseTemperature(battery.cellTemp[i * 16 + 8], battery.cellTemp[i * 16 + 9]);
+      msg.buf[5] = condenseTemperature(battery.cellTemp[i * 16 + 10], battery.cellTemp[i * 16 + 11]);
+      msg.buf[6] = condenseTemperature(battery.cellTemp[i * 16 + 12], battery.cellTemp[i * 16 + 13]);
+      msg.buf[7] = condenseTemperature(battery.cellTemp[i * 16 + 14], battery.cellTemp[i * 16 + 15]);
       can_prim.write(msg);
     }
       break;
