@@ -11,6 +11,7 @@ void shutdownState(){
   if (temp) acu.errs |= ERR_Prechrg;
   bool checkPass = !SystemCheck(true);
   if (acu.getTsVoltage() < SAFE_V_TO_TURN_OFF && checkPass) { // safe to turn off if TS voltage < 60V
+    D_L1("Shutdown (Safe) => Standby");
     state = STANDBY;
   }
   acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
@@ -89,6 +90,7 @@ void preChargeState(){
 
   D_L1("Precharge, AIR pins reset");
   if (!acu.setRelayState(0)) {
+    D_L1("PreCharge => Shutdown");
     state = SHUTDOWN;
   }
 
@@ -97,6 +99,7 @@ void preChargeState(){
 
   while (Vglv > OPEN_GLV_VOLT) { // 12V is not powered (defaults to max)
     D_L1("GLV not powered");
+    D_L1("PreCharge => Shutdown");
     state = SHUTDOWN;
     return;
   }
@@ -109,12 +112,14 @@ void preChargeState(){
   if (abs(Vglv - Vsdp) > ERRMG_GLV_SDC) {
     D_L1("Latch not closed, skill issue");
     delay(1000);
+    D_L1("PreCharge => Shutdown");
     state = SHUTDOWN;
     return;
   }
 
   D_L1("systemCheck");
   if (SystemCheck(true, false)) {
+    D_L1("PreCharge => Shutdown");
     state = SHUTDOWN;
     return;
   }
@@ -131,6 +136,7 @@ void preChargeState(){
   while (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
     Serial.println(acu.getTsVoltage(false));
     if (SystemCheck()) {
+      D_L1("PreCharge (TsVoltage) => Shutdown");
       state = SHUTDOWN;
       return;
     }
@@ -141,6 +147,7 @@ void preChargeState(){
       Serial.println("SDC voltage dropped while precharging!! Check connections");
       acu.errs |= ERR_Prechrg;
       sendCANData(ACU_General);
+      D_L1("PreCharge (ERRMG_GLV_SDC) => Shutdown");
       state = SHUTDOWN;
       return;
     }
@@ -149,6 +156,7 @@ void preChargeState(){
       sendCANData(ACU_General);
       state = SHUTDOWN;
       D_L1("Precharge timeout, error");
+      D_L1("PreCharge (timeout) => Shutdown");
       return;
     }
 
@@ -156,6 +164,7 @@ void preChargeState(){
     dumpCANbus();
     if (state != PRECHARGE) {
       state = SHUTDOWN;
+      D_L1("In Precharge (but incorrect state) => Shutdown");
       return;
     }
     D_L1(acu.getTsVoltage(false));
@@ -166,13 +175,16 @@ void preChargeState(){
   while (millis() - startTime < 3000) {
     if (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
       state = SHUTDOWN;
+      D_L1("Precharge (TS Threshold) => Shutdown");
       acu.errs |= ERR_Prechrg;
       return;
     }
     if (SystemCheck()) {
+      D_L1("Precharge (SystemCheck) => Shutdown");
       state = SHUTDOWN;
       return;
     }
+    Serial.print("Precharge TS voltage: ");
     Serial.println(acu.getTsVoltage(false));
     dumpCANbus();
   }
@@ -181,6 +193,7 @@ void preChargeState(){
   sendCANData(ACU_General2);
 
   D_L1("Precharge Done. Ready to drive. State Normal");
+  D_L1("Precharge => Normal");
   state = NORMAL;
   return;
 }

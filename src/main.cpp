@@ -20,34 +20,44 @@ uint64_t prev_mill = 0;
 IntervalTimer dumpCAN; //consider using this in conjunction with mailbox
 uint64_t lastTime = 0;
 void setup() {
-  
-  Serial.begin(1000000);
   // //D_L1 and D_L2 are debug print statements
-  D_L1("Init config");
+  Serial.begin(1000000);
   
+  
+  D_L1("can_chgr begin");
   can_chgr.begin();
   can_chgr.setBaudRate(500000); 
+
+  // if(can_chgr.getBaudRate() != 500000){
+  //   D_L1("can_chgr baud rate not set to correct value");
+  // }
+
+  D_L1("can_prim begin");
   can_prim.begin();
   can_prim.setBaudRate(1000000);
+
+  // if(can_prim.getBaudRate() != 1000000){
+  //   D_L1("can_prim baud rate not set to correct value");
+  // }
+
+  delay(1000); // required so that the CAN bus can initialize properly
+
   
-  delay(1000);
+  D_L1("Init config");
   acu.init_config();
   battery.init_config();
   D_L1("Setup done");
-
-  delay(1000);
-
   Serial.println("CAN interfaces initialized successfully");
+
   //mailboxSetup();
-  // https://github.com/tonton81/FlexCAN_T4/issues/22
 
   // needs to wait a bit before good values
-  
   acu.warns = 0;
   acu.errs = 0;
 
   if(SystemCheck(true, true)){
     state = SHUTDOWN;
+     D_L1("State => Shutdown");
     debug();
     D_L1("System check failed, shutting down (But not rly cuz its commented out)");
   }
@@ -60,8 +70,6 @@ void setup() {
 
 
 void loop() {
-  // sendCANData(IMD_Request); // tests
-  // readCANData();
   switch (state)
   {
     case STANDBY:
@@ -102,7 +110,7 @@ void loop() {
       prev_mill = millis();
       debug();
     }
-    // delay(1000);
+    delay(1000);
   #endif
 
 }

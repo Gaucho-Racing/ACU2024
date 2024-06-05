@@ -205,7 +205,6 @@ void sendCANData(uint32_t ID){
       can_chgr.write(msg);
     }break;
     case IMD_Request: 
-      // Serial.println("IMD Request ***************************************************");
       msg.buf[0] = 0x5E; // index for Voltage: HV system
       msg.buf[1] = 0xFF; 
       msg.buf[2] = 0xFF;
@@ -295,12 +294,12 @@ void parseCANData(){
       break;
     
     case IMD_General:
+      // Serial.println("IMD General DEBUG PRINTS (*****************************************)");
       acu.setRIsoCorrected((uint16_t(msg.buf[0]) << 8) | (msg.buf[1]));
       acu.setRIsoStatus(msg.buf[2]);
       acu.setIsoMeasCount(msg.buf[3]);
+      acu.setStatusDeviceActivity(msg.buf[6]); 
       //acu.setStatusDeviceActivity((uint16_t(msg.buf[4]) << 8) | (msg.buf[5]));
-      acu.setStatusDeviceActivity(msg.buf[6]);
-      // Serial.println("IMD General");
       //last byte is don't care
       break;
     
@@ -310,9 +309,8 @@ void parseCANData(){
       // for(int i = 0; i < 8; i++){
       //   Serial.print(i);
       //   Serial.print(msg.buf[i], HEX);
-      //   Serial.print(" ");
-      // }
-      Serial.println();
+      //   Serial.print(" "); }
+      // Serial.println();
       if(msg.buf[0] == IMD_HV){
         uint16_t temp = (msg.buf[1] << 8) | (msg.buf[2]);
         acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
@@ -333,15 +331,11 @@ int readCANData(){
     if(can_prim.read(msg)){
       parseCANData();
     }
-    else {
-    }
   }
   
   for(int i = 0; i < maxReads; i++){
     if(can_chgr.read(msg)){
-      // Serial.println("Can_chgr reads: ");
-      // Serial.print(msg.id, HEX);
-      // Serial.println();
+      // Serial.println("Can_chgr reads: "); Serial.print(msg.id, HEX); Serial.println();
       // Serial.print("Data: ");
       // for(int i = 0; i < 8; i++){
       //   Serial.print(i);
@@ -353,7 +347,6 @@ int readCANData(){
     }
   }
   return 1;
-
 }
 
 //TRIAGE 2: replace with interrupt/mailboxes
@@ -373,7 +366,7 @@ void dumpCANbus() {
     sendCANData(ACU_General2);
     sendCANData(Powertrain_Cooling);
     sendCANData(Charging_Cart_Config);
-    // sendCANData(IMD_General);
+    sendCANData(IMD_Request); // request IMD data, needs idx to specify what we need
     // sendCANData(IMD_Isolation_Detail);
     // sendCANData(IMD_Voltage);
     // sendCANData(IMD_IT_System);

@@ -3,13 +3,12 @@
 #include <Arduino.h>
 #include <unordered_map>
 
-// ID: 0x1CECFFF4
-enum IMD_TYPE { GENERAL, 
-                ISO_DETAILS, 
-                VOLTAGE, 
-                IT_SYS, 
-                IMD_REQUEST, 
-                IMD_RESPONSE }; // still needed or no?
+// enum IMD_TYPE { GENERAL, 
+//                 ISO_DETAILS, 
+//                 VOLTAGE, 
+//                 IT_SYS, 
+//                 IMD_REQUEST, 
+//                 IMD_RESPONSE }; // still needed or no?
 
 struct IMD_Monitor {
 
@@ -28,7 +27,6 @@ struct IMD_Monitor {
     // R_ISO_DETAILS
     uint16_t R_iso_positive, R_iso_original;
     uint8_t Iso_meas_count, Isolation_quality;
-
     // uint8_t imd_volt[8]; // 0x39; HV voltage, HV- to GND voltage, HV+ to GND voltage, Volt meas count
     // uint8_t imd_it[8];     // 0x3A; Capacity value, Cap meas count, Unbalance value, Unbalance meas, Voltage measure frequency	
 };

@@ -53,11 +53,9 @@
 #define Charger_Data 0x18FF50E5                 //Index 122
 #define Charger_Control 0x1806E5F4              //Index 123
 
-#define IMD_General 0x18FF01F4                      // Index 125: PGN #: 65281
-// #define IMD_Isolation_Detail 0x38              // Index 126
-#define IMD_Voltage 0x39                       // Index 127
-#define IMD_Request 0x18EFF4FE               // Index 129, pretty much only used for HV
-#define IMD_Response 0x18EF00FE // MAYBE?      // Index 130 ===> UNSURE ABOUT THIS
-#define IMD_HV 0x5E                           // Index 94
-
+#define IMD_General 0x18FF01F4                  // Retrieve from Read
+#define IMD_Voltage 0x39                        // Retrieve
+#define IMD_Request 0x18EFF4FE                  // pretty much only used for HV
+#define IMD_Response 0x18EF00FE // MAYBE?       // ===> UNSURE ABOUT THIS (NEEDS TESTING)
+#define IMD_HV 0x5E                             // Index
 #define IMD_HV_OFFSET 1606.4
