@@ -52,9 +52,8 @@ class ACU{
         
         float max_output_current = MAX_HV_CURRENT;
         float max_temp = MAX_DCDC_TEMP;
-        //TRIAGE 1.5 set default values for these
-        float max_chrg_voltage; 
-        float max_chrg_current; 
+        float max_chrg_voltage = CHARGER_VOLTAGE; 
+        float max_chrg_current = CHARGER_CURRENT; 
 
         IMD_Monitor IMD;   // IMD MONITOR
         
