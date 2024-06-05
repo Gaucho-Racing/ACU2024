@@ -204,9 +204,10 @@ void sendCANData(uint32_t ID){
       msg.buf[7] = 0b0000000; 
       can_chgr.write(msg);
     }break;
-    case IMD_Request: // weird thing happening: ID not part of buffer idx?
-      msg.buf[0] = 0x5E;
-      msg.buf[1] = 0xFF; // index for Voltage: HV system
+    case IMD_Request: 
+      // Serial.println("IMD Request ***************************************************");
+      msg.buf[0] = 0x5E; // index for Voltage: HV system
+      msg.buf[1] = 0xFF; 
       msg.buf[2] = 0xFF;
       msg.buf[3] = 0xFF;
       msg.buf[4] = 0xFF;
@@ -223,6 +224,9 @@ void sendCANData(uint32_t ID){
 }
 
 void parseCANData(){
+  // Serial.printf("Parsing CAN Data's msg.id: %lu => ", msg.id);
+  // Serial.print(msg.id, HEX);
+  // Serial.println();
   switch(msg.id){
     case Configure_Cell_Data:
       // if single send requested send immediately
@@ -300,7 +304,15 @@ void parseCANData(){
       //last byte is don't care
       break;
     
-    case IMD_RESPONSE:
+    case IMD_Response: 
+      // Serial.println("IMD Response DEBUG PRINTS (*****************************************)");
+      // Serial.print("Data: ");
+      // for(int i = 0; i < 8; i++){
+      //   Serial.print(i);
+      //   Serial.print(msg.buf[i], HEX);
+      //   Serial.print(" ");
+      // }
+      Serial.println();
       if(msg.buf[0] == IMD_HV){
         uint16_t temp = (msg.buf[1] << 8) | (msg.buf[2]);
         acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
@@ -317,28 +329,30 @@ int readCANData(){
   // Serial.println(millis()-prev_millis);
   // prev_millis = millis();
   int maxReads = 8;  //Max number of CAN message reads per function call
-  bool primary = 0;    //Determine which CAN is connected 2nd bit
-  bool charger = 0;    //Determine which CAN is connected 1st bit (LSB)
   for(int i = 0; i < maxReads; i++){
     if(can_prim.read(msg)){
       parseCANData();
-      primary = 1;
     }
     else {
     }
   }
   
-  // for(int i = 0; i < maxReads; i++){
-  //   Serial.println("Testing can_chgr.read()");
-  //   if(can_chgr.read(msg)){
-  //   Serial.println("Can_chgr.read() works");
-  //     parseCANData();
-      // charger = 1;
-
-  //   }
-  //  else{ Serial.println("Can_chgr.read() DOESN'T works"); }
-  // }
-  return (primary << 1) + charger;
+  for(int i = 0; i < maxReads; i++){
+    if(can_chgr.read(msg)){
+      // Serial.println("Can_chgr reads: ");
+      // Serial.print(msg.id, HEX);
+      // Serial.println();
+      // Serial.print("Data: ");
+      // for(int i = 0; i < 8; i++){
+      //   Serial.print(i);
+      //   Serial.print(msg.buf[i], HEX);
+      //   Serial.print(" ");
+      // }
+      // Serial.println();
+      parseCANData();
+    }
+  }
+  return 1;
 
 }
 

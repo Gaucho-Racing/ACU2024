@@ -150,9 +150,11 @@ void debug(){
     }
     if(printIMDData){
         Serial.println("IMD Data: --------------------------");
-        Serial.printf("HV System Voltage: %d\n", acu.IMD.hv_system_voltage);
-        Serial.printf("Isolation Quality: %d\n", acu.IMD.Isolation_quality);
-        Serial.printf("Isolation Original: %d\n", acu.IMD.R_iso_original);
+        Serial.printf("R_ISO_Corrected: %d\n", acu.IMD.R_iso_corrected);
+        Serial.printf("R_ISO_Status: %d\n", acu.IMD.R_iso_status);
+        Serial.printf("ISO_Meas_Count: %d\n", acu.IMD.Iso_meas_count);
+        Serial.printf("Status_Device_Activity: %d\n", acu.IMD.status_device_activity);
+        Serial.println();
     }
     Serial.println("-----------------------End-----------------------");
     #endif
