@@ -174,13 +174,13 @@ void Battery::checkTemp(){
       // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
       //check Cell Temp;
       if (this->cellTemp[i] > MAX_CELL_TEMP){
-        Serial.printf("Cell %d overtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
         this->cellErr[i >> 1]++;
+        Serial.printf("Cell %d overtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
         if (this->cellErr[i >> 1] > ERRMG_CELL_ERR) acu.errs |= ERR_OverTemp;
       }
       else if (this->cellTemp[i] < MIN_CELL_TEMP){
-        Serial.printf("Cell %d undrtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
         this->cellErr[i >> 1]++;
+        Serial.printf("Cell %d undrtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
         if (this->cellErr[i >> 1] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrTemp;
       }
       else {
@@ -302,8 +302,10 @@ uint8_t condenseVoltage(float voltage) {
 /// @brief converts float temp --> uint8_t temp
 /// @param[in] temperature float
 /// @return uint8_t temperature converted
-uint8_t condenseTemperature(float temperature) {
-  return (uint8_t)((temperature - 10) * 4); // 10C~73.75C --> 0~255
+uint8_t condenseTemperature(float temp1, float temp2) {
+  temp1 = (abs(temp1 - 61.411102) < 0.00001) ? 10 : temp1;
+  temp2 = (abs(temp2 - 61.411102) < 0.00001) ? 10 : temp2;
+  return (uint8_t)((max(temp1, temp2) - 10) * 4); // 10C~73.75C --> 0~255
 }
 
 

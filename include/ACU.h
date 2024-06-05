@@ -60,7 +60,7 @@ class ACU{
         
     public:
         ADC1283 ACU_ADC = ADC1283(CS_ADC, 4.096, 800000);
-        float cur_ref = 0;
+        float cur_ref = 0, dcdc_ref = 2.5;
         uint32_t cur_LastHighTime = 0;
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
         uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen

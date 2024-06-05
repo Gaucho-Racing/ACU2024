@@ -57,7 +57,7 @@ class Battery{
 };
 
 uint8_t condenseVoltage(float voltage); // calculate condensed cell voltage value
-uint8_t condenseTemperature(float temperature); // calculate condensed cell temperature value
+uint8_t condenseTemperature(float temp1, float temp2); // calculate condensed cell temperature value
 
 
 #endif // BATTERY_H
