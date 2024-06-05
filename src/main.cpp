@@ -20,6 +20,7 @@ uint64_t prev_mill = 0;
 IntervalTimer dumpCAN; //consider using this in conjunction with mailbox
 uint64_t lastTime = 0;
 void setup() {
+  
   Serial.begin(1000000);
   // //D_L1 and D_L2 are debug print statements
   D_L1("Init config");
@@ -59,39 +60,41 @@ void setup() {
 
 
 void loop() {
-  sendCANData(IMD_Request);
-  readCANData();
-  // switch (state)
-  // {
-  //   case STANDBY:
-  //     standByState();
-  //     break;
-
-  //   case PRECHARGE:
-  //     preChargeState();
-  //     break;
-
-  //   case CHARGE:
-  //     chargeState();  //TODO
-  //     break;
-
-  //   case NORMAL:
-  //     normalState();
-  //     break;
-
-  //   case SHUTDOWN:
-  //     shutdownState();
-  //     break;
-
-  //   default:
-  //     state = SHUTDOWN;
-  //     D_L1("Uh oh u dummy, u've entered a non-existent state");
-  //     // delay(10000);
-  //     break;
-  // }
-  // Serial.printf("Calling readCANData() in state: %d\n", state);
+  // sendCANData(IMD_Request); // tests
   // readCANData();
+  switch (state)
+  {
+    case STANDBY:
+      standByState();
+      break;
+
+    case PRECHARGE:
+      preChargeState();
+      break;
+
+    case CHARGE:
+      chargeState();  //TODO
+      break;
+
+    case NORMAL:
+      normalState();
+      break;
+
+    case SHUTDOWN:
+      shutdownState();
+      break;
+
+    default:
+      state = SHUTDOWN;
+      D_L1("Uh oh u dummy, u've entered a non-existent state");
+      // delay(10000);
+      break;
+  }
+  
   delay(1000);
+  Serial.printf("Calling readCANData() in state: %d\n", state);
+  
+  readCANData();
   dumpCANbus(); //uncomment if interrupt don't work
 
   #ifdef DEBUG
