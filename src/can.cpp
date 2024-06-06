@@ -299,8 +299,7 @@ void parseCANData(){
       acu.setRIsoStatus(msg.buf[2]);
       acu.setIsoMeasCount(msg.buf[3]);
       acu.setStatusDeviceActivity(msg.buf[6]); 
-      //acu.setStatusDeviceActivity((uint16_t(msg.buf[4]) << 8) | (msg.buf[5]));
-      //last byte is don't care
+      acu.setStatusWarningsAlarms((uint16_t)(msg.buf[4] << 8 | msg.buf[5]));
       break;
     
     case IMD_Response: 

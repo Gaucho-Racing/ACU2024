@@ -82,6 +82,7 @@ class ACU{
         void setMaxTemp(float temp);
 
         uint8_t getRelayState();
+        uint16_t getStatusWarningsAlarms(bool update = true);
         float getGlvVoltage(bool update = true);
         float getTsVoltage(bool update = true);
         float getTsCurrent(bool update = true);
@@ -90,8 +91,10 @@ class ACU{
         float getTemp1(bool update = true);
         float getTemp2(bool update = true);
         float getFanRef(bool update = true);
+        
 
         void printIso();
+        void printIMDErrorsWarnings();
         // uint16_t getIsoResistor();
         // uint16_t getIsoPos(); // retrieves positive resistance value
         // uint16_t getIsoNeg(); //^ neg

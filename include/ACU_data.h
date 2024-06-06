@@ -130,19 +130,14 @@
 #define MASK_CAN_PRECHARGE_DONE 0b00010000
 #define MASK_CAN_SHUTDOWN       0b00001000
 
-
-/*  Bit 0: true = Device error active
-    Bit 1: true = HV_pos connection failure
-    Bit 2: true = HV_neg connection failure
-    Bit 3: true = Earth connection failure
-    Bit 4: true = Iso Alarm (iso value below threshold error)
-    Bit 5: true = Iso Warning (iso value below threshold warning)
-    Bit 6: true = Iso Outdated (value, Time elapsed since lst measurement“ > = „measurement timeout“)
-    Bit 7: true = Unbalance Alarm (unbalance value below threshold)
-    Bit 8: true = Undervoltage Alarm
-    Bit 9: true = Unsafe to Start
-    Bit 10: true = Earthlift open */
-#define IMD_Failure_Bits 0b000000000000;
+//bit masks of IMD_General Status & Warnings
+#define IMD_Device_Error        0b10000000; // Slightly Important
+#define IMD_HV_Pos_Fail         0b01000000; 
+#define IMD_HV_Neg_Fail         0b00100000;
+#define IMD_Iso_Thresh_Error    0b00010000;  // Slightly Important
+#define IMD_Iso_Thresh_Warn     0b00001000;  // Slightly Important
+#define IMD_UnderVoltage        0b00000100;  // Slightly Important
+#define IMD_We_Die_If_Start     0b00000010;  // Slightly Important
 
 
 // relay switching times
