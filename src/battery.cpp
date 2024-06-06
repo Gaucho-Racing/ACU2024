@@ -106,10 +106,12 @@ void Battery::checkVoltage(){
   //if first check, set extremes to first cell
   
   this->minVolt = this->cellVoltage[0];
+  this->maxCellVolt = this->cellVoltage[0];
   // bool isOK = true;
   //iterate though cellVoltage
   this->batVoltage = 0;
   for (int i = 0 ; i < TOTAL_IC*16; i++){
+    if (this->maxCellVolt < this->cellVoltage[i]) this->maxCellVolt = this->cellVoltage[i];
     if (this->minVolt > this->cellVoltage[i]) this->minVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
       D_L1("Battery OverVolt Err");
@@ -233,11 +235,13 @@ void Battery::cell_Balancing(){
     
   }
 
+  float threshold = (this->minVolt + this->maxCellVolt)/2;
+
   //figure out which cells to discharge
   for(int ic = 0; ic < TOTAL_IC; ic++){
     for(int cell = 0; cell < CELL; cell++){
       //diff between the minimum cell voltage and the current cell is 20mV discharge
-      if(this->cellVoltage[ic*CELL + cell]-this->minVolt > 0.02){
+      if(this->cellVoltage[ic*CELL + cell] > threshold){
         toDischarge |= 1 << cell;
       }
     }

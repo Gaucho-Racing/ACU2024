@@ -52,9 +52,10 @@ class ACU{
         
         float max_output_current = MAX_HV_CURRENT;
         float max_temp = MAX_DCDC_TEMP;
-        //TRIAGE 1.5 set default values for these
-        float max_chrg_voltage; 
-        float max_chrg_current; 
+        float max_chrg_voltage = CHARGER_VOLTAGE; 
+        float max_chrg_current = CHARGER_CURRENT; 
+        uint64_t lastChrgRecieveTime;
+
 
         IMD_Monitor IMD;   // IMD MONITOR
         
@@ -91,7 +92,7 @@ class ACU{
         float getTemp1(bool update = true);
         float getTemp2(bool update = true);
         float getFanRef(bool update = true);
-        
+        uint64_t getLastChrgRecieveTime();
 
         void printIso();
         void printIMDErrorsWarnings();
@@ -106,6 +107,7 @@ class ACU{
         void setStatusDeviceActivity(uint8_t activity);
         bool setRelayState(uint8_t relayState);
         void resetLatch();
+        void updateChgrRecieveTime();
 
         IMD_Monitor* getIMD();
 

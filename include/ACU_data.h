@@ -97,8 +97,8 @@
 #define ERR_Pump            0b00000100
 
 // Charger Values
-#define CHARGER_VOLTAGE 540 //V
-#define CHARGER_CURRENT 5 //A
+#define CHARGER_VOLTAGE 531 //V
+#define CHARGER_CURRENT 2 //A
 
 #define PRECHARGE_THRESHOLD 0.96 // fraction of total cell voltage
 
