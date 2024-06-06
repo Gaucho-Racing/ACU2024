@@ -294,6 +294,11 @@ void parseCANData(){
       // parse the max voltage, max current & chaging/not charging bool & get all failures
       battery.max_chrg_voltage = ((msg.buf[0] << 8) | msg.buf[1]) * 0.1;
       battery.max_chrg_current = ((msg.buf[2] << 8) | msg.buf[3]) * 0.1;
+
+      //charger status, hardware failure|overtemp of charger| input voltage failure|starting state|communication state 
+      if(msg.buf[4] != 0){
+        state = SHUTDOWN;
+      }
       // battery.chargerDataStatus.hardwareStatus = msg.buf[4] & ERR_Hardware;
       // battery.chargerDataStatus.temperatureStatus = msg.buf[4] & ERR_Temp;
       // battery.chargerDataStatus.inputVoltageStatus = msg.buf[4] & ERR_InputVolt;

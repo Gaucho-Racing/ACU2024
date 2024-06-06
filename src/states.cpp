@@ -4,6 +4,10 @@ void shutdownState(){
   acu.setRelayState(0);
   digitalWrite(PIN_DCDC_EN, LOW);
 
+  //indicates to battery to stop charging, should fall on deaf ears if not charging
+  sendCANData(Charger_Control);
+  battery.resetDischarge();  
+  
   acu.warns = 0;
   //errors can only be reset when shutdown
   bool temp = acu.errs & ERR_Prechrg;
@@ -52,7 +56,7 @@ void normalState(){
 //TRIAGE 1.5: implement
 uint64_t lastChargeTime = 0;
 uint64_t lastDischargeTime = 0;
-u_int64_t lastSendTime = 0;
+uint64_t lastSendTime = 0;
 void chargeState(){
   acu.warns = 0;
   //every 2 seconds check if the system is still good
@@ -64,6 +68,8 @@ void chargeState(){
       state = SHUTDOWN;
       return;
     }
+    //doesn't need to check Voltage b/c done in the sysCheck
+    battery.cell_Balancing();
   }
 
   //every 0.99 seconds send charger "ping"
@@ -76,9 +82,16 @@ void chargeState(){
   if(millis()-acu.getLastChrgRecieveTime() > 5000){
     D_L1("CHARGE: Charger CAN timeout, shutting down");
     state = SHUTDOWN;
-    sendCANData(Charger_Control);
     return;
   }
+
+  //if done charging shut down
+  if(battery.getTotalVoltage() > CHARGER_VOLTAGE){
+    D_L1("CHARGE: Done charging, shutting down");
+    state = SHUTDOWN;
+    return;
+  }
+  
 
   if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
     digitalWrite(PIN_DCDC_EN, LOW);

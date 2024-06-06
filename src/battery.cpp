@@ -17,6 +17,7 @@ void Battery::init_config(){
   Serial.printf("cell_OT_Threshold: %5.03f, cell_UT_Threshold: %5.03f\n", this->cell_OT_Threshold, this->cell_UT_Threshold);
   this->updateVoltage();
   this->updateAllTemps();
+  // this->resetDischarge(); would be nice to have
 }
 
 /// @brief updates the voltage of the battery
@@ -222,15 +223,16 @@ void Battery::checkAllFuse(){
 
 /// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
 void Battery::cell_Balancing(){
+  D_L2("Balancing cells");
   //turn off balancing to prepare for cell voltage readings
   for(int ic = 0; ic < TOTAL_IC; ic++){
     this->IC[ic].tx_cfgb.dcc = 0;
   }
   uint16_t toDischarge = 0;
 
-  //check new voltage to find min cell temp
-    this->updateVoltage();
-    this->checkVoltage();
+  // //check new voltage to find min cell temp
+  //   this->updateVoltage();
+  //   this->checkVoltage();
     
 
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
@@ -243,7 +245,6 @@ void Battery::cell_Balancing(){
   //figure out which cells to discharge
   for(int ic = 0; ic < TOTAL_IC; ic++){
     for(int cell = 0; cell < CELL; cell++){
-      //diff between the minimum cell voltage and the current cell is 20mV discharge
       if(this->cellVoltage[ic*CELL + cell] > threshold){
         toDischarge |= 1 << cell;
       }
@@ -321,4 +322,13 @@ float Battery::updateSOC() {
   float cellOpenVoltage = getTotalVoltage() + acu.getTsCurrent(false) * CELL_INT_RESISTANCE * TOTAL_IC * 16;
   batSOC += (map(cellOpenVoltage, TOTAL_IC * 16 * UV_THRESHOLD, TOTAL_IC * 16 * OV_THRESHOLD, 0, 255) - batSOC) * 0.1;
   return batSOC;
+}
+
+void Battery::resetDischarge(){
+  for(int ic = 0; ic < TOTAL_IC; ic++){
+    this->IC[ic].tx_cfgb.dcc = 0;
+  }
+  adBmsWakeupIc(TOTAL_IC);
+  adBmsWriteData(TOTAL_IC, this->IC, WRCFGA, Config, AA);
+  adBmsWriteData(TOTAL_IC, this->IC, WRCFGB, Config, BB);
 }

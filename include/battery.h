@@ -48,6 +48,7 @@ class Battery{
         float getTotalVoltage();
         float updateSOC();
         void checkBattery(bool fullCheck = false);
+        void resetDischarge();
 
     friend void parseCANData();
     friend int readCANData();
