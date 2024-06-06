@@ -54,6 +54,8 @@ class ACU{
         float max_temp = MAX_DCDC_TEMP;
         float max_chrg_voltage = CHARGER_VOLTAGE; 
         float max_chrg_current = CHARGER_CURRENT; 
+        uint64_t lastChrgRecieveTime;
+
 
         IMD_Monitor IMD;   // IMD MONITOR
         
@@ -89,6 +91,7 @@ class ACU{
         float getTemp1(bool update = true);
         float getTemp2(bool update = true);
         float getFanRef(bool update = true);
+        uint64_t getLastChrgRecieveTime();
 
         void printIso();
         // uint16_t getIsoResistor();
@@ -102,6 +105,7 @@ class ACU{
         void setStatusDeviceActivity(uint8_t activity);
         bool setRelayState(uint8_t relayState);
         void resetLatch();
+        void updateChgrRecieveTime();
 
         IMD_Monitor* getIMD();
 

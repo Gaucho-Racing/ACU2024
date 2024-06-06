@@ -72,6 +72,13 @@ void chargeState(){
     sendCANData(Charger_Control);
   }
 
+  if(millis()-acu.getLastChrgRecieveTime() > 3000){
+    D_L1("CHARGE: Charger CAN timeout, shutting down");
+    state = SHUTDOWN;
+    sendCANData(Charger_Control);
+    return;
+  }
+
   if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
     digitalWrite(PIN_DCDC_EN, LOW);
   }

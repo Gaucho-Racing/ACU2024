@@ -269,3 +269,7 @@ void ACU::resetLatch() {
   delay(10);
   digitalWrite(PIN_AIR_RESET, LOW);
 }
+
+void ACU::updateChgrRecieveTime(){
+  lastChrgRecieveTime = millis();
+}

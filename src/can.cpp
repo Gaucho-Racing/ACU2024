@@ -223,7 +223,6 @@ void sendCANData(uint32_t ID){
   msg.id = ID;
 }
 
-uint64_t lastChrgRecieve = 0;
 void parseCANData(){
   // Serial.printf("Parsing CAN Data's msg.id: %lu => ", msg.id);
   // Serial.print(msg.id, HEX);
@@ -287,11 +286,7 @@ void parseCANData(){
     case Charger_Data:
       if(state == STANDBY) state = CHARGE;
       if(state == CHARGE){
-        if(millis() - lastChrgRecieve > 3000){
-          state = SHUTDOWN;
-          D_L1("Charger Data Timeout, Shutting Down");
-        }
-        lastChrgRecieve = millis();
+        acu.updateChgrRecieveTime();
       } 
       // parse the max voltage, max current & chaging/not charging bool & get all failures
       battery.max_chrg_voltage = ((msg.buf[0] << 8) | msg.buf[1]) * 0.1;
