@@ -72,7 +72,8 @@ void chargeState(){
     sendCANData(Charger_Control);
   }
 
-  if(millis()-acu.getLastChrgRecieveTime() > 3000){
+  //if no CAN data for 5 seconds, shut down
+  if(millis()-acu.getLastChrgRecieveTime() > 5000){
     D_L1("CHARGE: Charger CAN timeout, shutting down");
     state = SHUTDOWN;
     sendCANData(Charger_Control);

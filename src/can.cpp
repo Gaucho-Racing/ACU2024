@@ -88,7 +88,7 @@ void sendCANData(uint32_t ID){
     }break;
 
     case Charging_Cart_Config:{
-      uint16_t max_charge_current = uint16_t(battery.max_chrg_current);
+      uint16_t max_charge_current = battery.max_chrg_current*100;
       uint16_t max_charge_volt = battery.max_chrg_voltage * 100;
       msg.buf[0] = max_charge_current >> 8;
       msg.buf[1] = max_charge_current;
@@ -284,7 +284,10 @@ void parseCANData(){
       break;
       
     case Charger_Data:
-      if(state == STANDBY) state = CHARGE;
+      if(state == STANDBY) {
+        state = CHARGE;
+        acu.updateChgrRecieveTime();
+      }
       if(state == CHARGE){
         acu.updateChgrRecieveTime();
       } 

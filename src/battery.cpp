@@ -215,6 +215,9 @@ void Battery::checkAllFuse(){
     this->updateVoltage();
     this->checkVoltage();
   }
+  for(int ic = 0; ic < TOTAL_IC; ic++){
+    this->IC[ic].tx_cfgb.dcc = 0;
+  }
 }
 
 /// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
