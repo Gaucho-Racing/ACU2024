@@ -22,9 +22,10 @@ void shutdownState(){
 void normalState(){
   // Serial.print("Buck bad pin: ");
   // Serial.println(analogRead(PIN_DCDC_ER) / 1024.0 * 3.3);
-  if(SystemCheck()){
+  if(SystemCheck() || abs(acu.getTsVoltage(false) < SAFE_V_TO_TURN_OFF)){
     Serial.println("SystemCheck failed in NORMAL state");
     state = SHUTDOWN;
+
     return;
   }
   //cycle maxes out at 8

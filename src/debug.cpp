@@ -24,7 +24,7 @@
 #define printCellVoltage false
 #define printCellTemp false
 #define printBalTemp false
-#define printIMDData true
+#define printIMDData false
 
 extern ACU acu;
 extern Battery battery;
@@ -151,21 +151,6 @@ void debug(){
     if(printIMDData){
         Serial.println("IMD Data: --------------------------");
         acu.printIso();
-        // Serial.printf("IMD_HV_Voltage: %.3f\n", acu.IMD.hv_system_voltage);
-        // Serial.printf("R_ISO_Corrected: %d\n", acu.IMD.R_iso_corrected);
-        // Serial.printf("R_ISO_Status: %d\n", acu.IMD.R_iso_status);
-        // Serial.printf("ISO_Meas_Count: %d\n", acu.IMD.Iso_meas_count);
-        switch (acu.IMD.status_device_activity){
-        case 0:
-            Serial.println("Status_Device_Activity: initialization");
-            break;
-        case 1:
-            Serial.println("Status_Device_Activity: normal operation");
-        case 2:
-            Serial.println("Status_Device_Activity: self test");
-        default:
-            break;
-        }
         Serial.println();
     }
     Serial.println("-----------------------End-----------------------");

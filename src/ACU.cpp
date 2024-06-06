@@ -156,7 +156,6 @@ void ACU::checkACU(bool startup){
     }
 }
 
-
 void ACU::setMaxChrgVoltage(float voltage){
   this->max_chrg_voltage = voltage;
 }
@@ -212,12 +211,11 @@ float ACU::getFanRef(bool update){
 
 void ACU::printIso(){
   Serial.println("-------IMD--------");
-  
-  Serial.printf("R_ISO_Corrected: R_iso_corrected %u\n R_ISO_Status:", this->IMD.R_iso_corrected);
+  Serial.printf("R_ISO_Corrected: %u\n R_ISO_Status:", this->IMD.R_iso_corrected);
   Serial.print(this->IMD.R_iso_status, HEX);
   Serial.printf("\n ISO_Meas_Count: %u\n Status_Warnings_Alarms:", this->IMD.iso_meas_count);
   Serial.print(this->IMD.status_warnings_alarms, BIN);
-  Serial.printf("\n Status_Device_Activity: %u\n HV_System: %f\n", this->IMD.status_device_activity, this->IMD.hv_system_voltage  );
+  Serial.printf("\n Status_Device_Activity: %u\n HV_System: %5.02f\n", this->IMD.status_device_activity, this->IMD.hv_system_voltage  );
 }
 
 void ACU::setIMDHV(float voltage){
@@ -242,15 +240,12 @@ void ACU::setStatusDeviceActivity(uint8_t activity){
 // ========== Function: setRelayState ==========
 // drives relays, wait for them to switch, and check output pins' states
 // Inputs: 
-//   relayState: | Reserved | Reserved | Reserved | Reserved | Reserved | AIR- | AIR+ | Pre_charge
+// relayState: | Reserved | Reserved | Reserved | Reserved | Reserved | AIR- | AIR+ | Pre_charge
 // Returns: 1 if successful, 0 if not successful
 bool ACU::setRelayState(uint8_t relayState) {
   uint8_t diff = getRelayState() ^ relayState;
-  D_L1("digitalwrite 1");
   digitalWrite(PIN_AIR_NEG, relayState & 0b100);
-  D_L1("digitalwrite 2");
   digitalWrite(PIN_AIR_POS, relayState & 0b010);
-  D_L1("digitalwrite 3");
   digitalWrite(PIN_PRECHG,  relayState & 0b001);
   delay((diff & 0b110) ? DELAY_AIR_SW : DELAY_PCHG_SW); // wait for relay to switch
   if (getRelayState() == relayState) {
