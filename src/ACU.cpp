@@ -179,6 +179,10 @@ uint16_t ACU::getStatusWarningsAlarms(bool update){
   return IMD.status_warnings_alarms;
 }
 
+uint64_t ACU::getLastChrgRecieveTime(){
+  return lastChrgRecieveTime;
+}
+
 float ACU::getTsVoltage(bool update){
   if (update) updateTsVoltage();
   return ts_voltage;
@@ -217,7 +221,7 @@ float ACU::getFanRef(bool update){
 void ACU::printIMDErrorsWarnings(){
   uint16_t imd_errs = getStatusWarningsAlarms();
   Serial.println("-------IMD Errors & Warnings --------");
-  if(imd_errs & 0b10000000){
+  if(imd_errs & 0b10000000){ 
     Serial.println("IMD Device Error: true");
   }
   if(imd_errs & 0b01000000){
@@ -226,19 +230,19 @@ void ACU::printIMDErrorsWarnings(){
   if(imd_errs & 0b00100000){
     Serial.println("IMD_HV_Neg_Fail: true");
   }
-  if(imd_errs & 0b00010000){
+  if(imd_errs & 0b00001000){
     Serial.println("IMD_Iso_Thresh_Error: true");
   }
-  if(imd_errs & 0b00001000){
+  if(imd_errs & 0b00000100){
     Serial.println("IMD_Iso_Thresh_Warn: true");
   }
-  if(imd_errs & 0b00000100){
+  if(imd_errs & (0b10000000 >> 8)){
     Serial.println("IMD_Under_Voltage: true");
   }
-  if(imd_errs & 0b00000010){
+  if(imd_errs & (0b01000000 >> 8)){
     Serial.println("IMD Failed to Start... We Die :)");
   }
-  if((imd_errs & 0b11111111) == 0){
+  if((imd_errs & (0b11111111 |( 0b11111111 >> 8))) == 0){
     Serial.println("IMD Good! No Errors!");
   }
   Serial.println("-----------------------------------");
