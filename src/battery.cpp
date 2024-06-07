@@ -17,6 +17,7 @@ void Battery::init_config(){
   Serial.printf("cell_OT_Threshold: %5.03f, cell_UT_Threshold: %5.03f\n", this->cell_OT_Threshold, this->cell_UT_Threshold);
   this->updateVoltage();
   this->updateAllTemps();
+  // this->resetDischarge(); would be nice to have
 }
 
 /// @brief updates the voltage of the battery
@@ -106,9 +107,12 @@ void Battery::checkVoltage(){
   //if first check, set extremes to first cell
   
   this->minVolt = this->cellVoltage[0];
+  this->maxCellVolt = this->cellVoltage[0];
+  // bool isOK = true;
   //iterate though cellVoltage
   this->batVoltage = 0;
   for (int i = 0 ; i < TOTAL_IC*16; i++){
+    if (this->maxCellVolt < this->cellVoltage[i]) this->maxCellVolt = this->cellVoltage[i];
     if (this->minVolt > this->cellVoltage[i]) this->minVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
       D_L1("Battery OverVolt Err");
@@ -224,19 +228,23 @@ void Battery::checkAllFuse(){
     this->updateVoltage();
     this->checkVoltage();
   }
+  for(int ic = 0; ic < TOTAL_IC; ic++){
+    this->IC[ic].tx_cfgb.dcc = 0;
+  }
 }
 
 /// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
 void Battery::cell_Balancing(){
+  D_L2("Balancing cells");
   //turn off balancing to prepare for cell voltage readings
   for(int ic = 0; ic < TOTAL_IC; ic++){
     this->IC[ic].tx_cfgb.dcc = 0;
   }
   uint16_t toDischarge = 0;
 
-  //check new voltage to find min cell temp
-    this->updateVoltage();
-    this->checkVoltage();
+  // //check new voltage to find min cell temp
+  //   this->updateVoltage();
+  //   this->checkVoltage();
     
 
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
@@ -244,11 +252,12 @@ void Battery::cell_Balancing(){
     
   }
 
+  float threshold = (this->minVolt + this->maxCellVolt)/2;
+
   //figure out which cells to discharge
   for(int ic = 0; ic < TOTAL_IC; ic++){
     for(int cell = 0; cell < CELL; cell++){
-      //diff between the minimum cell voltage and the current cell is 20mV discharge
-      if(this->cellVoltage[ic*CELL + cell]-this->minVolt > 0.02){
+      if(this->cellVoltage[ic*CELL + cell] > threshold){
         toDischarge |= 1 << cell;
       }
     }
@@ -327,4 +336,13 @@ float Battery::updateSOC() {
   float fullChargeVolt = TOTAL_IC * 16 * OV_THRESHOLD;
   batSOC += (map(cellOpenVoltage, zeroChargeVolt, fullChargeVolt, 0, 255) - batSOC) * 0.1;
   return batSOC;
+}
+
+void Battery::resetDischarge(){
+  for(int ic = 0; ic < TOTAL_IC; ic++){
+    this->IC[ic].tx_cfgb.dcc = 0;
+  }
+  adBmsWakeupIc(TOTAL_IC);
+  adBmsWriteData(TOTAL_IC, this->IC, WRCFGA, Config, AA);
+  adBmsWriteData(TOTAL_IC, this->IC, WRCFGB, Config, BB);
 }

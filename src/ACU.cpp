@@ -174,6 +174,14 @@ uint8_t ACU::getRelayState(){
   return relay_state;
 }
 
+uint16_t ACU::getStatusWarningsAlarms(bool update){
+  return IMD.status_warnings_alarms;
+}
+
+uint64_t ACU::getLastChrgRecieveTime(){
+  return lastChrgRecieveTime;
+}
+
 float ACU::getTsVoltage(bool update){
   if (update) updateTsVoltage();
   return ts_voltage;
@@ -209,6 +217,29 @@ float ACU::getFanRef(bool update){
   return fan_Ref;
 }
 
+void ACU::printIMDErrorsWarnings(){
+  uint16_t imd_errs = getStatusWarningsAlarms();
+  Serial.println("-------IMD Errors & Warnings --------");
+  if(imd_errs & 0b0000000100000000){ 
+    Serial.println("IMD Device Error: true");
+  }
+  if(imd_errs & 0b0000001000000000){
+    Serial.println("IMD_HV_Pos_Fail: true");
+  }
+  if(imd_errs & 0b0000010000000000){
+    Serial.println("IMD_HV_Neg_Fail: true");
+  }
+  if(imd_errs & 0b0001000000000000){
+    Serial.println("IMD_Iso_Thresh_Error: true");
+  }
+  if(imd_errs & (0b1000000000000000)){
+    Serial.println("IMD_Under_Voltage: true");
+  }
+  if(imd_errs & (0b0000000000000001)){
+    Serial.println("IMD Failed to Start... We Die :)");
+  }
+  Serial.println("-----------------------------------");
+}
 void ACU::printIso(){
   Serial.println("-------IMD--------");
   Serial.printf("R_ISO_Corrected: %u\n R_ISO_Status:", this->IMD.R_iso_corrected);
@@ -232,6 +263,12 @@ void ACU::setIsoMeasCount(uint8_t count){
 }
 void ACU::setStatusWarningsAlarms(uint16_t status){
   IMD.status_warnings_alarms = status;
+  if((status & 0b1111111111111111) != 0){
+    Serial.println("IMD Error: Going into Shutdown");
+    printIMDErrorsWarnings();
+    // state = SHUTDOWN;
+  }
+  
 }
 void ACU::setStatusDeviceActivity(uint8_t activity){
   IMD.status_device_activity = activity;
@@ -263,4 +300,8 @@ void ACU::resetLatch() {
   digitalWrite(PIN_AIR_RESET, HIGH);
   delay(10);
   digitalWrite(PIN_AIR_RESET, LOW);
+}
+
+void ACU::updateChgrRecieveTime(){
+  lastChrgRecieveTime = millis();
 }

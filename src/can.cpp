@@ -88,7 +88,7 @@ void sendCANData(uint32_t ID){
     }break;
 
     case Charging_Cart_Config:{
-      uint16_t max_charge_current = battery.max_chrg_current * 100;
+      uint16_t max_charge_current = battery.max_chrg_current*100;
       uint16_t max_charge_volt = battery.max_chrg_voltage * 100;
       msg.buf[0] = max_charge_current >> 8;
       msg.buf[1] = max_charge_current;
@@ -192,10 +192,11 @@ void sendCANData(uint32_t ID){
       break;
       
     case Charger_Control: {
-      uint16_t code = battery.max_chrg_current * 100;
+      //TRIAGE 0: check b4 use
+      uint16_t code = battery.max_chrg_voltage*10;
       msg.buf[0] = code >> 8;
       msg.buf[1] = code & 0xFF;
-      code = battery.max_chrg_voltage * 100;
+      code = battery.max_chrg_current*10;
       msg.buf[2] = code >> 8;
       msg.buf[3] = code & 0xFF;
       msg.buf[4] = state == CHARGE ? 1:0; 
@@ -274,9 +275,21 @@ void parseCANData(){
       break;
       
     case Charger_Data:
+      if(state == STANDBY) {
+        state = CHARGE;
+        acu.updateChgrRecieveTime();
+      }
+      if(state == CHARGE){
+        acu.updateChgrRecieveTime();
+      } 
       // parse the max voltage, max current & chaging/not charging bool & get all failures
       battery.max_chrg_voltage = ((msg.buf[0] << 8) | msg.buf[1]) * 0.1;
       battery.max_chrg_current = ((msg.buf[2] << 8) | msg.buf[3]) * 0.1;
+
+      //charger status, hardware failure|overtemp of charger| input voltage failure|starting state|communication state 
+      if(msg.buf[4] != 0){
+        state = SHUTDOWN;
+      }
       // battery.chargerDataStatus.hardwareStatus = msg.buf[4] & ERR_Hardware;
       // battery.chargerDataStatus.temperatureStatus = msg.buf[4] & ERR_Temp;
       // battery.chargerDataStatus.inputVoltageStatus = msg.buf[4] & ERR_InputVolt;
@@ -290,8 +303,7 @@ void parseCANData(){
       acu.setRIsoStatus(msg.buf[2]);
       acu.setIsoMeasCount(msg.buf[3]);
       acu.setStatusDeviceActivity(msg.buf[6]); 
-      //acu.setStatusDeviceActivity((uint16_t(msg.buf[4]) << 8) | (msg.buf[5]));
-      //last byte is don't care
+      acu.setStatusWarningsAlarms((uint16_t)(msg.buf[4] << 8 | msg.buf[5]));
       break;
     
     case IMD_Response: 
