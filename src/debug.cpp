@@ -21,9 +21,9 @@
 #define printAccumCurrent true
 #define printCurrentZeros true
 #define printACUTemp false
-#define printCellVoltage false
-#define printCellTemp false
-#define printBalTemp false
+#define printCellVoltage true
+#define printCellTemp true
+#define printBalTemp true
 #define printIMDData false
 
 extern ACU acu;
