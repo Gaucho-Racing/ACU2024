@@ -55,7 +55,7 @@
 
 #define IMD_General 0x18FF01F4                  // Retrieve from Read
 #define IMD_Voltage 0x39                        // Retrieve
-#define IMD_Request 0x18EFF4FE                  // pretty much only used for HV
-#define IMD_Response 0x18EF00FE // MAYBE?       // ===> UNSURE ABOUT THIS (NEEDS TESTING)
+#define IMD_Request  0x18EFF4FE                  // pretty much only used for HV
+#define IMD_Response 0x18EFFEF4
 #define IMD_HV 0x5E                             // Index
-#define IMD_HV_OFFSET 1606.4
+#define IMD_HV_OFFSET 32128

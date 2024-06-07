@@ -53,7 +53,7 @@
 
 
 // hardware constants
-#define CELL_INT_RESISTANCE 0.005
+#define CELL_INT_RESISTANCE 0.007
 
 
 // ADC1283 connections
@@ -145,10 +145,10 @@
 #define DELAY_PCHG_SW 5
 
 // error margins
-#define ERRMG_GLV_SDC 3.5
+#define ERRMG_GLV_SDC 1000
 #define ERRMG_ISNS_VREF 0.2
 #define ERRMG_5V 0.2
-#define ERRMG_CELL_ERR 5
-
+#define ERRMG_CELL_VOLT_ERR 10
+#define ERRMG_CELL_TEMP_ERR 50
 
 #endif

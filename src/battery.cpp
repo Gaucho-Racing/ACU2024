@@ -118,23 +118,29 @@ void Battery::checkVoltage(){
       D_L1("Battery OverVolt Err");
       D_L1(i);
       D_L1(this->cellVoltage[i]);
-      this->cellErr[i]++;
-      if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_OverVolt;
+      this->cellVoltErr[i]++;
+      if (this->cellVoltErr[i] >= ERRMG_CELL_VOLT_ERR) {
+        acu.errs |= ERR_OverVolt;
+        this->cellVoltErr[i] = ERRMG_CELL_VOLT_ERR;
+      }
     }
     else {
-      this->cellErr[i] = 0;
+      this->cellVoltErr[i] = 0;
     }
     if (this->cellVoltage[i] < UV_THRESHOLD){
-      this->cellErr[i]++;
+      this->cellVoltErr[i]++;
       if (this->cellVoltage[i] > 1.6) {
         D_L1("Battery UnderVolt Err");
         D_L1(i);
         D_L1(this->cellVoltage[i]);
       }
-      if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrVolt;
+      if (this->cellVoltErr[i] >= ERRMG_CELL_VOLT_ERR) {
+        acu.errs |= ERR_UndrVolt;
+        this->cellVoltErr[i] = ERRMG_CELL_VOLT_ERR;
+      }
     }
     else {
-      this->cellErr[i] = 0;
+      this->cellVoltErr[i] = 0;
     }
     this->batVoltage += this->cellVoltage[i];
   }
@@ -150,24 +156,24 @@ void Battery::checkTemp(){
     if (this->maxBalTemp < this->balTemp[i]) this->maxBalTemp = this->balTemp[i];
     // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
     //check Bal Temp;
-    if(this->balTemp[i] == NAN || this->cellTemp[i] == NAN){
-      D_L1("Nan temp");
-    }
-    else{
-      if (this->balTemp[i] > MAX_BAL_TEMP){
-        D_L1("Bal OverTemp Err");
-        this->cellErr[i]++;
-        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_OverTemp;
-      }
-      else if (this->balTemp[i] < MIN_BAL_TEMP){
-        D_L1("Bal UnderTemp Err");
-        this->cellErr[i]++;
-        if (this->cellErr[i] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrTemp;
-      }
-      else {
-        this->cellErr[i] = 0;
-      }
-    }
+    // if(this->balTemp[i] == NAN || this->cellTemp[i] == NAN){
+    //   D_L1("Nan temp");
+    // }
+    // else{
+    //   if (this->balTemp[i] > MAX_BAL_TEMP){
+    //     D_L1("Bal OverTemp Err");
+    //     this->cellTempErr[i]++;
+    //     if (this->cellTempErr[i] > ERRMG_CELL_TEMP_ERR) acu.errs |= ERR_OverTemp;
+    //   }
+    //   else if (this->cellTempErr[i] < MIN_BAL_TEMP){
+    //     D_L1("Bal UnderTemp Err");
+    //     this->cellTempErr[i]++;
+    //     if (this->cellTempErr[i] > ERRMG_CELL_TEMP_ERR) acu.errs |= ERR_UndrTemp;
+    //   }
+    //   else {
+    //     this->cellTempErr[i] = 0;
+    //   }
+    // }
   }
   for(uint16_t i = 0; i < TOTAL_IC*2*16; i++){
     if(this->balTemp[i] == NAN || this->cellTemp[i] == NAN){
@@ -177,17 +183,23 @@ void Battery::checkTemp(){
       // if (battery.minCellVo > battery.cellTemp[i]) battery.maxBalTemp = battery.balTemp[i];
       //check Cell Temp;
       if (this->cellTemp[i] > MAX_CELL_TEMP){
-        this->cellErr[i >> 1]++;
-        Serial.printf("Cell %d overtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
-        if (this->cellErr[i >> 1] > ERRMG_CELL_ERR) acu.errs |= ERR_OverTemp;
+        this->cellTempErr[i >> 1]++;
+        //Serial.printf("Cell %d overtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellTempErr[i >> 1]);
+        if (this->cellTempErr[i >> 1] >= ERRMG_CELL_TEMP_ERR) {
+          acu.errs |= ERR_OverTemp;
+          this->cellTempErr[i >> 1] = ERRMG_CELL_TEMP_ERR;
+        }
       }
       else if (this->cellTemp[i] < MIN_CELL_TEMP){
-        this->cellErr[i >> 1]++;
-        Serial.printf("Cell %d undrtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellErr[i >> 1]);
-        if (this->cellErr[i >> 1] > ERRMG_CELL_ERR) acu.errs |= ERR_UndrTemp;
+        this->cellTempErr[i >> 1]++;
+        //Serial.printf("Cell %d undrtemp: %f°C, celErr: %u\n", i >> 1, this->cellTemp[i], this->cellTempErr[i >> 1]);
+        if (this->cellTempErr[i >> 1] >= ERRMG_CELL_TEMP_ERR) {
+          acu.errs |= ERR_UndrTemp;
+          this->cellTempErr[i >> 1] = ERRMG_CELL_TEMP_ERR;
+        }
       }
       else {
-        this->cellErr[i >> 1] = 0;
+        this->cellTempErr[i >> 1] = 0;
       }
     }
   }
@@ -320,7 +332,9 @@ uint8_t condenseTemperature(float temp1, float temp2) {
 /// @brief calculates state of charge and applies filter
 float Battery::updateSOC() {
   float cellOpenVoltage = getTotalVoltage() + acu.getTsCurrent(false) * CELL_INT_RESISTANCE * TOTAL_IC * 16;
-  batSOC += (map(cellOpenVoltage, TOTAL_IC * 16 * UV_THRESHOLD, TOTAL_IC * 16 * OV_THRESHOLD, 0, 255) - batSOC) * 0.1;
+  float zeroChargeVolt = TOTAL_IC * 16 * UV_THRESHOLD;
+  float fullChargeVolt = TOTAL_IC * 16 * OV_THRESHOLD;
+  batSOC += (map(cellOpenVoltage, zeroChargeVolt, fullChargeVolt, 0, 255) - batSOC) * 0.1;
   return batSOC;
 }
 

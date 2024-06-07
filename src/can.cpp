@@ -206,14 +206,8 @@ void sendCANData(uint32_t ID){
       can_chgr.write(msg);
     }break;
     case IMD_Request: 
-      msg.buf[0] = 0x5E; // index for Voltage: HV system
-      msg.buf[1] = 0xFF; 
-      msg.buf[2] = 0xFF;
-      msg.buf[3] = 0xFF;
-      msg.buf[4] = 0xFF;
-      msg.buf[5] = 0xFF;
-      msg.buf[6] = 0xFF;
-      msg.buf[7] = 0xFF;
+      msg.len = 1;
+      msg.buf[0] = IMD_HV; // index for Voltage: HV system
       can_chgr.write(msg);
       break;
     default:
@@ -224,9 +218,6 @@ void sendCANData(uint32_t ID){
 }
 
 void parseCANData(){
-  // Serial.printf("Parsing CAN Data's msg.id: %lu => ", msg.id);
-  // Serial.print(msg.id, HEX);
-  // Serial.println();
   switch(msg.id){
     case Configure_Cell_Data:
       // if single send requested send immediately
@@ -316,20 +307,15 @@ void parseCANData(){
       break;
     
     case IMD_Response: 
-      // Serial.println("IMD Response DEBUG PRINTS (*****************************************)");
-      // Serial.print("Data: ");
-      // for(int i = 0; i < 8; i++){
-      //   Serial.print(i);
-      //   Serial.print(msg.buf[i], HEX);
-      //   Serial.print(" "); }
-      // Serial.println();
       if(msg.buf[0] == IMD_HV){
-        uint16_t temp = (msg.buf[1] << 8) | (msg.buf[2]);
-        acu.setIMDHV(temp*0.05 - IMD_HV_OFFSET);
+        acu.setIMDHV(((uint16_t(msg.buf[2]) << 8) + msg.buf[1] - 32128) * 0.05);
       }
     break;
     default:
-      // Serial.println("lol no message here for ya\t\t\t\t\t\t\t\t\tFucker");
+      // Serial.print("Unknown ID 0x"); Serial.print(msg.id, HEX);
+      // for (uint8_t i = 0; i < msg.len; i++) {
+      //   Serial.printf(" %u ", msg.buf[i]);
+      // }Serial.write('\n');
       break;
   }
 }
@@ -347,14 +333,6 @@ int readCANData(){
   
   for(int i = 0; i < maxReads; i++){
     if(can_chgr.read(msg)){
-      // Serial.println("Can_chgr reads: "); Serial.print(msg.id, HEX); Serial.println();
-      // Serial.print("Data: ");
-      // for(int i = 0; i < 8; i++){
-      //   Serial.print(i);
-      //   Serial.print(msg.buf[i], HEX);
-      //   Serial.print(" ");
-      // }
-      // Serial.println();
       parseCANData();
     }
   }
