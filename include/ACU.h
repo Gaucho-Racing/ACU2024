@@ -96,9 +96,6 @@ class ACU{
 
         void printIso();
         void printIMDErrorsWarnings();
-        // uint16_t getIsoResistor();
-        // uint16_t getIsoPos(); // retrieves positive resistance value
-        // uint16_t getIsoNeg(); //^ neg
         void setIMDHV(float voltage);
         void setRIsoCorrected(uint16_t resistance);
         void setRIsoStatus(uint8_t mesurement);

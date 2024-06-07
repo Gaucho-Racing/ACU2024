@@ -198,21 +198,27 @@ void preChargeState(){
     }
     D_L1(acu.getTsVoltage(false));
   }
-
+   
   // delay 3 seconds, for safety
   startTime = millis();
+  CAN_message_t msg;
+  bool goToCharge = false;
   while (millis() - startTime < 3000) {
+    acu.checkACU(false);
+    
+    if (can_chgr.read(msg)) {
+      if (msg.id == Charger_Data) {
+        goToCharge = true;
+      }
+    }
+
     if (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
       state = SHUTDOWN;
       D_L1("Precharge (TS Threshold) => Shutdown");
       acu.errs |= ERR_Prechrg;
       return;
     }
-    if (SystemCheck()) {
-      D_L1("Precharge (SystemCheck) => Shutdown");
-      state = SHUTDOWN;
-      return;
-    }
+
     Serial.print("Precharge TS voltage: ");
     Serial.println(acu.getTsVoltage(false));
     dumpCANbus();
@@ -222,8 +228,7 @@ void preChargeState(){
   sendCANData(ACU_General2);
 
   D_L1("Precharge Done. Ready to drive. State Normal");
-  D_L1("Precharge => Normal");
-  state = NORMAL;
+  state = goToCharge ? CHARGE : NORMAL;
   return;
 }
 

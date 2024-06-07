@@ -275,7 +275,7 @@ void parseCANData(){
       break;
       
     case Charger_Data:
-      if(state == STANDBY) {
+      if(state == PRECHARGE) {
         state = CHARGE;
         acu.updateChgrRecieveTime();
       }

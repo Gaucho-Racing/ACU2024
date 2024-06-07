@@ -106,14 +106,14 @@ void Battery::updateAllTemps(){
 void Battery::checkVoltage(){
   //if first check, set extremes to first cell
   
-  this->minVolt = this->cellVoltage[0];
+  this->minCellVolt = this->cellVoltage[0];
   this->maxCellVolt = this->cellVoltage[0];
   // bool isOK = true;
   //iterate though cellVoltage
   this->batVoltage = 0;
   for (int i = 0 ; i < TOTAL_IC*16; i++){
     if (this->maxCellVolt < this->cellVoltage[i]) this->maxCellVolt = this->cellVoltage[i];
-    if (this->minVolt > this->cellVoltage[i]) this->minVolt = this->cellVoltage[i];
+    if (this->minCellVolt > this->cellVoltage[i]) this->minCellVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
       D_L1("Battery OverVolt Err");
       D_L1(i);
@@ -242,30 +242,33 @@ void Battery::cell_Balancing(){
   }
   uint16_t toDischarge = 0;
 
-  // //check new voltage to find min cell temp
-  //   this->updateVoltage();
-  //   this->checkVoltage();
-    
-
-  for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
-    toDischarge = 0;
-    
-  }
-
-  float threshold = (this->minVolt + this->maxCellVolt)/2;
+  // //check new voltage to find min cell temp  
+  float threshold = (this->minCellVolt + this->maxCellVolt)/2;
+  D_L1(threshold);
 
   //figure out which cells to discharge
+  Serial.printf("\nDischarging Stuff: ************************** \n");
   for(int ic = 0; ic < TOTAL_IC; ic++){
+    Serial.printf("IC #%d\n", ic);
     for(int cell = 0; cell < CELL; cell++){
-      if(this->cellVoltage[ic*CELL + cell] > threshold){
+      if(this->cellVoltage[ic*CELL + cell] > threshold || this->cellVoltage[ic*CELL + cell] - minCellVolt > 0.02){
         toDischarge |= 1 << cell;
+        Serial.print("1 ");
+      }
+      else{
+        Serial.print("0 ");
       }
     }
+    Serial.println();
+    
     this->IC[ic].tx_cfgb.dcc = toDischarge;
+    toDischarge = 0;
   }
+  Serial.printf("Discharge Print Done:  ************************** \n");
   adBmsWakeupIc(TOTAL_IC);
   adBmsWriteData(TOTAL_IC, this->IC, WRCFGA, Config, AA);
   adBmsWriteData(TOTAL_IC, this->IC, WRCFGB, Config, BB);
+  
 }
 
 /// @brief disables the mux, used in Standby

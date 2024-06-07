@@ -3,13 +3,6 @@
 #include <Arduino.h>
 #include <unordered_map>
 
-// enum IMD_TYPE { GENERAL, 
-//                 ISO_DETAILS, 
-//                 VOLTAGE, 
-//                 IT_SYS, 
-//                 IMD_REQUEST, 
-//                 IMD_RESPONSE }; // still needed or no?
-
 struct IMD_Monitor {
 
     uint8_t imd_gen[8];    // 0x37; R_iso_corrected,R_iso_status, Iso meas count, Status: warnings & alarms, Status: dev act	N/A or 0xFF

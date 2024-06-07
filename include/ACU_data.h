@@ -130,16 +130,6 @@
 #define MASK_CAN_PRECHARGE_DONE 0b00010000
 #define MASK_CAN_SHUTDOWN       0b00001000
 
-//bit masks of IMD_General Status & Warnings
-#define IMD_Device_Error        0b10000000; // Slightly Important
-#define IMD_HV_Pos_Fail         0b01000000; 
-#define IMD_HV_Neg_Fail         0b00100000;
-#define IMD_Iso_Thresh_Error    0b00010000;  // Slightly Important
-#define IMD_Iso_Thresh_Warn     0b00001000;  // Slightly Important
-#define IMD_UnderVoltage        0b00000100;  // Slightly Important
-#define IMD_We_Die_If_Start     0b00000010;  // Slightly Important
-
-
 // relay switching times
 #define DELAY_AIR_SW 30
 #define DELAY_PCHG_SW 5

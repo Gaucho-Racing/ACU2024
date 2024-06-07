@@ -16,7 +16,7 @@
 #define printFanRef true
 #define printMaxCellTemp true
 #define printMaxBalTemp true
-#define printMinVolt true
+#define printminCellVolt true
 #define printCycle false
 #define printAccumCurrent true
 #define printCurrentZeros true
@@ -100,8 +100,8 @@ void debug(){
         Serial.printf("Max Cell Temp: %5.03f\n", battery.maxCellTemp);
     }
     if(printMaxBalTemp);
-    if(printMinVolt){
-        Serial.printf("Min Cell Volt: %5.03f\n", battery.minVolt);
+    if(printminCellVolt){
+        Serial.printf("Min Cell Volt: %5.03f\n", battery.minCellVolt);
     }
     if(printAccumCurrent){
         Serial.printf("TS current: %5.03f\n", acu.getTsCurrent(false));

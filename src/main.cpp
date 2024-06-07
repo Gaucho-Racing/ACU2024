@@ -28,17 +28,9 @@ void setup() {
   can_chgr.begin();
   can_chgr.setBaudRate(500000); 
 
-  // if(can_chgr.getBaudRate() != 500000){
-  //   D_L1("can_chgr baud rate not set to correct value");
-  // }
-
   D_L1("can_prim begin");
   can_prim.begin();
   can_prim.setBaudRate(1000000);
-
-  // if(can_prim.getBaudRate() != 1000000){
-  //   D_L1("can_prim baud rate not set to correct value");
-  // }
 
   delay(1000); // required so that the CAN bus can initialize properly
 
