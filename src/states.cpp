@@ -213,7 +213,6 @@ void preChargeState(){
       state = SHUTDOWN;
       return;
     }
-    Serial.print("Precharge TS voltage: ");
     Serial.println(acu.getTsVoltage(false));
     dumpCANbus();
   }

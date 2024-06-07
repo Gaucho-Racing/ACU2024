@@ -74,13 +74,13 @@ void ACU::updateDcdcCurrent(){
   dcdc_current = (ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - dcdc_ref) / 0.09;
 }
 void ACU::updateTemp1(){
-  temps[0] = V2T(fan_Ref, ACU_ADC.readVoltage(ADC_MUX_TEMP1), 3950, 10e3, 47e3);
+  temps[0] += (V2T(fan_Ref, ACU_ADC.readVoltage(ADC_MUX_TEMP1), 3950, 10e3, 47e3) - temps[0]) * 0.1;
 }
 void ACU::updateTemp2(){
-  temps[1] = V2T(fan_Ref, ACU_ADC.readVoltage(ADC_MUX_TEMP2), 3950, 10e3, 47e3);
+  temps[1] += (V2T(fan_Ref, ACU_ADC.readVoltage(ADC_MUX_TEMP2), 3950, 10e3, 47e3) - temps[1]) * 0.1;
 }
 void ACU::updateFanRef(){
-  fan_Ref = ACU_ADC.readVoltage(ADC_MUX_FAN_REF)*2;
+  fan_Ref = ACU_ADC.readVoltage(ADC_MUX_FAN_REF) * 2;
 }
 void ACU::updateRelayState(){
   relay_state = 0;
@@ -121,22 +121,22 @@ void ACU::checkACU(bool startup){
 
     //glv voltage
     if(this->glv_voltage < MIN_GLV_VOLT){
-        //D_L1("GLV Undervolt detected");
+        D_L1("GLV Undervolt detected");
         this->errs |= ERR_UndrVolt;
     }
     if(this->glv_voltage > MAX_GLV_VOLT){
-        //D_L1("GLV Overvolt detected");
+        D_L1("GLV Overvolt detected");
         this->errs |= ERR_OverVolt;
     }
     
     if(this->glv_voltage > OPEN_GLV_VOLT){
-        //D_L1("GLV Not connected detected");
+        D_L1("GLV Not connected detected");
         this->errs |= ERR_UndrVolt;
     } 
 
     //fan ref voltage
     if(5.0 - this->fan_Ref > ERRMG_5V){
-        //D_L1("5V Low detected");
+        D_L1("5V Low detected");
         //this->errs |= ERR_UndrVolt;
     } else if(this->fan_Ref - 5.0 > ERRMG_5V){
         //D_L1("5V High detected");
