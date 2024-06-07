@@ -218,8 +218,11 @@ void preChargeState(){
       acu.errs |= ERR_Prechrg;
       return;
     }
-
-    Serial.print("Precharge TS voltage: ");
+    if (SystemCheck()) {
+      D_L1("Precharge (SystemCheck) => Shutdown");
+      state = SHUTDOWN;
+      return;
+    }
     Serial.println(acu.getTsVoltage(false));
     dumpCANbus();
   }

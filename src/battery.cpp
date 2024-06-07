@@ -25,8 +25,16 @@ void Battery::updateVoltage(){
   adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC, &readCANData);
   adBms6830_read_cell_voltages(TOTAL_IC, this->IC);
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
-    for (uint8_t cell = 0; cell < CELL; cell++) {
-      this->cellVoltage[ic * CELL + cell] = (this->IC[ic].cell.c_codes[cell] + 10000) * 0.000150;
+    if (this->IC[ic].cccrc.cell_pec) {
+      D_pf("Segment %u PEC error\n", ic);
+      for (uint8_t cell = 0; cell < CELL; cell++) {
+        this->cellVoltErr[ic * CELL + cell]++;
+      }
+    }
+    else {
+      for (uint8_t cell = 0; cell < CELL; cell++) {
+        this->cellVoltage[ic * CELL + cell] = (this->IC[ic].cell.c_codes[cell] + 10000) * 0.000150;
+      }
     }
   }
 }
@@ -51,22 +59,37 @@ void Battery::updateTemp(){
   adBms6830_read_aux_voltages(TOTAL_IC, this->IC);
   
   //parse the data and store it in the battery struct
-  for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
-    //all values are subtracted by one to account for indexing from 0
-    //gpio 3: mux1, temp 0
-    this->cellTemp[ic*32 + (7-cycle)] = V2T(this->IC[ic].aux.a_codes[3]);
-    //gpio 4: mux 2, temp 8
-    this->cellTemp[ic*32 + (7-cycle) + 8] = V2T(this->IC[ic].aux.a_codes[4]);
-    //gpio 5: mux 3, bal 0
-    this->balTemp[ic*16 + cycle] = V2T(this->IC[ic].aux.a_codes[5]);
-    //gpio 0: mux 4, bal 0
-    this->balTemp[ic*16 + cycle + 8] = V2T(this->IC[ic].aux.a_codes[0]);
-    //gpio 1: mux 5, temp 16
-    this->cellTemp[ic*32 + (7-cycle) + 16] = V2T(this->IC[ic].aux.a_codes[1]);
-    //gpio 2: mux 6, temp 24
-    this->cellTemp[ic*32 + (7-cycle) + 24] = V2T(this->IC[ic].aux.a_codes[2]);
+  for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
+    if (this->IC[ic].cccrc.aux_pec) {
+      //gpio 3: mux1, temp 0
+      this->cellTempErr[ic*16 + (7-cycle)/2]++;
+      //gpio 4: mux 2, temp 8
+      this->cellTempErr[ic*16 + (7-cycle)/2 + 4]++;
+      //gpio 5: mux 3, bal 0
+      this->cellTempErr[ic*16 + cycle]++;
+      //gpio 0: mux 4, bal 0
+      this->cellTempErr[ic*16 + cycle + 8]++;
+      //gpio 1: mux 5, temp 16
+      this->cellTempErr[ic*16 + (7-cycle)/2 + 8]++;
+      //gpio 2: mux 6, temp 24
+      this->cellTempErr[ic*16 + (7-cycle)/2 + 12]++;
+    }
+    else {
+      //all values are subtracted by one to account for indexing from 0
+      //gpio 3: mux1, temp 0
+      this->cellTemp[ic*32 + (7-cycle)] = V2T(this->IC[ic].aux.a_codes[3]);
+      //gpio 4: mux 2, temp 8
+      this->cellTemp[ic*32 + (7-cycle) + 8] = V2T(this->IC[ic].aux.a_codes[4]);
+      //gpio 5: mux 3, bal 0
+      this->balTemp[ic*16 + cycle] = V2T(this->IC[ic].aux.a_codes[5]);
+      //gpio 0: mux 4, bal 0
+      this->balTemp[ic*16 + cycle + 8] = V2T(this->IC[ic].aux.a_codes[0]);
+      //gpio 1: mux 5, temp 16
+      this->cellTemp[ic*32 + (7-cycle) + 16] = V2T(this->IC[ic].aux.a_codes[1]);
+      //gpio 2: mux 6, temp 24
+      this->cellTemp[ic*32 + (7-cycle) + 24] = V2T(this->IC[ic].aux.a_codes[2]);
+    }
   }
-  //increment the cycle
 }
 
 /// @brief updates all temperatures, using same structure as updateTemps but using a for loop instead of cycles
