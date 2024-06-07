@@ -99,7 +99,7 @@ void Battery::updateAllTemps(){
     //8 input mux, 8 cycles
   for(uint8_t i = 0; i < 8; i++){
     for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
-    this->IC[ic].tx_cfga.gpo = mux_temp_codes[i];
+      this->IC[ic].tx_cfga.gpo = mux_temp_codes[i];
     }
     // adBmsWriteData(TOTAL_IC, battery.IC, WRCFGA, Config, AA);
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, this->IC);
@@ -107,18 +107,33 @@ void Battery::updateAllTemps(){
     for (uint8_t ic = 0; ic < TOTAL_IC; ic++){
       //all values are subtracted by one to account for indexing from 0
       //gpio 3: mux1, temp 0
-
-      this->cellTemp[ic*32 + (7-i)] = V2T(this->IC[ic].aux.a_codes[3]);
-      //gpio 4: mux 2, temp 8
-      this->cellTemp[ic*32 + (7-i) + 8] = V2T(this->IC[ic].aux.a_codes[4]);
-      //gpio 5: mux 3, bal 0
-      this->balTemp[ic*16 + i] = V2T(this->IC[ic].aux.a_codes[5]);
-      //gpio 0: mux 4, bal 0
-      this->balTemp[ic*16 + i + 8] = V2T(this->IC[ic].aux.a_codes[0]);
-      //gpio 1: mux 5, temp 16
-      this->cellTemp[ic*32 + (7-i) + 16] = V2T(this->IC[ic].aux.a_codes[1]);
-      //gpio 2: mux 6, temp 24
-      this->cellTemp[ic*32 + (7-i) + 24] = V2T(this->IC[ic].aux.a_codes[2]);
+      if (this->IC[ic].cccrc.aux_pec) {
+        //gpio 3: mux1, temp 0
+        this->cellTempErr[ic*16 + (7-i)/2]++;
+        //gpio 4: mux 2, temp 8
+        this->cellTempErr[ic*16 + (7-i)/2 + 4]++;
+        //gpio 5: mux 3, bal 0
+        this->cellTempErr[ic*16 + i]++;
+        //gpio 0: mux 4, bal 0
+        this->cellTempErr[ic*16 + i + 8]++;
+        //gpio 1: mux 5, temp 16
+        this->cellTempErr[ic*16 + (7-i)/2 + 8]++;
+        //gpio 2: mux 6, temp 24
+        this->cellTempErr[ic*16 + (7-i)/2 + 12]++;
+      }
+      else {
+        this->cellTemp[ic*32 + (7-i)] = V2T(this->IC[ic].aux.a_codes[3]);
+        //gpio 4: mux 2, temp 8
+        this->cellTemp[ic*32 + (7-i) + 8] = V2T(this->IC[ic].aux.a_codes[4]);
+        //gpio 5: mux 3, bal 0
+        this->balTemp[ic*16 + i] = V2T(this->IC[ic].aux.a_codes[5]);
+        //gpio 0: mux 4, bal 0
+        this->balTemp[ic*16 + i + 8] = V2T(this->IC[ic].aux.a_codes[0]);
+        //gpio 1: mux 5, temp 16
+        this->cellTemp[ic*32 + (7-i) + 16] = V2T(this->IC[ic].aux.a_codes[1]);
+        //gpio 2: mux 6, temp 24
+        this->cellTemp[ic*32 + (7-i) + 24] = V2T(this->IC[ic].aux.a_codes[2]);
+      }
     }
   }
     return;
@@ -234,11 +249,14 @@ void Battery::checkFuse(){
   //D_L1("------------Checking fuses------------- \n");
   for(int ic = 0; ic < TOTAL_IC; ic++){
     this->IC[ic].tx_cfgb.dcc = 0;
-    this->IC[ic].tx_cfgb.dcc |=  1<<cycle;
+    this->IC[ic].tx_cfgb.dcc |= 1 << cycle;
+    adBmsWakeupIc(TOTAL_IC);
+    adBmsWriteData(TOTAL_IC, this->IC, WRCFGB, Config, BB);
   }
   this->updateVoltage();
   this->checkVoltage();
   //D_L1("------------Fuse Checked------------- \n");
+  resetDischarge();
 }
 
 /// @brief does the same as checkFuse but immediately
@@ -246,14 +264,14 @@ void Battery::checkAllFuse(){
   for(int i = 0; i < 8; i++){
     for(int ic = 0; ic < TOTAL_IC; ic++){
       this->IC[ic].tx_cfgb.dcc = 0;
-      this->IC[ic].tx_cfgb.dcc |=  1<<i;
+      this->IC[ic].tx_cfgb.dcc |= 1 << i;
     }
+    adBmsWakeupIc(TOTAL_IC);
+    adBmsWriteData(TOTAL_IC, this->IC, WRCFGB, Config, BB);
     this->updateVoltage();
     this->checkVoltage();
   }
-  for(int ic = 0; ic < TOTAL_IC; ic++){
-    this->IC[ic].tx_cfgb.dcc = 0;
-  }
+  resetDischarge();
 }
 
 /// @brief finds lowest cell voltage and discharges the other cells to match, within 20mV
@@ -369,6 +387,5 @@ void Battery::resetDischarge(){
     this->IC[ic].tx_cfgb.dcc = 0;
   }
   adBmsWakeupIc(TOTAL_IC);
-  adBmsWriteData(TOTAL_IC, this->IC, WRCFGA, Config, AA);
   adBmsWriteData(TOTAL_IC, this->IC, WRCFGB, Config, BB);
 }

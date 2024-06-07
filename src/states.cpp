@@ -61,7 +61,8 @@ uint64_t lastSendTime = 0;
 void chargeState(){
   acu.warns = 0;
   //every 2 seconds check if the system is still good
-  if(millis() - lastChargeTime > 2000){
+  if(millis() - lastChargeTime >= 2000){
+    battery.resetDischarge();
     //what needs to be reset
     lastChargeTime = millis();
     if(SystemCheck(true, false)){
@@ -80,7 +81,7 @@ void chargeState(){
   }
 
   //if no CAN data for 5 seconds, shut down
-  if(millis()-acu.getLastChrgRecieveTime() > 5000){
+  if(millis() - acu.getLastChrgRecieveTime() > 5000){
     D_L1("CHARGE: Charger CAN timeout, shutting down");
     state = SHUTDOWN;
     return;
