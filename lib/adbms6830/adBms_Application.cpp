@@ -48,8 +48,8 @@ ERR     INJECT_ERR_SPI_READ = WITHOUT_ERR;
 
 /* Set Under Voltage and Over Voltage Thresholds */
 /* Set Under Voltage and Over Voltage Thresholds */
-const float OV_THRESHOLD = 4.2;                 /* Volt in 0.1 mV*/
-const float UV_THRESHOLD = 3.0;                 /* Volt in 0.1 mV*/
+const float OV_THRESHOLD = 4.2;
+const float UV_THRESHOLD = 2.7;
 //Discharge
 const float MIN_DIS_TEMP = -40; //TODO: Modify later
 const float MAX_DIS_TEMP = 60; 
@@ -154,7 +154,7 @@ void adBms6830_read_config(uint8_t tIC, cell_asic *ic)
 * @brief Start ADC Cell Voltage Measurement
 *******************************************************************************
 */
-void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC, int(*func_ptr)() = nullptr)
+void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC, int(*func_ptr)())
 {
   adBmsWakeupIc(tIC);
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
@@ -278,7 +278,7 @@ void adBms6830_read_fcell_voltages(uint8_t tIC, cell_asic *ic)
 * @brief Start AUX, VMV, V+ Voltages Measurement
 *******************************************************************************
 */
-void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic, int(*func_ptr)() = nullptr)
+void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic, int(*func_ptr)())
 {
   for(uint8_t cic = 0; cic < tIC; cic++)
   {

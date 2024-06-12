@@ -47,13 +47,12 @@
 #define MAX_DCDC_CURRENT 10
 #define MIN_GLV_VOLT 10
 #define MAX_GLV_VOLT 14.4
-#define OPEN_GLV_VOLT 16.37
 
 
 // hardware constants
-#define CELL_INT_RESISTANCE 0.007
+#define CELL_INT_RESISTANCE 0.006
 #define CELL_EMPTY_VOLTAGE 3
-#define CELL_FULL_VOLTAGE 4.2
+#define CELL_FULL_VOLTAGE 4.15
 
 
 // ADC1283 connections
