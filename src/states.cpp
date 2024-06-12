@@ -1,12 +1,12 @@
 #include "states.h"
 void shutdownState(){
   // Open AIRS and Precharge if already not open, close Discharge
-  acu.setRelayState(0);
   digitalWrite(PIN_DCDC_EN, LOW);
+  acu.setRelayState(0);
 
   //indicates to battery to stop charging, should fall on deaf ears if not charging
   sendCANData(Charger_Control);
-  battery.resetDischarge();  
+  battery.resetDischarge();
   
   acu.warns = 0;
   //errors can only be reset when shutdown
@@ -40,27 +40,32 @@ void normalState(){
   if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
 
   if (!digitalRead(PIN_DCDC_EN)) acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
-  // if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
-  //   digitalWrite(PIN_DCDC_EN, LOW);
-  // }
-  // else if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP*0.9){
-  //   digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
-  //   digitalWrite(PIN_DCDC_SLOW, HIGH);
-  // }
-  // else {
-  //   digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
-  // }
+
+  if (acu.getTemp1(false) > MAX_DCDC_TEMP){
+    digitalWrite(PIN_DCDC_EN, LOW);
+  }
+  else {
+    if (!digitalRead(PIN_DCDC_EN) && acu.getGlvVoltage(false) < 11 && acu.getTemp1(false) < MAX_DCDC_TEMP - 5){
+      digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+    }
+    else if (digitalRead(PIN_DCDC_EN) && acu.getGlvVoltage(false) > 13.5) {
+      digitalWrite(PIN_DCDC_EN, LOW);
+    }
+  }
 
   return;
 }
 
 //TRIAGE 1.5: implement
-uint64_t lastChargeTime = 0;
-uint64_t lastDischargeTime = 0;
-uint64_t lastSendTime = 0;
+uint32_t lastChargeTime = 0;
+uint32_t lastDischargeTime = 0;
+uint32_t lastSendTime = 0;
+uint32_t lastCaliTime = 0;
+
 void chargeState(){
   acu.warns = 0;
   //every 2 seconds check if the system is still good
+  acu.checkACU();
   if(millis() - lastChargeTime >= 2000){
     battery.resetDischarge();
     //what needs to be reset
@@ -77,6 +82,13 @@ void chargeState(){
   //every 0.99 seconds send charger "ping"
   if(millis() - lastSendTime > 990){
     lastSendTime = millis();
+    if(battery.maxCellVolt > 4.15){
+      battery.max_chrg_current = map(battery.maxCellVolt, OV_THRESHOLD-0.06, OV_THRESHOLD-0.01, acu.max_chrg_current, 0);
+      battery.max_chrg_current = constrain(battery.max_chrg_current, 0, acu.max_chrg_current);
+    } else {
+      battery.max_chrg_current = acu.max_chrg_current;
+    }
+    battery.max_chrg_voltage = acu.max_chrg_voltage;
     sendCANData(Charger_Control);
   }
 
@@ -87,22 +99,30 @@ void chargeState(){
     return;
   }
 
-  //if done charging shut down
-  if(battery.getTotalVoltage() > CHARGER_VOLTAGE){
-    D_L1("CHARGE: Done charging, shutting down");
-    state = SHUTDOWN;
-    return;
+  // re-measure current sensor ref every 5 minutes
+  if (millis() - lastCaliTime > 300000) {
+    lastCaliTime = millis();
+    state = NORMAL; // turn off charger
+    sendCANData(Charger_Control);
+    delay(1000);
+    acu.cur_ref = acu.ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT, 1024);
+    state = CHARGE; // turn charger back on
+    sendCANData(Charger_Control);
   }
+
+  //if done charging shut down
+  // if(battery.getTotalVoltage() > CHARGER_VOLTAGE){
+  //   D_L1("CHARGE: Done charging, shutting down");
+  //   state = SHUTDOWN;
+  //   sendCANData(Charger_Control);
+  //   return;
+  // }
   
 
-  if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP){
+  if (acu.getTemp1(false) > MAX_DCDC_TEMP && digitalRead(PIN_DCDC_EN)){
     digitalWrite(PIN_DCDC_EN, LOW);
   }
-  else if (max(acu.getTemp1(false), acu.getTemp2(false)) > MAX_DCDC_TEMP*0.9){
-    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
-    digitalWrite(PIN_DCDC_SLOW, HIGH);
-  }
-  else {
+  else if ((acu.getTemp1(false) < MAX_DCDC_TEMP - 5 && !digitalRead(PIN_DCDC_EN))) {
     digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
   }
 
@@ -164,7 +184,7 @@ void preChargeState(){
   // check voltage, if difference > threshold after 2 seconds throw error
   uint32_t startTime = millis();
   while (acu.getTsVoltage() < battery.getTotalVoltage() * PRECHARGE_THRESHOLD) {
-    Serial.println(acu.getTsVoltage(false));
+    Serial.print("Precharging... "); Serial.println(acu.getTsVoltage(false));
     if (SystemCheck()) {
       D_L1("PreCharge (TsVoltage) => Shutdown");
       state = SHUTDOWN;
@@ -193,20 +213,19 @@ void preChargeState(){
     readCANData();
     dumpCANbus();
     if (state != PRECHARGE) {
-      state = SHUTDOWN;
-      D_L1("In Precharge (but incorrect state) => Shutdown");
-      return;
+      //state = SHUTDOWN;
+      //D_L1("In Precharge (but incorrect state) => Shutdown");
+      D_L1(state);
+      //return;
     }
-    D_L1(acu.getTsVoltage(false));
   }
    
   // delay 3 seconds, for safety
   startTime = millis();
   CAN_message_t msg;
-  bool goToCharge = false;
+  bool goToCharge = false; // change this to false on final build
   while (millis() - startTime < 3000) {
     acu.checkACU(false);
-    
     if (can_chgr.read(msg)) {
       if (msg.id == Charger_Data) {
         goToCharge = true;
@@ -219,13 +238,14 @@ void preChargeState(){
       acu.errs |= ERR_Prechrg;
       return;
     }
-    if (SystemCheck()) {
-      D_L1("Precharge (SystemCheck) => Shutdown");
-      state = SHUTDOWN;
-      return;
-    }
-    Serial.println(acu.getTsVoltage(false));
+    // if (SystemCheck()) {
+    //   D_L1("Precharge (SystemCheck) => Shutdown");
+    //   state = SHUTDOWN;
+    //   return;
+    // }
+    Serial.print("waiting... "); Serial.println(acu.getTsVoltage(false));
     dumpCANbus();
+    delay(50);
   }
 
   acu.setRelayState(0b111); // close all relays
@@ -233,6 +253,7 @@ void preChargeState(){
 
   D_L1("Precharge Done. Ready to drive. State Normal");
   state = goToCharge ? CHARGE : NORMAL;
+  acu.cur_ref = acu.ACU_ADC.readVoltageTot(ADC_MUX_HV_CURRENT, 1024);
   return;
 }
 

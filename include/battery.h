@@ -14,7 +14,7 @@ class Battery{
         //in 0.1mV
 
         float maxCellTemp, maxBalTemp = -1;
-        float maxCellVolt, minCellVolt = -1;
+        float minCellVolt = -1;
 
         float cellTemp[16 * 2 * TOTAL_IC]; // 16 * 2 * 8
         float balTemp[16 * TOTAL_IC];
@@ -26,13 +26,13 @@ class Battery{
         float cell_OT_Threshold = 60;
         float cell_UT_Threshold = 0;
         
-        float max_chrg_voltage; // 10mV/LSB
-        float max_chrg_current; // 10mA/LSB
-        float max_output_current; // 10mA/LSB
+        float max_output_current;
     public:
         // Battery();
+        float max_chrg_voltage;
+        float max_chrg_current;
         float cellVoltage[16 * TOTAL_IC]; // 16 * 8
-
+        float maxCellVolt = -1;
         void init_config();
         void updateVoltage();
         void updateTemp();

@@ -47,14 +47,12 @@ class ACU{
         float shdn_volt; 
         float dcdc_current; 
         //TRIAGE 4: consider if we want to do some sort of "sanity" checking for the temps
-        float temps[2]; // thermistor readings
+        float temps[2] = {25, 25}; // thermistor readings
         float fan_Ref;
         
         float max_output_current = MAX_HV_CURRENT;
         float max_temp = MAX_DCDC_TEMP;
-        float max_chrg_voltage = CHARGER_VOLTAGE; 
-        float max_chrg_current = CHARGER_CURRENT; 
-        uint64_t lastChrgRecieveTime;
+        uint32_t lastChrgRecieveTime;
 
 
         IMD_Monitor IMD;   // IMD MONITOR
@@ -65,6 +63,7 @@ class ACU{
         uint32_t cur_LastHighTime = 0;
         uint8_t errs; // for general 1; OverTemp|OverVolt|OverCurr|BMS|UnderVolt|Precharge|Teensy|UnderTemp
         uint8_t warns; // for general 1; OpenWire|ADBMSADC|CellDrop|HighCurr|LowChrg|CellInbl|Humidity|Hydrogen
+        uint8_t acuErrCount = 0;
 
         // TRIAGE 2: fan thingamajigs
         fanController fans = fanController(&Serial8);
@@ -72,6 +71,9 @@ class ACU{
         uint16_t fanRpm[4];
         float fanVoltage[4];
         float fanCurrent[4];
+
+        float max_chrg_current = CHARGER_CURRENT;
+        float max_chrg_voltage = CHARGER_VOLTAGE; 
 
         void init_config();
 
@@ -92,7 +94,7 @@ class ACU{
         float getTemp1(bool update = true);
         float getTemp2(bool update = true);
         float getFanRef(bool update = true);
-        uint64_t getLastChrgRecieveTime();
+        uint32_t getLastChrgRecieveTime();
 
         void printIso();
         void printIMDErrorsWarnings();

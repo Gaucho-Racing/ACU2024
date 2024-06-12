@@ -94,8 +94,17 @@ void loop() {
   readCANData();
   dumpCANbus(); //uncomment if interrupt don't work
 
+  float maxTemp = max(acu.getTemp1(false), acu.getTemp2(false));
+  if (maxTemp < 30) {
+    acu.fans.writeRegister(FAN_SPD4_addr, 0);
+  }
+  else {
+    maxTemp = constrain(maxTemp, 30, 60);
+    acu.fans.writeRegister(FAN_SPD4_addr, map(maxTemp, 30, 60, 1500, 3500));
+  }
+
   #ifdef DEBUG
-    if(millis() - prev_mill > 100){
+    if(millis() - prev_mill > 1000){
       prev_mill = millis();
       debug();
     }

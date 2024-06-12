@@ -153,10 +153,8 @@ void Battery::checkVoltage(){
     if (this->maxCellVolt < this->cellVoltage[i]) this->maxCellVolt = this->cellVoltage[i];
     if (this->minCellVolt > this->cellVoltage[i]) this->minCellVolt = this->cellVoltage[i];
     if (this->cellVoltage[i] > OV_THRESHOLD){
-      D_L1("Battery OverVolt Err");
-      D_L1(i);
-      D_L1(this->cellVoltage[i]);
       this->cellVoltErr[i]++;
+      D_pf("Cell %u OverVolt Err: %5.03fV, x%u\n", i, this->cellVoltage[i], this->cellVoltErr[i]);
       if (this->cellVoltErr[i] >= ERRMG_CELL_VOLT_ERR) {
         acu.errs |= ERR_OverVolt;
         this->cellVoltErr[i] = ERRMG_CELL_VOLT_ERR;
@@ -168,9 +166,7 @@ void Battery::checkVoltage(){
     if (this->cellVoltage[i] < UV_THRESHOLD){
       this->cellVoltErr[i]++;
       if (this->cellVoltage[i] > 1.6) {
-        D_L1("Battery UnderVolt Err");
-        D_L1(i);
-        D_L1(this->cellVoltage[i]);
+        D_pf("Cell %u UndrVolt Err: %5.03fV, x%u\n", i, this->cellVoltage[i], this->cellVoltErr[i]);
       }
       if (this->cellVoltErr[i] >= ERRMG_CELL_VOLT_ERR) {
         acu.errs |= ERR_UndrVolt;
@@ -290,9 +286,9 @@ void Battery::cell_Balancing(){
   //figure out which cells to discharge
   Serial.printf("\nDischarging Stuff: ************************** \n");
   for(int ic = 0; ic < TOTAL_IC; ic++){
-    Serial.printf("IC #%d\n", ic);
+    Serial.printf("Segment %d: ", ic);
     for(int cell = 0; cell < CELL; cell++){
-      if(this->cellVoltage[ic*CELL + cell] > threshold || this->cellVoltage[ic*CELL + cell] - minCellVolt > 0.02){
+      if((this->cellVoltage[ic*CELL + cell] > threshold || this->cellVoltage[ic*CELL + cell] - minCellVolt > 0.02) && this->balTemp[ic*CELL + cell] < 70){
         toDischarge |= 1 << cell;
         Serial.print("1 ");
       }
@@ -376,8 +372,8 @@ uint8_t condenseTemperature(float temp1, float temp2) {
 /// @brief calculates state of charge and applies filter
 float Battery::updateSOC() {
   float cellOpenVoltage = getTotalVoltage() + acu.getTsCurrent(false) * CELL_INT_RESISTANCE * TOTAL_IC * 16;
-  float zeroChargeVolt = TOTAL_IC * 16 * UV_THRESHOLD;
-  float fullChargeVolt = TOTAL_IC * 16 * OV_THRESHOLD;
+  float zeroChargeVolt = TOTAL_IC * 16 * CELL_EMPTY_VOLTAGE;
+  float fullChargeVolt = TOTAL_IC * 16 * CELL_FULL_VOLTAGE;
   batSOC += (map(cellOpenVoltage, zeroChargeVolt, fullChargeVolt, 0, 255) - batSOC) * 0.1;
   return batSOC;
 }

@@ -9,11 +9,11 @@
 #define printGLVVoltage true
 #define printDcdcCurrent true
 #define printTemps true
-#define printMaxChrgVoltage false
-#define printMaxChrgCurrent false
+#define printMaxChrgVoltage true
+#define printMaxChrgCurrent true
 #define printMaxOutputCurrent false
 #define printState true
-#define printFanRef true
+#define printFanRef false
 #define printMaxCellTemp true
 #define printMaxBalTemp true
 #define printminCellVolt true
@@ -21,9 +21,9 @@
 #define printAccumCurrent true
 #define printCurrentZeros true
 #define printACUTemp false
-#define printCellVoltage true
-#define printCellTemp true
-#define printBalTemp true
+#define printCellVoltage false
+#define printCellTemp false
+#define printBalTemp false
 #define printIMDData false
 
 extern ACU acu;
@@ -90,8 +90,12 @@ void debug(){
     if(printTemps){
         Serial.printf("ACU Temps: %5.03f, %5.03f\n", acu.getTemp1(false), acu.getTemp2(false));
     }
-    if(printMaxChrgVoltage);
-    if(printMaxChrgCurrent);
+    if(printMaxChrgVoltage){
+        Serial.printf("Max charge voltage: %4.02f\n", acu.max_chrg_voltage);
+    }
+    if(printMaxChrgCurrent){
+        Serial.printf("Max charge current: %4.02f\n", acu.max_chrg_current);
+    }
     if(printMaxOutputCurrent);
     if(printFanRef){
         Serial.printf("5V: %5.03f\n", acu.getFanRef(false));
@@ -118,11 +122,11 @@ void debug(){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 8; j++){
-                Serial.printf("[%3u]%5.03f; ", j, battery.getCellVoltage(i*16 + j));
+                Serial.printf("[%2u]%5.03f; ", j, battery.getCellVoltage(i*16 + j));
             }
-            Serial.println();
+            //Serial.println();
             for(int j = 8; j < 16; j++){
-                Serial.printf("[%3u]%5.03f; ", j, battery.getCellVoltage(i*16 + j));
+                Serial.printf("[%2u]%5.03f; ", j, battery.getCellVoltage(i*16 + j));
             }
             Serial.println();
         }
@@ -132,7 +136,7 @@ void debug(){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 32; j++){
-                Serial.printf("[%3u]%5.03f; ", j, battery.getCellTemp(i*16 + j));
+                Serial.printf("[%2u]%5.03f; ", j, battery.getCellTemp(i*16 + j));
             }
             Serial.println();
         }
@@ -143,7 +147,7 @@ void debug(){
         for(int i = 0; i < TOTAL_IC; i++){
             Serial.printf("Segment %d: ", i);
             for(int j = 0; j < 16; j++){
-                Serial.printf("[%3u]%5.03f; ", j, battery.getBalTemp(i*16 + j));
+                Serial.printf("[%2u]%5.01f; ", j, battery.getBalTemp(i*16 + j));
             }
             Serial.println();
         }

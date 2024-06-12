@@ -88,7 +88,7 @@ void sendCANData(uint32_t ID){
     }break;
 
     case Charging_Cart_Config:{
-      uint16_t max_charge_current = battery.max_chrg_current*100;
+      uint16_t max_charge_current = battery.max_chrg_current * 100;
       uint16_t max_charge_volt = battery.max_chrg_voltage * 100;
       msg.buf[0] = max_charge_current >> 8;
       msg.buf[1] = max_charge_current;
@@ -193,13 +193,13 @@ void sendCANData(uint32_t ID){
       
     case Charger_Control: {
       //TRIAGE 0: check b4 use
-      uint16_t code = battery.max_chrg_voltage*10;
+      uint16_t code = battery.max_chrg_voltage * 10;
       msg.buf[0] = code >> 8;
       msg.buf[1] = code & 0xFF;
-      code = battery.max_chrg_current*10;
+      code = battery.max_chrg_current * 10;
       msg.buf[2] = code >> 8;
       msg.buf[3] = code & 0xFF;
-      msg.buf[4] = state == CHARGE ? 1:0; 
+      msg.buf[4] = state == CHARGE ? 0:1;
       msg.buf[5] = 0b0000000;
       msg.buf[6] = 0b0000000; 
       msg.buf[7] = 0b0000000; 
@@ -209,6 +209,7 @@ void sendCANData(uint32_t ID){
       msg.len = 1;
       msg.buf[0] = IMD_HV; // index for Voltage: HV system
       can_chgr.write(msg);
+      msg.len = 8;
       break;
     default:
       Serial.printf("Unknown CAN ID: %lu\n", msg.id);
@@ -247,11 +248,12 @@ void parseCANData(){
 
 
     case Battery_Limits:
-      battery.max_chrg_voltage = ((uint16_t(msg.buf[0]) << 8) | msg.buf[1])*0.01;
+      acu.max_chrg_voltage = ((uint16_t(msg.buf[0]) << 8) | msg.buf[1])*0.01;
       battery.max_output_current = ((uint16_t(msg.buf[2]) << 8) | msg.buf[3])*0.01;
       battery.cell_OT_Threshold = ((uint16_t(msg.buf[4]) << 8) | msg.buf[5])*0.01;
-      battery.max_chrg_current = ((uint16_t(msg.buf[6]) << 8) | msg.buf[7])*0.01;
-
+      acu.max_chrg_current = ((uint16_t(msg.buf[6]) << 8) | msg.buf[7])*0.01;
+      acu.max_chrg_current = constrain(acu.max_chrg_current, 0, 4);
+      acu.max_chrg_voltage = constrain(acu.max_chrg_voltage, 0, TOTAL_IC * 16 * OV_THRESHOLD);
       break;
 
     case ACU_Ping_Request:
@@ -275,20 +277,17 @@ void parseCANData(){
       break;
       
     case Charger_Data:
-      if(state == PRECHARGE) {
-        state = CHARGE;
-        acu.updateChgrRecieveTime();
-      }
-      if(state == CHARGE){
-        acu.updateChgrRecieveTime();
-      } 
+      acu.updateChgrRecieveTime();
       // parse the max voltage, max current & chaging/not charging bool & get all failures
-      battery.max_chrg_voltage = ((msg.buf[0] << 8) | msg.buf[1]) * 0.1;
-      battery.max_chrg_current = ((msg.buf[2] << 8) | msg.buf[3]) * 0.1;
+      //battery.max_chrg_voltage = ((uint16_t(msg.buf[0]) << 8) + msg.buf[1]) * 0.1;
+      D_pf("Charger readback: %5.01fV, %5.01fA\n", ((uint16_t(msg.buf[0]) << 8) + msg.buf[1]) * 0.1, ((uint16_t(msg.buf[2]) << 8) + msg.buf[3]) * 0.1);
+      //battery.max_chrg_current = ((uint16_t(msg.buf[2]) << 8) + msg.buf[3]) * 0.1;
 
       //charger status, hardware failure|overtemp of charger| input voltage failure|starting state|communication state 
       if(msg.buf[4] != 0){
-        state = SHUTDOWN;
+        Serial.print("Charger Error: ");
+        Serial.println(msg.buf[4], BIN);
+        //state = SHUTDOWN;
       }
       // battery.chargerDataStatus.hardwareStatus = msg.buf[4] & ERR_Hardware;
       // battery.chargerDataStatus.temperatureStatus = msg.buf[4] & ERR_Temp;
