@@ -72,7 +72,7 @@ class ACU{
         float fanVoltage[4];
         float fanCurrent[4];
 
-        float max_chrg_current = CHARGER_CURRENT;
+        float max_chrg_current = 0;
         float max_chrg_voltage = CHARGER_VOLTAGE; 
 
         void init_config();

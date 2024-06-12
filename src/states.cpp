@@ -221,8 +221,8 @@ void preChargeState(){
     acu.checkACU(false);
     
     if (can_prim.read(msg)) {
-      if (msg.id == Charging_SDC_States && (msg.buf[6]& 1<<6)) {
-        D_L1("Recieved charge command, going to charge");
+      if (msg.id == Charger_Data) {
+        D_L1("Charger is plugged in, go to charging mode");
         goToCharge = true;
       }
     }

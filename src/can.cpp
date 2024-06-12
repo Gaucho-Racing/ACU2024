@@ -199,7 +199,7 @@ void sendCANData(uint32_t ID){
       code = battery.max_chrg_current * 10;
       msg.buf[2] = code >> 8;
       msg.buf[3] = code & 0xFF;
-      msg.buf[4] = state == CHARGE ? 0:1;
+      msg.buf[4] = (state == CHARGE && battery.max_chrg_current >= 0.1) ? 0:1;
       msg.buf[5] = 0b0000000;
       msg.buf[6] = 0b0000000; 
       msg.buf[7] = 0b0000000; 
