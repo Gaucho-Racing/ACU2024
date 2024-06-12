@@ -259,7 +259,9 @@ void parseCANData(){
       break;
 
     case Charging_SDC_Ping_Response:
-      sendCANData(Charging_SDC_Ping_Request);
+      // sendCANData(Charging_SDC_Ping_Request);
+      //lol lmao
+      D_L1("Recieved a Charging SDC Ping Response, how?");
       break;
 
     case Charging_SDC_States:
