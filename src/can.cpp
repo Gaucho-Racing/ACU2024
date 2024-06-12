@@ -264,14 +264,12 @@ void parseCANData(){
 
     case Charging_SDC_States:
       //FILLER TODO
-      msg.buf[0] = 0b0000000;
-      msg.buf[1] = 0b0000000;
-      msg.buf[2] = 0b0000000;
-      msg.buf[3] = 0b0000000;
-      msg.buf[4] = 0b0000000;
-      msg.buf[5] = 0b0000000;
-      msg.buf[6] = 0b0000000;
-      msg.buf[7] = 0b0000000;
+      if(state == CHARGE && (!(msg.buf[6]& 1<<6))){
+        D_L1("Stopping CHARGE, entering normal")
+        state = NORMAL;
+        sendCANData(Charger_Control);
+        battery.resetDischarge();
+      }
       break;
       
     case Charger_Data:

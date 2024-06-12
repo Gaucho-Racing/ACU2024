@@ -207,8 +207,9 @@ void preChargeState(){
   while (millis() - startTime < 3000) {
     acu.checkACU(false);
     
-    if (can_chgr.read(msg)) {
-      if (msg.id == Charger_Data) {
+    if (can_prim.read(msg)) {
+      if (msg.id == Charging_SDC_States && (msg.buf[6]& 1<<6)) {
+        D_L1("Recieved charge command, going to charge");
         goToCharge = true;
       }
     }
