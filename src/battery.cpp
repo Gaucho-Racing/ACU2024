@@ -26,7 +26,7 @@ void Battery::updateVoltage(){
   adBms6830_read_cell_voltages(TOTAL_IC, this->IC);
   for (uint8_t ic = 0; ic < TOTAL_IC; ic++) {
     if (this->IC[ic].cccrc.cell_pec) {
-      D_pf("Segment %u PEC error\n", ic);
+      //D_pf("Segment %u PEC error\n", ic);
       for (uint8_t cell = 0; cell < CELL; cell++) {
         this->cellVoltErr[ic * CELL + cell]++;
       }

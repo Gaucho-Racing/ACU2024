@@ -62,10 +62,10 @@ void ACU::updateGlvVoltage(){
   glv_voltage = ACU_ADC.readVoltage(ADC_MUX_GLV_VOLT) * 4;
 }
 void ACU::updateTsVoltage(){
-  ts_voltage += (ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200 - ts_voltage) * 0.2;
+  ts_voltage = (ACU_ADC.readVoltage(ADC_MUX_HV_VOLT) * 200);
 }
 void ACU::updateTsCurrent(){
-  ts_current += ((ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - cur_ref) /5 /0.0032 - ts_current) * 0.2;
+  ts_current = ((ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - cur_ref) * 62.5);
 }
 void ACU::updateShdnVolt(){
   shdn_volt = ACU_ADC.readVoltage(ADC_MUX_SHDN_POW) * 4;
@@ -104,10 +104,12 @@ void ACU::updateAll(){
 void ACU::checkACU(bool startup){
   this->updateAll();
   uint8_t lastAcuErrCount = acuErrCount;
+  bool hasErrors = false;
   this->warns &= ~(WARN_LowChrg|WARN_HighCurr); //reset warnings
   //overcurrent checks
   if(this->ts_current > MAX_HV_CURRENT){
     D_L1("Overcurrent detected");
+    hasErrors = true;
     acuErrCount++;
     if (acuErrCount >= ERRMG_ACU_ERR){
       acuErrCount = ERRMG_ACU_ERR;
@@ -121,6 +123,7 @@ void ACU::checkACU(bool startup){
   //dcdc current
   if(this->dcdc_current > MAX_DCDC_CURRENT){
     D_L1("DCDC Overcurrent detected");
+    hasErrors = true;
     acuErrCount++;
     if (acuErrCount >= ERRMG_ACU_ERR){
       acuErrCount = ERRMG_ACU_ERR;
@@ -130,8 +133,9 @@ void ACU::checkACU(bool startup){
 
   //glv voltage
   if(this->glv_voltage < MIN_GLV_VOLT){
-    D_L1("GLV Undervolt detected");
+    if (this->glv_voltage > 3) D_L1("GLV Undervolt detected");
     acuErrCount++;
+    hasErrors = true;
     if (acuErrCount >= ERRMG_ACU_ERR){
       acuErrCount = ERRMG_ACU_ERR;
       this->errs |= ERR_UndrVolt;
@@ -140,6 +144,7 @@ void ACU::checkACU(bool startup){
   if(this->glv_voltage > MAX_GLV_VOLT){
     D_L1("GLV Overvolt detected");
     acuErrCount++;
+    hasErrors = true;
     if (acuErrCount >= ERRMG_ACU_ERR){
       acuErrCount = ERRMG_ACU_ERR;
       this->errs |= ERR_OverVolt;
@@ -150,6 +155,7 @@ void ACU::checkACU(bool startup){
   if(5.0 - this->fan_Ref > ERRMG_5V){
     D_L1("5V Low detected");
     acuErrCount++;
+    hasErrors = true;
     if (acuErrCount >= ERRMG_ACU_ERR){
       acuErrCount = ERRMG_ACU_ERR;
       this->errs |= ERR_UndrVolt;
@@ -157,6 +163,7 @@ void ACU::checkACU(bool startup){
   } else if(this->fan_Ref - 5.0 > ERRMG_5V){
     D_L1("5V High detected");
     acuErrCount++;
+    hasErrors = true;
     if (acuErrCount >= ERRMG_ACU_ERR){
       acuErrCount = ERRMG_ACU_ERR;
       this->errs |= ERR_OverVolt;
@@ -169,6 +176,7 @@ void ACU::checkACU(bool startup){
     Serial.println(abs(this->shdn_volt - this->glv_voltage));
     if(this->shdn_volt < this->glv_voltage) {
       acuErrCount++;
+      hasErrors = true;
       if (acuErrCount >= ERRMG_ACU_ERR){
         acuErrCount = ERRMG_ACU_ERR;
         this->errs |= ERR_UndrVolt;
@@ -176,6 +184,7 @@ void ACU::checkACU(bool startup){
     }
     else if(this->shdn_volt > this->glv_voltage){
       acuErrCount++;
+      hasErrors = true;
       if (acuErrCount >= ERRMG_ACU_ERR){
         acuErrCount = ERRMG_ACU_ERR;
         this->errs |= ERR_OverVolt;
@@ -183,7 +192,8 @@ void ACU::checkACU(bool startup){
     }
   }
 
-  acuErrCount = (lastAcuErrCount == acuErrCount)? 0 : acuErrCount;
+  acuErrCount = (lastAcuErrCount == acuErrCount && !hasErrors)? 0 : acuErrCount;
+  // D_pf("ACU error count: %u\n", acuErrCount);
 }
 
 void ACU::setMaxChrgVoltage(float voltage){

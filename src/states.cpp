@@ -13,45 +13,70 @@ void shutdownState(){
   bool temp = acu.errs & ERR_Prechrg;
   acu.errs = 0;
   if (temp) acu.errs |= ERR_Prechrg;
-  bool checkPass = !SystemCheck(true);
+
+  acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.02;
+  acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.02;
+
+  bool checkPass = !SystemCheck(true, false);
   if (acu.getTsVoltage() < SAFE_V_TO_TURN_OFF && checkPass) { // safe to turn off if TS voltage < 60V
     D_L1("Shutdown (Safe) => Standby");
     state = STANDBY;
   }
-  acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
-  acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
+
   return;
 }
 
+uint8_t tsVoltErrCount = 0;
 void normalState(){
   // Serial.print("Buck bad pin: ");
   // Serial.println(analogRead(PIN_DCDC_ER) / 1024.0 * 3.3);
-  if(SystemCheck() || abs(acu.getTsVoltage(false) < SAFE_V_TO_TURN_OFF)){
+  if(SystemCheck()){
     Serial.println("SystemCheck failed in NORMAL state");
     state = SHUTDOWN;
-
     return;
   }
+
+  float totVolt = battery.getTotalVoltage();
+  if (abs(acu.getTsVoltage(false) - totVolt) > 80) {
+    D_L1("TS voltage mismatch");
+    tsVoltErrCount++;
+    if (tsVoltErrCount >= ERRMG_ACU_ERR) {
+      tsVoltErrCount = ERRMG_ACU_ERR;
+      state = SHUTDOWN;
+      if (acu.getTsVoltage(false) < totVolt) {
+        acu.errs |= ERR_UndrVolt;
+      }
+      else {
+        acu.errs |= ERR_OverVolt;
+      }
+    }
+  }
+  else {
+    tsVoltErrCount = 0;
+  }
+
   //cycle maxes out at 8
   cycle++;
   cycle = cycle % 8;
 
   if (acu.getTsCurrent(false) > 0.5) acu.cur_LastHighTime = millis();
-  if (millis() - acu.cur_LastHighTime > 10000) acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
+  if (millis() - acu.cur_LastHighTime > 10000) {
+    acu.cur_ref += acu.getTsCurrent() * 0.01;
+  }
 
   if (!digitalRead(PIN_DCDC_EN)) acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
 
   if (acu.getTemp1(false) > MAX_DCDC_TEMP){
     digitalWrite(PIN_DCDC_EN, LOW);
   }
-  else {
-    if (!digitalRead(PIN_DCDC_EN) && acu.getGlvVoltage(false) < 11 && acu.getTemp1(false) < MAX_DCDC_TEMP - 5){
-      digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
-    }
-    else if (digitalRead(PIN_DCDC_EN) && acu.getGlvVoltage(false) > 13.5) {
-      digitalWrite(PIN_DCDC_EN, LOW);
-    }
-  }
+  // else {
+  //   if (!digitalRead(PIN_DCDC_EN) && acu.getGlvVoltage(false) < 10.5 && acu.getTemp1(false) < MAX_DCDC_TEMP - 5){
+  //     digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+  //   }
+  //   else if (digitalRead(PIN_DCDC_EN) && acu.getGlvVoltage(false) > 13.5) {
+  //     digitalWrite(PIN_DCDC_EN, LOW);
+  //   }
+  // }
 
   return;
 }
@@ -122,9 +147,9 @@ void chargeState(){
   if (acu.getTemp1(false) > MAX_DCDC_TEMP && digitalRead(PIN_DCDC_EN)){
     digitalWrite(PIN_DCDC_EN, LOW);
   }
-  else if ((acu.getTemp1(false) < MAX_DCDC_TEMP - 5 && !digitalRead(PIN_DCDC_EN))) {
-    digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
-  }
+  // else if ((acu.getTemp1(false) < MAX_DCDC_TEMP - 5 && !digitalRead(PIN_DCDC_EN))) {
+  //   digitalWrite(PIN_DCDC_EN, acu.getTsVoltage(false) > 370 && !digitalRead(PIN_DCDC_ER));
+  // }
 
   return;
 }
@@ -256,11 +281,13 @@ void preChargeState(){
 /// @brief do nothing, in initial state wait for VDM to send start command, might need to poll CAN
 void standByState(){
   digitalWrite(PIN_DCDC_EN, LOW);
+  // to make this compatible with BSPD test
+  acu.getTsCurrent();
+  if (abs(acu.getTsCurrent(false)) < 1) acu.cur_ref += acu.getTsCurrent(false) * 0.01;
+  acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
   SystemCheck();
   cycle++;
   cycle = cycle % 8;
-  acu.cur_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_HV_CURRENT) - acu.cur_ref) * 0.01;
-  acu.dcdc_ref += (acu.ACU_ADC.readVoltage(ADC_MUX_DCDC_CURRENT) - acu.dcdc_ref) * 0.01;
 }
 
 //TRIAGE 3: set a macro for fullCheck for readibility; FULL = true, PARTIAL = false
@@ -275,6 +302,6 @@ bool SystemCheck(bool fullCheck, bool startup){
   battery.checkBattery(fullCheck);
   //D_L1("System Check Done");
   //D_L1();
-  digitalWrite(PIN_AMS_OK, acu.errs == 0);
+  digitalWrite(PIN_AMS_OK, (acu.errs & ERR_OverTemp) == 0);
   return acu.errs != 0;
 }

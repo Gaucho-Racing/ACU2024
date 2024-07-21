@@ -137,8 +137,8 @@
 #define ERRMG_GLV_SDC 4
 #define ERRMG_ISNS_VREF 0.2
 #define ERRMG_5V 0.2
-#define ERRMG_CELL_VOLT_ERR 15
+#define ERRMG_CELL_VOLT_ERR 20
 #define ERRMG_CELL_TEMP_ERR 50
-#define ERRMG_ACU_ERR 20
+#define ERRMG_ACU_ERR 50
 
 #endif

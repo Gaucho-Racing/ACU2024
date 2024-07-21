@@ -104,7 +104,7 @@ void loop() {
   }
 
   #ifdef DEBUG
-    if(millis() - prev_mill > 1000){
+    if(millis() - prev_mill > 500){
       prev_mill = millis();
       debug();
     }

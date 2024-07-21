@@ -20,7 +20,6 @@
 #define printCycle false
 #define printAccumCurrent true
 #define printCurrentZeros true
-#define printACUTemp false
 #define printCellVoltage false
 #define printCellTemp false
 #define printBalTemp false
@@ -113,7 +112,6 @@ void debug(){
     if(printCurrentZeros){
         Serial.printf("TS current ref: %5.05f, DCDC current ref: %5.05f\n", acu.cur_ref, acu.dcdc_ref);
     }
-    if(printACUTemp);
     if(printCycle){
         Serial.printf("----------- Cycle: %d --------------\n", cycle);
     }
